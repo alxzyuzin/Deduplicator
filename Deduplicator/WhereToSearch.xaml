@@ -1,0 +1,116 @@
+﻿<!-- -->
+<!-- ОКНО СО СПИСКОМ КАТАЛОГОВ ДЛЯ ПОИСКА-->
+
+<Page
+    x:Class="Deduplicator.WhereToSearch"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Deduplicator"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+
+        <Style x:Key="TextBlockStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
+
+        <DataTemplate x:Key="FolderTemplate" >
+
+            <Grid x:Name="Folder" Height="80" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="750"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="5,5,0,0" 
+                          Text="{Binding FullName}" HorizontalAlignment="Stretch" Foreground="Orange"  
+                          TextWrapping="WrapWholeWords" Style="{StaticResource TextBlockStyle}" />
+                <!--Border HorizontalAlignment="Right"  Grid.Column="1"-->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="1">
+                    <ToggleSwitch x:Name="toggleswitch_SearchInSubfolders"  
+                                     Style="{StaticResource ToggleSwitchStyle}"
+                                     OnContent="Search in subfolders"      
+                    	             OffContent="Search in this folder only"
+                                     FontSize="20" FontWeight="Normal"
+                                     Toggled="toggleswitch_SetPrimary_Toggled"
+                                     Margin="0,-15,10,0"
+                                     IsOn="{Binding SearchInSubfolders, Mode=TwoWay}"/>
+                    <ToggleSwitch x:Name="toggleswitch_SetPrimary"  
+                                     Style="{StaticResource ToggleSwitchStyle}"
+                                     OnContent="Primary"      
+                    	             OffContent="Set as primary"
+                                     FontSize="20" FontWeight="Normal"
+                                     Toggled="toggleswitch_SetPrimary_Toggled"
+                                     Margin="0,-15,10,0"
+                                     IsOn="{Binding IsPrimary, Mode=TwoWay}"/>
+                    <ToggleSwitch x:Name="toggleswitch_Protected"  
+                                     Style="{StaticResource ToggleSwitchStyle}"
+                                     OnContent="Protected"      
+                    	             OffContent="Protect"
+                                     FontSize="20" FontWeight="Normal"
+                                     Toggled="toggleswitch_SetPrimary_Toggled"
+                                     Margin="0,-15,10,0"
+                                     IsOn="{Binding Protected, Mode=TwoWay}"/>
+                </StackPanel>
+                <!--/-->
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+
+
+    <Grid x:Name="LayoutRoot">
+
+        <Grid x:Name="grid_WhereToSearch" VerticalAlignment="Stretch" >
+            <!--
+            <Grid.Transitions>
+                <TransitionCollection>
+                    <PaneThemeTransition Edge="Top"/>
+                </TransitionCollection>
+            </Grid.Transitions>
+            -->
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border>
+                <TextBlock Grid.Row="0" Text="List of folders where to search duplicates" FontSize="20" FontWeight="Medium" VerticalAlignment="Center" 
+                       Margin="20,10,0,5" />
+            </Border>
+            <Border Grid.Row="1" Margin="0,0,0,5"  Background="#FF505050">
+                <ListView x:Name="listvew_Folders" Grid.Row="0" Grid.Column="0" VerticalAlignment="Stretch"
+                      ItemTemplate="{StaticResource FolderTemplate}"
+                      ScrollViewer.VerticalScrollMode="Enabled"
+                      SelectionMode="Multiple"
+                      Margin="0,5,0,0"
+                      ItemContainerStyle="{StaticResource ListViewItemStyle}"
+                      Tapped="listvew_Folders_Tapped">
+                    <ListViewItem/>
+                    <ListViewItem/>
+                </ListView>
+            </Border>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Height="40"
+                            HorizontalAlignment="Right" Margin="20,5,20,5">
+                
+            </StackPanel>
+            <TextBlock x:Name="textblock_NoFoldersSelected"  Grid.Row="1" Height="60"
+                        FontSize="20" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding textblock_NoFoldersSelectedVisibility}" TextWrapping="WrapWholeWords">
+                    	<Run Text="No folders selected for searching duplicated files."/>
+                    	<LineBreak/>
+                    	<Run Text="Add folders where search duplicates."/>
+            </TextBlock>
+
+            <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
+        </Grid>
+    </Grid>
+</Page>

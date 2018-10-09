@@ -1,0 +1,99 @@
+﻿<!-- ОКНО Search Options-->
+<Page
+    x:Class="Deduplicator.SearchOptions"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Deduplicator"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style x:Key="TextBlockStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="30,20,40,10"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontSize" Value="18"/>
+        </Style>
+
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Margin" Value="40,0,40,10"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontSize" Value="18"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid x:Name="LayoutRoot">
+        <Grid x:Name="grid_SearchOptions" VerticalAlignment="Stretch" >
+            <!--Grid.Transitions>
+                <TransitionCollection>
+                    <PaneThemeTransition Edge="Top"/>
+                </TransitionCollection>
+            </-->
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Search options" FontSize="20" FontWeight="Medium" 
+                       VerticalAlignment="Center" Height="45" Padding="0,10,0,0"/>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="stackpanel_FileSelectionOptions" Grid.Column="0" Margin="20,0,10,0">
+                    <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
+                               FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
+                    <RadioButton x:Name="rb_AllFiles" Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
+                                 FontWeight="Medium"  GroupName="FileSelection"
+                                 IsChecked="{Binding Path=AllFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                    <RadioButton x:Name="rb_SpecificFiles" Content="  specific files"  Height="35" FontSize="18" 
+                                 FontWeight="Medium" Margin="30,0,0,0" GroupName="FileSelection"
+                                 IsChecked="{Binding Path=SpecificFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                    <CheckBox    Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
+                                 IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                                 IsChecked="{Binding ImageFiles , Mode=TwoWay}"/>
+                    <CheckBox    Content="  audio files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                                 IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                                 IsChecked="{Binding AudioFiles , Mode=TwoWay}"/>
+                    <CheckBox    Content="  video files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                                 IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                                 IsChecked="{Binding VideoFiles , Mode=TwoWay}"/>
+                    <TextBlock   Text="with extensions:" FontSize="18" Height="32" FontWeight="Medium"  Margin="50,10,0,0"/>
+                    <TextBox     x:Name="textbox_SpecificExtentions" FontSize="18" FontWeight="Normal" 
+                                 Margin="70,0,40,0"  Height="35" MinWidth="200"
+                                 IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                                 PlaceholderText="Type here list of file extentions separated with semicolon"
+                                 Text="{Binding SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                    <TextBlock/>
+                    <TextBlock   Text="Exclude extensions:" FontSize="18" FontWeight="Medium"  Margin="0,10,0,0"/>
+                    <TextBox     x:Name="textbox_ExcludeExtentions" FontSize="18" FontWeight="Normal" Margin="20,0,40,0"
+                                 Height="35" MinWidth="200" 
+                                 PlaceholderText="Type here list of file extentions separated with semicolon"
+                                 Text="{Binding ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                </StackPanel>
+                <StackPanel x:Name="stackpanel_FileCompareOptions" Grid.Column="1" Margin="10,0,20,0">
+                    <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
+                                   FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
+                    <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckName, Mode=TwoWay}"/>
+                    <CheckBox Content="  Size" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckSize, Mode=TwoWay}"/>
+                    <CheckBox Content="  Creation date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckCreationDateTime, Mode=TwoWay}"/>
+                    <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
+                    <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
+                    <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
+                    <ComboBox  x:Name="listbox_ResultGroupingModes" Width="250" FontSize="18" FontWeight="Medium"
+                              HorizontalAlignment="Left" Margin="30,5,0,0"
+                               SelectionChanged="listbox_ResultGroupingModes_SelectionChanged">
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Height="40"
+                            HorizontalAlignment="Right" Margin="20,5,20,5">
+
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

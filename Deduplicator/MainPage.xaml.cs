@@ -56,39 +56,50 @@ namespace Deduplicator
         public DataModel DataModel { get { return _dataModel; } }
 
         private bool _firstloading = true;
+
+
+        ApplicationTabs appTabs = new ApplicationTabs();
+
+
         public MainPage()
         {
             _dataModel = new DataModel(this);
 
             this.InitializeComponent();
-           
+
+            WorkArea.Child = appTabs;
+
+            appTabs.SwitchTo(ApplicationTabs.Tabs.WhereToSearch);
             // This is a static public property that will allow downstream pages to get 
             // a handle to the MainPage instance in order to call methods that are in this class.
-            Current = this;
+            //Current = this;
 
             // This frame is hidden, meaning it is never shown.  It is simply used to load
             // each application page and then pluck out the work area and
             // place them into the UserControls on the main page.
-            HiddenFrame = new Frame();
-            HiddenFrame.Visibility = Visibility.Collapsed;
-            ContentRoot.Children.Add(HiddenFrame);
+            //HiddenFrame = new Frame();
+            //HiddenFrame.Visibility = Visibility.Collapsed;
 
-            this.ContentRoot.DataContext = _dataModel;
 
-            _dataModel.PropertyChanged += OnDatamodel_PropertyChanged;
-            _dataModel.SearchStarted += OnDatamodel_SearchStarted;
-            _dataModel.SearchCompleted += OnDatamodel_SearchCompleted;
-            _dataModel.SearchInterruptStarted += OnDatamodel_SearchInterruptStarted;
-            _dataModel.SearchInterruptCompleted += OnDatamodel_SearchInterruptCompleted;
-            _dataModel.Error += OnDatamodel_Error;
+            //ContentRoot.Children.Add(HiddenFrame);
 
-            this.Unloaded += MainPage_Unloaded;
-            this.Loaded += MainPage_Loaded;
-       }
+            //this.ContentRoot.DataContext = _dataModel;
 
-        private async void MainPage_Loaded(object sender, RoutedEventArgs e)
+            //_dataModel.PropertyChanged += OnDatamodel_PropertyChanged;
+            //_dataModel.SearchStarted += OnDatamodel_SearchStarted;
+            //_dataModel.SearchCompleted += OnDatamodel_SearchCompleted;
+            //_dataModel.SearchInterruptStarted += OnDatamodel_SearchInterruptStarted;
+            //_dataModel.SearchInterruptCompleted += OnDatamodel_SearchInterruptCompleted;
+            //_dataModel.Error += OnDatamodel_Error;
+
+            //this.Unloaded += MainPage_Unloaded;
+            //this.Loaded += MainPage_Loaded;
+        }
+
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            await NavigateToSearchLocation();
+            //WorkArea.Child = new ApplicationTabs();
+            //await NavigateToSearchLocation();
         }
 
         private void MainPage_Unloaded(object sender, RoutedEventArgs e)
@@ -150,28 +161,36 @@ namespace Deduplicator
             }
         }
 
-        private async void button_SearchLocation_Tapped(object sender, TappedRoutedEventArgs e)
+        private void button_SearchLocation_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await NavigateToSearchLocation();
+            appTabs.SwitchTo(ApplicationTabs.Tabs.WhereToSearch);
+            //WorkArea.Child = new ApplicationTabs();
+
+            //await NavigateToSearchLocation();
         }
 
-        private  async void button_SearchOptions_Tapped(object sender, TappedRoutedEventArgs e)
+        private void button_SearchOptions_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await NavigateToSearchOptions();
+            appTabs.SwitchTo(ApplicationTabs.Tabs.SearchOptions);
+            //await NavigateToSearchOptions();
         }
 
-        private async void button_SearchResults_Tapped(object sender, TappedRoutedEventArgs e)
+        private void button_SearchResults_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await NavigateToSearchResults();
+            appTabs.SwitchTo(ApplicationTabs.Tabs.SearchResults);
+            //await NavigateToSearchResults();
         }
 
-        private async void button_Settings_Tapped(object sender, TappedRoutedEventArgs e)
+        private void button_Settings_Tapped(object sender, TappedRoutedEventArgs e)
         {
-           await  NavigateToSettings();
+            appTabs.SwitchTo(ApplicationTabs.Tabs.Settings);
+            //await  NavigateToSettings();
         }
 
+        /*
         private async Task NavigateToSearchLocation()
         {
+            
             bool contentLoaded = false;
 
             if (WorkArea.Content == null)
@@ -192,10 +211,12 @@ namespace Deduplicator
                     | CmdButtons.Settings | CmdButtons.AddFolder | CmdButtons.DelFolder | CmdButtons.StartSearch
                     | CmdButtons.CancelSearch);
             }
-        }
+            
+    }
 
-        private async Task NavigateToSearchOptions()
+    private async Task NavigateToSearchOptions()
         {
+            
             if (((Grid)WorkArea.Content).Name != "grid_SearchOptions")
             {
                 if (await LoadWorkArea(typeof(SearchOptions), "grid_SearchOptions"))
@@ -210,10 +231,12 @@ namespace Deduplicator
                     | CmdButtons.Settings | CmdButtons.StartSearch | CmdButtons.CancelSearch);
                 }
             }
+            
         }
 
         private async Task NavigateToSearchResults()
         {
+            /*
             if (((Grid)WorkArea.Content).Name != "grid_SearchResults")
             {
                 if (await LoadWorkArea(typeof(SearchResults), "grid_SearchResults"))
@@ -231,10 +254,12 @@ namespace Deduplicator
                         _dataModel.SearchStatus = "";
                 }
             }
+            
         }
 
         private async Task NavigateToSettings()
         {
+            
             if (((Grid)WorkArea.Content).Name != "grid_Options")
             {
                 if (await LoadWorkArea(typeof(Options), "grid_Options"))
@@ -248,7 +273,9 @@ namespace Deduplicator
                     | CmdButtons.Settings | CmdButtons.SaveSettings);
                 }
             }
+            
         }
+        */
 
         private async void button_AddFolder_Tapped(object sender, RoutedEventArgs e)
         {
@@ -317,7 +344,8 @@ namespace Deduplicator
 
         private async void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            // Проверим что если один из каталогов помечен как Primary то в списке писутствует ещё хотя бы один каталог
+            // Проверим что если один из каталогов помечен как Primary то в списке должен присутствовать 
+            // хотя бы ещё один каталог 
             if (_dataModel.FoldersCollection.Count < 2 & _dataModel.PrimaryFolder != null)
             {
                 MsgBox.SetButtons(MessageBoxButtons.Close);
@@ -345,7 +373,7 @@ namespace Deduplicator
                 if (pressedbutton == MessageBoxButtons.No)
                     return;
             }
-            await NavigateToSearchResults();
+           // await NavigateToSearchResults();
             await _dataModel.StartSearch();
         }
 
@@ -361,7 +389,7 @@ namespace Deduplicator
 
         private async Task<bool> LoadWorkArea(Type workareatype, string workelementname)
         {
-
+            /*
             if (!_firstloading)
             {
                 this.Hide.Begin();
@@ -407,6 +435,8 @@ namespace Deduplicator
                 ScenarioLoaded(this, new EventArgs());
             }
             return (WorkArea.Content == null) ? false : true;
+            */
+            return false;
         }
 
         public void UpdateDeleteSelectedFilesButton(int selecteditemscount)

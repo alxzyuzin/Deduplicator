@@ -11,6 +11,8 @@
     d:DesignWidth="1000">
 
     <UserControl.Resources>
+        <CollectionViewSource x:Name="GroupedFiles" IsSourceGrouped="true"/>
+        
         <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
         <SolidColorBrush x:Key="MainBackgroundBrush" Color="#FF303030"/>
         
@@ -56,8 +58,6 @@
             <Setter Property="FontSize" Value="18"/>
         </Style>
         
-        <CollectionViewSource x:Name="GroupedFiles" IsSourceGrouped="true"/>
-
         <DataTemplate x:Key="FolderTemplate" >
 
             <Grid x:Name="Folder" Height="80" HorizontalAlignment="Stretch">
@@ -204,7 +204,7 @@
         </StackPanel>
 
         <Border x:Name="WhereToSearchtab" Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0">
-            <ListView x:Name="listvew_Folders" Grid.Row="0" VerticalAlignment="Stretch"
+            <ListView x:Name="listview_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
                       ScrollViewer.VerticalScrollMode="Enabled"
                       SelectionMode="Multiple"
@@ -325,17 +325,19 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,5,20,15">
             <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" 
-                    Content="Add folder" Tapped="button_AddFolder_Tapped" Visibility="{Binding BtnAddFolderVisibility}"/>
+                    Content="Add folder" Tapped="button_AddFolder_Tapped" Visibility="{Binding BtnAddFolderVisibility}"
+                    IsEnabled="{Binding BtnAddFolderEnabled}"/>
             <Button x:Name="button_DelFolder"  Style="{StaticResource CmdButtonStyle}" 
                     Content="Delete selected folders" Tapped="button_DelFolder_Tapped"  Visibility="{Binding BtnDelFolderVisibility}"
-                    IsEnabled="{Binding BtnDelFolderIsEnabled}"/>
+                    IsEnabled="{Binding BtnDelFolderEnabled}"/>
             <Button x:Name="button_DelSelectedFiles" Style="{StaticResource CmdButtonStyle}" 
                     Content="Delete selected files" Tapped="button_DeleteSelectedFiles_Tapped" Visibility="{Binding BtnDelSelectedFilesVisibility}"/>
             <Button x:Name="button_StartSearch" Style="{StaticResource CmdButtonStyle}"
                     Content="Start search" Tapped="button_StartSearch_Tapped" Visibility="{Binding BtnStartSearchVisibility}"
-                    IsEnabled="{Binding BtnStartSearchIsEnabled}"/>
+                    IsEnabled="{Binding BtnStartSearchEnabled}"/>
             <Button x:Name="button_CancelSearch" Style="{StaticResource CmdButtonStyle}"
-                    Content="Cancel search" Tapped="button_CancelSearch_Tapped" Visibility="{Binding BtnCancelSearchVisibility}"/>
+                    Content="Cancel search" Tapped="button_CancelSearch_Tapped" Visibility="{Binding BtnCancelSearchVisibility}"
+                    IsEnabled="{Binding BtnStopSearchEnabled}"/>
             <Button x:Name="button_SaveSettings" Style="{StaticResource CmdButtonStyle}" 
                     Content="Save settings" Tapped="button_SaveSettings_Tapped" Visibility="{Binding BtnSaveSettingsVisibility}"/>
         </StackPanel>

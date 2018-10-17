@@ -14,6 +14,7 @@ using System.ComponentModel;
 using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
+using Windows.ApplicationModel.Resources;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -44,6 +45,7 @@ namespace Deduplicator
         }
 
         Tabs _activeTab;
+        private ResourceLoader _resldr = new ResourceLoader();
 
         CmdButtons _cmdButtonsVisualState;
         private CmdButtons CmdButtonsVisualState
@@ -91,15 +93,71 @@ namespace Deduplicator
             get { return _cmdButtonsVisualState.HasFlag(CmdButtons.DelFolder) ? Visibility.Visible : Visibility.Collapsed; }
         }
 
-        public bool BtnDelFolderIsEnabled
+
+        public bool _btnAddFolderEnabled = true;
+        public bool BtnAddFolderEnabled
         {
-            get { return (listvew_Folders.SelectedItems.Count > 0) ? true : false; }
+            get { return _btnAddFolderEnabled; }
+            set
+            {
+                if (_btnAddFolderEnabled != value)
+                {
+                    _btnAddFolderEnabled = value;
+                    NotifyPropertyChanged("BtnAddFolderEnabled");
+                }
+            }
         }
 
-        public bool BtnStartSearchIsEnabled
+        public bool _btnDelFolderEnabled = false;
+        public bool BtnDelFolderEnabled
         {
-            get { return (listvew_Folders.Items.Count > 0) ? true : false; }
+            get { return _btnDelFolderEnabled;}
+            set
+            {
+                if (_btnDelFolderEnabled != value)
+                {
+                    _btnDelFolderEnabled = value;
+                    NotifyPropertyChanged("BtnDelFolderEnabled");
+                }
+            }
         }
+
+
+        private bool _btnStartSearchEnabled = false;
+        public bool BtnStartSearchEnabled
+        {
+            get
+            {
+                return _btnStartSearchEnabled;
+            }
+            set
+            {
+                if (_btnStartSearchEnabled != value)
+                {
+                    _btnStartSearchEnabled = value;
+                    NotifyPropertyChanged("BtnStartSearchEnabled");
+                }
+            }
+        }
+
+        private bool _btnStopSearchEnabled = false;
+        public bool BtnStopSearchEnabled
+        {
+            get
+            {
+                return _btnStopSearchEnabled;
+
+            }
+            set
+            {
+                if (_btnStopSearchEnabled != value)
+                {
+                    _btnStopSearchEnabled = value;
+                    NotifyPropertyChanged("BtnStopSearchEnabled");
+                }
+            }
+        }
+
         private string _tabHeader = string.Empty;
         public string TabHeader
         {
@@ -147,7 +205,7 @@ namespace Deduplicator
             this.DataContext = this;
 
             // Tab "Where to search" data binding
-            listvew_Folders.ItemsSource = _dataModel.FoldersCollection;
+            listview_Folders.ItemsSource = _dataModel.FoldersCollection;
 
             // Tab "Search options" data binding
             stackpanel_FileSelectionOptions.DataContext = _dataModel.FileSelectionOptions;
@@ -157,23 +215,65 @@ namespace Deduplicator
             _dataModel.UpdateResultGruppingModesList();
             listbox_ResultGroupingModes.SelectedItem = _dataModel.ResultGrouppingModes[0];
 
-
+            // Tab "Search results" data binding
+            GroupedFiles.Source = _dataModel.ResultFilesCollection;
+            listbox_ResultGrouping.ItemsSource = _dataModel.ResultGrouppingModes;
 
             // Tab "Settings" data binding
             brd_SettingsTab.DataContext = _dataModel.Settings;
 
+            // Подпишемся на события модели данных
+             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
+
         }
-        /*
-        public ApplicationTabs(Page page)
+
+        private void OnSearchStatusChanged(object sender, DataModel.SearchStatus status)
         {
-            this.InitializeComponent();
+            
+            ApplicationStatus = _dataModel.SearchStatusInfo;
 
-            PageHeader.Text = "List of folders where to search duplicates";
-
-            EmptyContentMessage.Text = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
-
+            if (status == DataModel.SearchStatus.Completed)
+            {
+                BtnAddFolderEnabled = true;
+                BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0) ? true : false;
+                BtnStartSearchEnabled = (listview_Folders.Items.Count > 0) ? true : false;
+                BtnStopSearchEnabled = false;
+                _dataModel.ResultFilesCollection.Invalidate();
+                //listview_Duplicates.ItemsSource = _dataModel.ResultFilesCollection;
+                //GroupedFiles.Source = _dataModel.ResultFilesCollection;
+            }
+            else
+            {
+                BtnAddFolderEnabled = false;
+                BtnDelFolderEnabled = false;
+                BtnStartSearchEnabled = false;
+                BtnStopSearchEnabled = true;
+            }
+           
+            
         }
-        */
+
+        //private void OnSearchCompleted(object sender, EventArgs e)
+        //{
+        //    ApplicationStatus = "Search completed";
+        //}
+
+        //private void OnSearchStarted(object sender, EventArgs e)
+        //{
+        //    ApplicationStatus = "Search started";
+        //}
+
+        /*
+public ApplicationTabs(Page page)
+{
+   this.InitializeComponent();
+
+   PageHeader.Text = "List of folders where to search duplicates";
+
+   EmptyContentMessage.Text = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
+
+}
+*/
 
 
         public void SwitchTo(Tabs tab)
@@ -192,7 +292,7 @@ namespace Deduplicator
                     WhereToSearchtab.Visibility = Visibility.Visible;
                     TabHeader = "List of folders where to search duplicates.";
                     CmdButtonsVisualState = CmdButtons.AddFolder|CmdButtons.DelFolder|CmdButtons.StartSearch|CmdButtons.CancelSearch;
-                    EmptyContentMessageVisibility = (listvew_Folders.Items.Count > 0) ? Visibility.Collapsed : Visibility.Visible;
+                    EmptyContentMessageVisibility = (listview_Folders.Items.Count > 0) ? Visibility.Collapsed : Visibility.Visible;
                     EmptyContentMessage = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
                     break;
                 case Tabs.SearchOptions:
@@ -265,16 +365,18 @@ namespace Deduplicator
                 }
                 String AccessToken = StorageApplicationPermissions.FutureAccessList.Add(newfolder);
                 _dataModel.FoldersCollection.Add(new Folder(newfolder.Path, false, AccessToken));
-                NotifyPropertyChanged("BtnStartSearchIsEnabled");
+
+                BtnStartSearchEnabled = (_dataModel.Status == DataModel.SearchStatus.Completed) ? true : false;
+                
                 EmptyContentMessageVisibility = Visibility.Collapsed;
- 
             }
         }
+
         private void button_DelFolder_Tapped(object sender, TappedRoutedEventArgs e)
         {
             List<Folder> foldersBuffer = new List<Folder>();
             // Перенесём фолдеры подлежащие удалению в буферный список 
-            foreach (Folder f in listvew_Folders.SelectedItems)
+            foreach (Folder f in listview_Folders.SelectedItems)
                 foldersBuffer.Add(f);
             // А теперь удалим из основного списка фоолдеры попавшие в буферный список
             foreach (Folder f in foldersBuffer)
@@ -282,22 +384,58 @@ namespace Deduplicator
                 StorageApplicationPermissions.FutureAccessList.Remove(f.AccessToken);
                 _dataModel.FoldersCollection.Remove(f);
             }
-            // Если после удаления список фолдеров пуст то сделаем кнопку удаления фолдеров неактивной
-            NotifyPropertyChanged("BtnDelFolderIsEnabled");
-            NotifyPropertyChanged("BtnStartSearchIsEnabled");
-            EmptyContentMessageVisibility = (listvew_Folders.Items.Count > 0) ? Visibility.Collapsed : Visibility.Visible;
+
+            BtnDelFolderEnabled = false;
+            // Если после удаления список фолдеров пуст то сделаем кнопку запуска поиска неактивной
+
+            bool folderListEmpty = (listview_Folders.Items.Count > 0) ? false : true;
+               
+            BtnStartSearchEnabled = folderListEmpty?false:true;
+            EmptyContentMessageVisibility = folderListEmpty?Visibility.Visible:Visibility.Collapsed;
         }
+
+
         private void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
 
         }
-        private void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
+        private async void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            // Проверим что если один из каталогов помечен как Primary то в списке должен присутствовать 
+            // хотя бы ещё один каталог 
+            if (_dataModel.FoldersCollection.Count < 2 & _dataModel.PrimaryFolder != null)
+            {
+                MsgBox.SetButtons(MessageBoxButtons.Close);
+                MsgBox.Message = _resldr.GetString("SinglePrimaryDirectory");
+                await MsgBox.Show();
+                return;
+            }
 
+            // Проверим что выбран хотя бы один атрибут файла для сравнения при поиске дубликатов
+            if (!(_dataModel.FileCompareOptions.CheckName | _dataModel.FileCompareOptions.CheckSize |
+                _dataModel.FileCompareOptions.CheckContent | _dataModel.FileCompareOptions.CheckCreationDateTime |
+                _dataModel.FileCompareOptions.CheckModificationDateTime))
+            {
+                MsgBox.SetButtons(MessageBoxButtons.Close);
+                MsgBox.Message = _resldr.GetString("NoFileCompareAttributesChecked");
+                await MsgBox.Show();
+                return;
+            }
+            // Проверим есть ли результат предыдущего поиска и если есть покажем предупреждающее сообщение
+            if (_dataModel.ResultFilesCollection.Count > 0)
+            {
+                MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
+                MsgBox.Message = _resldr.GetString("DuplicatedAlreadyFound");
+                MessageBoxButtons pressedbutton = await MsgBox.Show();
+                if (pressedbutton == MessageBoxButtons.No)
+                    return;
+            }
+            // await NavigateToSearchResults();
+            await _dataModel.StartSearch();
         }
-        private void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
+        private async void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
-
+            await _dataModel.StopSearch();
         }
         private void button_SaveSettings_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -333,7 +471,7 @@ namespace Deduplicator
 
         private void listvew_Folders_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            NotifyPropertyChanged("BtnDelFolderIsEnabled");
+            BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0 && _dataModel.Status == DataModel.SearchStatus.Completed) ? true : false;
         }
 
         #endregion
@@ -379,9 +517,9 @@ namespace Deduplicator
                 FileAttribs grpatr = DataModel.ConvertGroupingNameToFileAttrib(cb.SelectedValue.ToString());
                 _dataModel.RegroupResultsByFileAttribute(grpatr);
                 _dataModel.ResultFilesCollection.Invalidate();
-                _dataModel.SearchStatus = string.Format("Regrouping complete. Regrouped {0} duplicates into {1} groups.",
-                                                       _dataModel.TotalDuplicatesCount,
-                                                       _dataModel.ResultFilesCollection.Count);
+//                _dataModel.SearchStatus = string.Format("Regrouping complete. Regrouped {0} duplicates into {1} groups.",
+//                                                       _dataModel.TotalDuplicatesCount,
+//                                                       _dataModel.ResultFilesCollection.Count);
                 _dataModel.ResultFilesCollection.Invalidate();
             }
         }

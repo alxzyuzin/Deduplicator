@@ -132,9 +132,6 @@
     <Compile Include="MessageBox.xaml.cs">
       <DependentUpon>MessageBox.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Options.xaml.cs">
-      <DependentUpon>Options.xaml</DependentUpon>
-    </Compile>
     <Compile Include="PopUpDialog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchOptions.xaml.cs">
@@ -142,9 +139,6 @@
     </Compile>
     <Compile Include="SearchResults.xaml.cs">
       <DependentUpon>SearchResults.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="WhereToSearch.xaml.cs">
-      <DependentUpon>WhereToSearch.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -187,10 +181,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Options.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="PopUpMessageStyle.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -204,10 +194,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ToggleSwitchStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="WhereToSearch.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

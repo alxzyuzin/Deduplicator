@@ -8,51 +8,49 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Windows.System.Threading;
 using System.IO;
+using Windows.Foundation;
 
 namespace Deduplicator.Common
 {
     public enum AppStatus {SearchOptions, SearchResults, Settings }
     public enum LastAction { Search, Group}
+
+    
+
+
     public sealed class DataModel : INotifyPropertyChanged
 
     {
-        string _unknownErrorMessage = "Function: {0}\nModule: {1}\nLine:{2}\n{3}";
 
-
-        public event EventHandler SearchStarted;
-        private async void NotifySearchStarted()
+        private sealed class ErrorData
         {
-            if (SearchStarted != null)
+            public ErrorType Type;
+            public string FunctionName;
+            public string ModuleName;
+            public int LineNumber;
+            public string Message;
+
+            public ErrorData(string moduleName)
             {
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { SearchStarted(this, null); });
+                ModuleName = moduleName;
+            }
+
+            public void Set(ErrorType type, string functionName, int lineNumber, string message)
+            {
+                Type = type;
+                FunctionName = functionName;
+                LineNumber = lineNumber;
+                Message = message;
             }
         }
 
-        public event EventHandler SearchCompleted;
-        private async void NotifySearchCompleted()
-        {
-            if (SearchCompleted != null)
-            {
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { SearchCompleted(this, null); });
-            }
-        }
+        public enum SearchStatus { SelectingFiles, Sorting, SearchingDuplicates, Groupping, Error, Completed, Stopping, NewFileSelected }
 
-        public event EventHandler SearchInterruptStarted;
-        private async void NotifySearchInterruptStarted()
+        public event EventHandler<SearchStatus> SearchStatusChanged;
+        private void NotifySearchStatusChanged(SearchStatus status)
         {
-            if (SearchInterruptStarted != null)
-            {
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { SearchInterruptStarted(this, null); });
-            }
-        }
-
-        public event EventHandler SearchInterruptCompleted;
-        private async void NotifySearchInterruptCompleted()
-        {
-            if (SearchInterruptCompleted != null)
-            {
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { SearchInterruptCompleted(this, null); });
-            }
+            if (SearchStatusChanged != null)
+                SearchStatusChanged(this, status);
         }
 
         public event EventHandler<Error> Error;
@@ -65,13 +63,10 @@ namespace Deduplicator.Common
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private async void NotifyPropertyChanged(string propertyName)
+        private void NotifyPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
-            {
-                //PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { PropertyChanged(this, new PropertyChangedEventArgs(propertyName)); });
-            }
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public FolderColection FoldersCollection = new FolderColection();
@@ -86,45 +81,47 @@ namespace Deduplicator.Common
 
         #region Fields
 
+        private bool _searchInProgress = false;
+
         private MainPage _mainPage = null;
         private bool _stopSearch = false;
-
-        private DateTime _startTime = DateTime.Now;
+        private ErrorData _error = new ErrorData("DataModel.cs");
+  
         private int _stage = 0;
-        private int _totalFilesHandled = 0;
+
+        
+
+        private IProgress<SearchStatus> _status;
         #endregion
 
         #region Properties
-        private string _testProp = "kkkkkkkk";
-        public string TestProp
-        {
-            get { return _testProp; }
+        public SearchStatus Status { get; set; } = SearchStatus.Completed;
+
+        private string _searchStatusInfo;
+        public string SearchStatusInfo
+        { get
+            { return _searchStatusInfo; }
             set
             {
-                _testProp = value;
-                //NotifyPropertyChanged("TestProp");
+                if (_searchStatusInfo != value)
+                {
+                    _searchStatusInfo = value;
+                    NotifyPropertyChanged("SearchStatusInfo");
+                }
             }
         }
 
+//        private int _totalDuplicatesFound = 0;  // Общее число найденных дубликатов
+        
+        private int _totalFilesHandled = 0; // Общее число файлов найденных в указанных каталогах
+        
+//        private int _totalFilesSelected = 0; // Общее число файлов отобранных для поиска дубликатов
+        
+        private DateTime _startTime = DateTime.Now;
+ 
         public string CurrentGroupMode { get; set; } = string.Empty;
 
-        public int  TotalDuplicatesCount
-        {
-            get
-            {
-                int totalDuplicatesCount = 0;
-                foreach (FilesGroup g in ResultFilesCollection)
-                    foreach (File f in g)
-                        totalDuplicatesCount++;
-                return totalDuplicatesCount;
-            }
-        }
-
-        private string _totalTimeTaken;
-        public string TotalTimeTaken
-        { get { return _totalTimeTaken; } }
-
-        int _foldersCount = 0;
+        int         _foldersCount = 0;
         public int  FoldersCount
         {
             get { return _foldersCount; }
@@ -138,81 +135,26 @@ namespace Deduplicator.Common
             }
         }
         public int  FilesCount { get { return ResultFilesCollection.Count; } }
-        Windows.UI.Xaml.Visibility _NoFoldersSelectedVisibility = Windows.UI.Xaml.Visibility.Visible;
-        public Windows.UI.Xaml.Visibility textblock_NoFoldersSelectedVisibility
-        {
-            get
-            {
-                return _NoFoldersSelectedVisibility;
-            }
-            set
-            {
-                if (_NoFoldersSelectedVisibility!=value)
-                {
-                    _NoFoldersSelectedVisibility = value;
-                    NotifyPropertyChanged("textblock_NoFoldersSelectedVisibility");
-                }
-            }
 
-        }
+//        Windows.UI.Xaml.Visibility _NoFoldersSelectedVisibility = Windows.UI.Xaml.Visibility.Visible;
+//        public Windows.UI.Xaml.Visibility textblock_NoFoldersSelectedVisibility
+//        {
+//            get
+//            {
+//                return _NoFoldersSelectedVisibility;
+//            }
+//            set
+//            {
+//                if (_NoFoldersSelectedVisibility!=value)
+//                {
+//                    _NoFoldersSelectedVisibility = value;
+//                    NotifyPropertyChanged("textblock_NoFoldersSelectedVisibility");
+//               }
+//            }
 
-        public bool PrimaryFolderSelected
-        { get; set; }
+//        }
 
-        /// <summary>
-        /// Признак того что идёт процесс поска дубликатов
-        /// </summary>
-        private bool _searchInProgress = false;
-        public bool SearchInProgress
-        {
-            get { return _searchInProgress; }
-            set
-            {
-                if (_searchInProgress!=value)
-                {
-                    _searchInProgress = value;
-                    NotifyPropertyChanged("SearchInProgress");
-                    NotifyPropertyChanged("CanStartOrStop");
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Текстовое описание статуса процесса поиска
-        /// </summary>
-        private string _searchStatus = string.Empty;
-        public string SearchStatus
-        {
-            get
-            {
-               return _searchStatus;
-            }
-            set
-            {
-                if (_searchStatus!= value)
-                {
-                    _searchStatus = value;
-                    NotifyPropertyChanged("SearchStatus");
-                }
-            }
-        }
-
-  //      private int _completionPercent;
-  //      public int CompletionPercent
-  //      {
-  //          get
-  //          {
-  //              return _completionPercent;
-  //          }
-  //          set
-  //          {
-  //              if (_completionPercent != value)
-  //              {
-  //                  _completionPercent = value;
-  //                  NotifyPropertyChanged("CompletionPercent");
-  //              }
-  //          }
-  //      }
+        public bool PrimaryFolderSelected { get; set; }
 
         #endregion
 
@@ -223,7 +165,9 @@ namespace Deduplicator.Common
             FilesCollection = new FileCollection(mainpage);
             PrimaryFilesCollection = new FileCollection(mainpage);
             ResultFilesCollection = new GroupedFilesCollection(mainpage);
-                    
+
+            _status = new Progress<SearchStatus>(ReportStatus);
+            
             ResultGrouppingModes.Add("Do not group files.");
             Settings.Restore();
 
@@ -231,9 +175,6 @@ namespace Deduplicator.Common
             FileSelectionOptions.ImageFileExtentions = Settings.ImageFileExtentions;
             FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
 
-            SearchInProgress = false;
-
-            FoldersCollection.CollectionChanged += OnFoldersCollectionChanged;
             FileCompareOptions.PropertyChanged += FileCompareOptionsChanged;
         }
 
@@ -242,40 +183,28 @@ namespace Deduplicator.Common
             NotifyPropertyChanged("FileCompareOptions");
         }
  
-        #region Internal events handlers
-
-        private void OnFoldersCollectionChanged( object sender, NotifyCollectionChangedEventArgs args)
-        {
-            FoldersCount = FoldersCollection.Count;
-            textblock_NoFoldersSelectedVisibility = (FoldersCollection.Count>0)? Windows.UI.Xaml.Visibility.Collapsed:Windows.UI.Xaml.Visibility.Visible;
-        } 
-
-        #endregion
-
         /// <summary>
         /// Поиск дубликатов файлов
         /// </summary>
         /// <returns></returns>
-        private async void Search()
+        private async void Search(IProgress<SearchStatus> status)
         {
-      
-            NotifySearchStarted();
-            SearchStatus = "Selecting files...";
-                // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
-                
+            _status.Report(SearchStatus.SelectingFiles);
+
+            // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
             foreach (Folder folder in FoldersCollection)
                 await GetFolderFiles(folder, FilesCollection, FileSelectionOptions);
 
             // Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
             if (FilesCollection.Count > 0)
             {
-                SearchStatus = "Grouping files...";
+                _status.Report(SearchStatus.Groupping);
                 FilesGroup group = new FilesGroup("All ungrouped files");
                 foreach (File file in FilesCollection)
                     group.Add(file);
                 ResultFilesCollection.Add(group);
 
-                SearchStatus = "Searching for duplicates...";
+                _status.Report(SearchStatus.SearchingDuplicates);
                 foreach (var attrib in FileCompareOptions.CheckAttribsList)
                 {
                     _stage++; 
@@ -284,7 +213,7 @@ namespace Deduplicator.Common
             }
             if (PrimaryFolder != null)
             {
-                SearchStatus = "Grouping duplicates by files in primary folder ...";
+                _status.Report(SearchStatus.Groupping);
                 List<FilesGroup> groupsForDelete = new List<FilesGroup>();
                 File fileFromPrimaryFolder = null; 
                 foreach (FilesGroup group in ResultFilesCollection)
@@ -311,11 +240,9 @@ namespace Deduplicator.Common
                 foreach (FilesGroup group in groupsForDelete)
                     ResultFilesCollection.Remove(group);
             }
-            ResultFilesCollection.Invalidate();
-            SearchInProgress = false;
-            _totalTimeTaken =  (DateTime.Now - _startTime).ToString();
-            NotifySearchCompleted();
-        }
+//            ResultFilesCollection.Invalidate();
+            _status.Report(SearchStatus.Completed);
+         }
 
         /// <summary>
         /// Удаляет из коллекции файлы с уникальным значением атрибутв
@@ -327,7 +254,8 @@ namespace Deduplicator.Common
             string currentduplicatestotal = string.Empty;
             int filesHandled = 0;
             int filesTotal = 0;
-            
+            // Подсчитаем общее количество файлов подлежащих перегруппировке
+//// TO DO Можно складывать количества файлов в каждой группе а не перебирать все файлы во всех группах
             foreach (var group in filegroups)
                 foreach (File file in group)
                     filesTotal++;
@@ -346,7 +274,10 @@ namespace Deduplicator.Common
                 foreach (var group in groupsbuffer)
                 {
                     if (_stopSearch)  // Необходимо прекратить поиск
+                    {
+                        _status.Report(SearchStatus.Stopping);
                         return;
+                    }
                     //SearchStatus = "Searching duplicates. Stage {0} of {1}. Sorting...";
                     await QuickSortGroupByAttrib(group, 0, group.Count - 1, attribute);   // 10500 файлoв время 0.118s 
                     //SearchStatus = "Searching duplicates. Stage {0} of {1}. Delete non duplicates...";                                                                                          // Попарно сравниваем файлы в группе для поиска дубликатов
@@ -367,32 +298,29 @@ namespace Deduplicator.Common
                             newgroup.TotalSize += file.Size;
                             group.Remove(file);
                             ++filesHandled;
-
-
                   }
                         //Сохраним новую группу в буфере результата
-                        if (newgroup.Count > 1)
-                        {
-                            filegroups.Add(newgroup);
-                            if (attribute == FileAttribs.Content)
-                                filegroups.Invalidate();
-                        }
+                  if (newgroup.Count > 1)
+                  {
+                     filegroups.Add(newgroup);
+                     if (attribute == FileAttribs.Content)
+                         filegroups.Invalidate();
+                   }
 
                         
-                        if (_stage == FileCompareOptions.CheckAttribsList.Count)
-                        {
-                            int newFilesTotal = 0;
-                            foreach (var g in filegroups)
-                                foreach (File file in g)
-                                    newFilesTotal++;
-                            currentduplicatestotal = string.Format("Found {0} duplicates in {1} group(s).", newFilesTotal, filegroups.Count);
-                        }
-                        
-                        SearchStatus = string.Format("Searching duplicates. Stage {0} of {1}. Handled {2} files from {3}. {4} Total time taken {5}.",
-                            _stage, FileCompareOptions.CheckAttribsList.Count, filesHandled, filesTotal, currentduplicatestotal,
-                            (DateTime.Now - _startTime).ToString(@"hh\ \h\ \ mm\ \m\ \ ss\ \s\."));
-
-
+                   if (_stage == FileCompareOptions.CheckAttribsList.Count) // Выполнено сравнение по всем аттрибутам
+                   { // Подсчитаем общее количество найденных дубликатов
+                      int newFilesTotal = 0;
+      //// TO DO Можно складывать количества файлов в каждой группе а не перебирать все файлы во всех группах
+                        foreach (var g in filegroups)
+                            foreach (File file in g)
+                                newFilesTotal++;
+                     //       currentduplicatestotal = string.Format("Found {0} duplicates in {1} group(s).", newFilesTotal, filegroups.Count);
+                    }
+                    _status.Report(SearchStatus.SearchingDuplicates);
+                        //SearchStatus = string.Format("Searching duplicates. Stage {0} of {1}. Handled {2} files from {3}. {4} Total time taken {5}.",
+                        //    _stage, FileCompareOptions.CheckAttribsList.Count, filesHandled, filesTotal, currentduplicatestotal,
+                        //    (DateTime.Now - _startTime).ToString(@"hh\ \h\ \ mm\ \m\ \ ss\ \s\."));
                     }
                     handledgroups++;
                 }
@@ -402,8 +330,8 @@ namespace Deduplicator.Common
             catch(Exception ex)
             {
                 _stopSearch = true;
-                NotifyError(new Error(ErrorType.UnknownError,
-                            string.Format(_unknownErrorMessage, "SplitGroupsByAttribute", "DataModel.cs", "395", ex.Message)));
+                _error.Set(ErrorType.UnknownError,"SplitGroupsByAttribute", 395, ex.Message);
+                _status.Report(SearchStatus.Error);
                 return;
             }
         } 
@@ -412,16 +340,60 @@ namespace Deduplicator.Common
         {
             FilesCollection.Clear();
             ResultFilesCollection.Clear();
-            SearchInProgress = true;
+ 
             _stopSearch = false;
             _totalFilesHandled = 0;
 
             _startTime = DateTime.Now;
             _stage = 0;
-        
 
-        WorkItemHandler workhandler = delegate { Search(); };
+            WorkItemHandler workhandler = delegate { Search(_status); };
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
+        }
+
+        private void ReportStatus(SearchStatus searchStatus)
+        {
+            Status = searchStatus;
+            switch(searchStatus)
+            {
+                case SearchStatus.NewFileSelected:
+                    _searchInProgress = true;
+                    SearchStatusInfo = string.Format(@"Selecting files to search duplicates. Selected {0} files. Total files found {1}. Total time taken {2}",
+                                                 FilesCollection.Count,
+                                                 _totalFilesHandled,
+                                                (DateTime.Now - _startTime).ToString(@"hh\ \h\ \ mm\ \m\ \ ss\ \s\."));
+                    break;
+                case SearchStatus.Groupping:
+                    _searchInProgress = true;
+                    SearchStatusInfo = @"Groupping selected files";
+                    break;
+                case SearchStatus.Sorting:
+                    _searchInProgress = true;
+                    SearchStatusInfo = @"Sorting files";
+                    break;
+                case SearchStatus.SearchingDuplicates:
+                    _searchInProgress = true;
+                    SearchStatusInfo = @"Searching duplicates";
+                    break;
+                case SearchStatus.Completed:
+                    _searchInProgress = false;
+                    int totalDuplicatesCount = 0;
+                    foreach (FilesGroup g in ResultFilesCollection)
+                        totalDuplicatesCount += g.Count;
+                    SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
+                                                        totalDuplicatesCount, ResultFilesCollection.Count);
+                    break;
+                case SearchStatus.Error:
+                    _stopSearch = true;
+                    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
+                        _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
+                    break;
+                default:
+                    SearchStatusInfo = string.Empty;
+                    break;
+            }
+
+            NotifySearchStatusChanged(searchStatus);
         }
 
         public async Task StopSearch()
@@ -429,8 +401,8 @@ namespace Deduplicator.Common
 
             if (!_searchInProgress)  // Если процесс не активен то сразу выходим
                 return;
-            SearchStatus = "Canceling current search ...";
-            NotifySearchInterruptStarted();
+//            SearchStatus = "Canceling current search ...";
+//            NotifySearchInterruptStarted();
             _stopSearch = true;
             do        // В цикле с интервалом 100 миллисекунд проверяем статус ппроцесса поиска пока он не закончится
             {
@@ -442,8 +414,8 @@ namespace Deduplicator.Common
             ResultFilesCollection.Clear();
 
             _stopSearch = false;
-            SearchStatus = "Current search canceled.";
-            NotifySearchInterruptCompleted();
+//            SearchStatus = "Current search canceled.";
+//            NotifySearchInterruptCompleted();
         }
 
         /// <summary>
@@ -500,21 +472,17 @@ namespace Deduplicator.Common
                             file.DateModifyed = basicproperties.DateModified.DateTime;
                             file.Size = basicproperties.Size;
                             filelist.Add(file);
+                            _status.Report(SearchStatus.NewFileSelected);
                         }
                     }
                     catch(Exception e)
                     {
                         Type t = e.GetType();
                         _stopSearch = true;
-                        NotifyError(new Error(ErrorType.UnknownError, 
-                                    string.Format(_unknownErrorMessage, "GetFolderFiles", "DataModel.cs", "522", e.Message)));
+                        _error.Set(ErrorType.UnknownError, "GetFolderFiles", 522, e.Message);
+                        _status.Report(SearchStatus.Error);
                         return;
                     }
-                    
-                    SearchStatus = string.Format("Selecting files to search duplicates. Selected {0} files. Total files found {1}. Total time taken {2}",
-                                                 FilesCollection.Count.ToString(),
-                                                 _totalFilesHandled,
-                                                (DateTime.Now - _startTime).ToString(@"hh\ \h\ \ mm\ \m\ \ ss\ \s\."));
                 }
             }
         }

@@ -18,8 +18,8 @@ namespace Deduplicator
     {
         ResourceLoader _resldr = new ResourceLoader();
 
-        private DataModel _dataModel = MainPage.Current.DataModel;
-        private MainPage _mainPage = MainPage.Current;
+        private DataModel _dataModel;// = MainPage.Current.DataModel;
+        private MainPage _mainPage; // = MainPage.Current;
         private bool _doNotRegroup = true;
         public SearchResults()
         {
@@ -33,7 +33,7 @@ namespace Deduplicator
                 listbox_ResultGrouping.SelectedItem = _dataModel.CurrentGroupMode;
             listview_Duplicates.InternalWidth = _mainPage.ActualWidth - 80;
 
-            _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
+            //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
 
             if (_dataModel.PrimaryFolder != null)
             {
@@ -45,9 +45,9 @@ namespace Deduplicator
                 txtblk_GroupBy.Text = "Group files by";
                 listbox_ResultGrouping.Visibility = Visibility.Visible;
             }
-            _dataModel.SearchStarted += OnDataModel_SearchStarted;
-            _dataModel.SearchCompleted += OnDataModel_SearchCompleted;
-            _mainPage.ButtonTapped += OnButtonTapped;
+//            _dataModel.SearchStarted += OnDataModel_SearchStarted;
+//            _dataModel.SearchCompleted += OnDataModel_SearchCompleted;
+//            _mainPage.ButtonTapped += OnButtonTapped;
             _mainPage.SizeChanged += _mainPage_SizeChanged;
         }
 
@@ -72,7 +72,7 @@ namespace Deduplicator
                 listview_Duplicates.SelectedItems.Remove(e.ClickedItem);
             else
                 listview_Duplicates.SelectedItems.Add(e.ClickedItem);
-            _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
+           // _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
 
         private void checkbox_SelectGroup_Checked(object sender, RoutedEventArgs e)
@@ -83,7 +83,7 @@ namespace Deduplicator
             {
                 listview_Duplicates.SelectedItems.Add(f);
             }
-            _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
+            //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
 
         private void checkbox_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
@@ -94,7 +94,7 @@ namespace Deduplicator
             {
                 listview_Duplicates.SelectedItems.Remove(f);
             }
-            _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
+            //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
        
         private void listbox_ResultGrouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -113,9 +113,9 @@ namespace Deduplicator
                 FileAttribs grpatr = DataModel.ConvertGroupingNameToFileAttrib(cb.SelectedValue.ToString());
                 _dataModel.RegroupResultsByFileAttribute(grpatr);
                 _dataModel.ResultFilesCollection.Invalidate();
-                _dataModel.SearchStatus = string.Format("Regrouping complete. Regrouped {0} duplicates into {1} groups.",
-                                                       _dataModel.TotalDuplicatesCount, 
-                                                       _dataModel.ResultFilesCollection.Count);
+//                _dataModel.SearchStatus = string.Format("Regrouping complete. Regrouped {0} duplicates into {1} groups.",
+//                                                       _dataModel.TotalDuplicatesCount, 
+//                                                       _dataModel.ResultFilesCollection.Count);
                 _dataModel.ResultFilesCollection.Invalidate();
             }
         }

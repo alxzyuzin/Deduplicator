@@ -66,8 +66,10 @@
             <Grid.RowDefinitions>
                  <RowDefinition Height="60"/>
                <RowDefinition Height="*"/>
+                <!--
                 <RowDefinition Height="60"/>
                 <RowDefinition Height="30"/>
+                -->
             </Grid.RowDefinitions>
 
             <Grid x:Name="stackpanel_PageHeader" Grid.Row="0" Margin="20,5,20,15" 
@@ -92,7 +94,7 @@
                                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/-->
         </Border>
 
-        
+        <!--
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right"
                     Margin="20,5,20,15">
             <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" Content="Add folder" 
@@ -114,7 +116,7 @@
                    Text="{Binding SearchStatus}" HorizontalAlignment="Stretch"  VerticalAlignment="Center"
                    FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,0,30,0"/>
 
-
+        -->
         <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>
     </Border>

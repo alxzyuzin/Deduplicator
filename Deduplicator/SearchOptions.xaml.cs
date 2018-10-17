@@ -11,14 +11,14 @@ namespace Deduplicator
     /// </summary>
     public sealed partial class SearchOptions : Page
     {
-        MainPage mainPage = MainPage.Current;
+        //MainPage mainPage = MainPage.Current;
         public DataModel _dataModel;
 
         public SearchOptions()
         {
             this.InitializeComponent();
 
-            _dataModel = MainPage.Current.DataModel;
+          //  _dataModel = MainPage.Current.DataModel;
 
             stackpanel_FileSelectionOptions.DataContext = _dataModel.FileSelectionOptions;
             stackpanel_FileCompareOptions.DataContext = _dataModel.FileCompareOptions;

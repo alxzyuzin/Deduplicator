@@ -27,10 +27,10 @@ namespace Deduplicator
 
             var _previousSelectedItem = listbox_ResultGrouping.SelectedItem;
             GroupedFiles.Source = _dataModel.ResultFilesCollection;
-            listbox_ResultGrouping.ItemsSource = _dataModel.ResultGrouppingModes;
+//            listbox_ResultGrouping.ItemsSource = _dataModel.FileCompareOptions.ResultGrouppingModesList;
              
-            if (_dataModel.ResultGrouppingModes.Count > 0)
-                listbox_ResultGrouping.SelectedItem = _dataModel.CurrentGroupMode;
+//            if (_dataModel.FileCompareOptions.ResultGrouppingModesList.Count > 0)
+ //               listbox_ResultGrouping.SelectedItem = _dataModel.CurrentGroupMode;
             listview_Duplicates.InternalWidth = _mainPage.ActualWidth - 80;
 
             //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
@@ -108,11 +108,11 @@ namespace Deduplicator
             ComboBox cb = sender as ComboBox;
             if (cb.SelectedIndex >= 0)
             {
-                _dataModel.CurrentGroupMode = (string)cb.SelectedValue;
+//                _dataModel.CurrentGroupMode = (string)cb.SelectedValue;
 
-                FileAttribs grpatr = DataModel.ConvertGroupingNameToFileAttrib(cb.SelectedValue.ToString());
-                _dataModel.RegroupResultsByFileAttribute(grpatr);
-                _dataModel.ResultFilesCollection.Invalidate();
+                //FileAttribs grpatr = DataModel.ConvertGroupingNameToFileAttrib(cb.SelectedValue.ToString());
+                //_dataModel.RegroupResultsByFileAttribute(grpatr);
+                //_dataModel.ResultFilesCollection.Invalidate();
 //                _dataModel.SearchStatus = string.Format("Regrouping complete. Regrouped {0} duplicates into {1} groups.",
 //                                                       _dataModel.TotalDuplicatesCount, 
 //                                                       _dataModel.ResultFilesCollection.Count);

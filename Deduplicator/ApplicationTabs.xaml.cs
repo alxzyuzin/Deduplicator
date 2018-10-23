@@ -45,7 +45,16 @@ namespace Deduplicator
         }
 
         Tabs _activeTab;
+       
+        DataModel.SearchStatus _currentSearchStatus;
         private ResourceLoader _resldr = new ResourceLoader();
+
+        // Список аттрибутов по коорым будет выполняться сравнение файлов при поиске дубликатов
+        public FileCompareOptions FileCompareOptions = new FileCompareOptions();
+        // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
+        public FileSelectionOptions FileSelectionOptions = new FileSelectionOptions();
+
+        public Settings Settings = new Settings();
 
         CmdButtons _cmdButtonsVisualState;
         private CmdButtons CmdButtonsVisualState
@@ -122,7 +131,6 @@ namespace Deduplicator
             }
         }
 
-
         private bool _btnStartSearchEnabled = false;
         public bool BtnStartSearchEnabled
         {
@@ -197,84 +205,101 @@ namespace Deduplicator
         }
 
         private DataModel _dataModel = new DataModel(null);
-        //private Page _mainPage;
+
         
         public ApplicationTabs()
         {
             this.InitializeComponent();
             this.DataContext = this;
 
+            Settings.Restore();
+
+            FileSelectionOptions.AudioFileExtentions = Settings.AudioFileExtentions;
+            FileSelectionOptions.ImageFileExtentions = Settings.ImageFileExtentions;
+            FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
+
             // Tab "Where to search" data binding
             listview_Folders.ItemsSource = _dataModel.FoldersCollection;
 
             // Tab "Search options" data binding
-            stackpanel_FileSelectionOptions.DataContext = _dataModel.FileSelectionOptions;
-            stackpanel_FileCompareOptions.DataContext = _dataModel.FileCompareOptions;
-
-            listbox_ResultGroupingModes.ItemsSource = _dataModel.ResultGrouppingModes;
-            _dataModel.UpdateResultGruppingModesList();
-            listbox_ResultGroupingModes.SelectedItem = _dataModel.ResultGrouppingModes[0];
+            stackpanel_FileSelectionOptions.DataContext = FileSelectionOptions;
+            stackpanel_FileCompareOptions.DataContext = FileCompareOptions;
 
             // Tab "Search results" data binding
             GroupedFiles.Source = _dataModel.ResultFilesCollection;
-            listbox_ResultGrouping.ItemsSource = _dataModel.ResultGrouppingModes;
+            listbox_ResultGroupingModes.ItemsSource = FileCompareOptions.ResultGrouppingModesList;
+            
+            listbox_ResultGrouping.ItemsSource = FileCompareOptions.ResultGrouppingModesList;
+            listbox_ResultGrouping.DataContext = FileCompareOptions;
+            FileCompareOptions.CurrentGroupModeIndex = 0;
 
             // Tab "Settings" data binding
-            brd_SettingsTab.DataContext = _dataModel.Settings;
+            brd_SettingsTab.DataContext = Settings;
+
+            FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
 
             // Подпишемся на события модели данных
-             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
+            _dataModel.SearchStatusChanged += OnSearchStatusChanged;
+
+        }
+
+        private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+
+            if (e.PropertyName == "CurrentGroupModeIndex" && 
+                FileCompareOptions.CurrentGroupModeIndex >= 0
+                && _dataModel.ResultFilesCollection.Count >0)
+            {
+                await _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
+                _dataModel.ResultFilesCollection.Invalidate();
+            }
+
+            if (e.PropertyName == "CheckName" || e.PropertyName == "CheckSize" ||
+                e.PropertyName == "CheckCreationDateTime" || e.PropertyName == "CheckModificationDateTime" ||
+                e.PropertyName == "CheckContent")
+            {
+                // Если событие возникает в процессе отката изменений параметров то игнорируем его
+                if (FileCompareOptions.IsRollBack)
+                    return;
+
+                if (_dataModel.ResultFilesCollection.Count == 0)
+                {
+                    // Если поиск дубликатов не выполнялся то просто сохраняем новые значения
+                    FileCompareOptions.Commit();
+                }
+                else
+                {
+                    MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
+                    MsgBox.Message = "Changing file compare options will discard current search results.\n Would you like to change file compare options\n and clear results of last duplicates search?";
+                    MessageBoxButtons pressedButton = await MsgBox.Show();
+                    if (pressedButton == MessageBoxButtons.Yes)
+                    {
+                        FileCompareOptions.Commit();
+                        _dataModel.ClearSearchResults();
+                    }
+
+                    if (pressedButton == MessageBoxButtons.No)
+                    {
+                        FileCompareOptions.RollBack();
+                    }
+                }
+            }
 
         }
 
         private void OnSearchStatusChanged(object sender, DataModel.SearchStatus status)
         {
-            
             ApplicationStatus = _dataModel.SearchStatusInfo;
 
-            if (status == DataModel.SearchStatus.Completed)
+            if (status == DataModel.SearchStatus.SearchCompleted)
             {
                 BtnAddFolderEnabled = true;
                 BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0) ? true : false;
                 BtnStartSearchEnabled = (listview_Folders.Items.Count > 0) ? true : false;
                 BtnStopSearchEnabled = false;
                 _dataModel.ResultFilesCollection.Invalidate();
-                //listview_Duplicates.ItemsSource = _dataModel.ResultFilesCollection;
-                //GroupedFiles.Source = _dataModel.ResultFilesCollection;
             }
-            else
-            {
-                BtnAddFolderEnabled = false;
-                BtnDelFolderEnabled = false;
-                BtnStartSearchEnabled = false;
-                BtnStopSearchEnabled = true;
-            }
-           
-            
         }
-
-        //private void OnSearchCompleted(object sender, EventArgs e)
-        //{
-        //    ApplicationStatus = "Search completed";
-        //}
-
-        //private void OnSearchStarted(object sender, EventArgs e)
-        //{
-        //    ApplicationStatus = "Search started";
-        //}
-
-        /*
-public ApplicationTabs(Page page)
-{
-   this.InitializeComponent();
-
-   PageHeader.Text = "List of folders where to search duplicates";
-
-   EmptyContentMessage.Text = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
-
-}
-*/
-
 
         public void SwitchTo(Tabs tab)
         {
@@ -316,8 +341,7 @@ public ApplicationTabs(Page page)
                     break;
             }
         }
-
-
+        
         private async void button_AddFolder_Tapped(object sender, TappedRoutedEventArgs e)
         {
             FolderPicker folderPicker = new FolderPicker();
@@ -366,7 +390,7 @@ public ApplicationTabs(Page page)
                 String AccessToken = StorageApplicationPermissions.FutureAccessList.Add(newfolder);
                 _dataModel.FoldersCollection.Add(new Folder(newfolder.Path, false, AccessToken));
 
-                BtnStartSearchEnabled = (_dataModel.Status == DataModel.SearchStatus.Completed) ? true : false;
+                BtnStartSearchEnabled = (_dataModel.Status == DataModel.SearchStatus.SearchCompleted) ? true : false;
                 
                 EmptyContentMessageVisibility = Visibility.Collapsed;
             }
@@ -387,18 +411,15 @@ public ApplicationTabs(Page page)
 
             BtnDelFolderEnabled = false;
             // Если после удаления список фолдеров пуст то сделаем кнопку запуска поиска неактивной
-
-            bool folderListEmpty = (listview_Folders.Items.Count > 0) ? false : true;
-               
-            BtnStartSearchEnabled = folderListEmpty?false:true;
-            EmptyContentMessageVisibility = folderListEmpty?Visibility.Visible:Visibility.Collapsed;
+            BtnStartSearchEnabled = (listview_Folders.Items.Count > 0) ? true : false;
+            EmptyContentMessageVisibility = (listview_Folders.Items.Count > 0) ? Visibility.Collapsed:Visibility.Visible;
         }
-
-
+        
         private void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
 
         }
+
         private async void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
             // Проверим что если один из каталогов помечен как Primary то в списке должен присутствовать 
@@ -412,9 +433,9 @@ public ApplicationTabs(Page page)
             }
 
             // Проверим что выбран хотя бы один атрибут файла для сравнения при поиске дубликатов
-            if (!(_dataModel.FileCompareOptions.CheckName | _dataModel.FileCompareOptions.CheckSize |
-                _dataModel.FileCompareOptions.CheckContent | _dataModel.FileCompareOptions.CheckCreationDateTime |
-                _dataModel.FileCompareOptions.CheckModificationDateTime))
+            if (!(FileCompareOptions.CheckName | FileCompareOptions.CheckSize |
+                FileCompareOptions.CheckContent | FileCompareOptions.CheckCreationDateTime |
+                FileCompareOptions.CheckModificationDateTime))
             {
                 MsgBox.SetButtons(MessageBoxButtons.Close);
                 MsgBox.Message = _resldr.GetString("NoFileCompareAttributesChecked");
@@ -424,22 +445,28 @@ public ApplicationTabs(Page page)
             // Проверим есть ли результат предыдущего поиска и если есть покажем предупреждающее сообщение
             if (_dataModel.ResultFilesCollection.Count > 0)
             {
-                MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
-                MsgBox.Message = _resldr.GetString("DuplicatedAlreadyFound");
-                MessageBoxButtons pressedbutton = await MsgBox.Show();
+                 MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
+                 MsgBox.Message = _resldr.GetString("DuplicatedAlreadyFound");
+                 MessageBoxButtons pressedbutton = await MsgBox.Show();
                 if (pressedbutton == MessageBoxButtons.No)
                     return;
             }
             // await NavigateToSearchResults();
-            await _dataModel.StartSearch();
+            BtnAddFolderEnabled = false;
+            BtnDelFolderEnabled = false;
+            BtnStartSearchEnabled = false;
+            BtnStopSearchEnabled = true;
+            await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.CompareAttribsList);
         }
+
         private async void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
             await _dataModel.StopSearch();
         }
+
         private void button_SaveSettings_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            _dataModel.Settings.Save();
+            Settings.Save();
         }
         //---------------------------------------------------------------------------
         #region Where To Search Tab event handlers
@@ -468,10 +495,9 @@ public ApplicationTabs(Page page)
             }
         }
 
-
         private void listvew_Folders_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0 && _dataModel.Status == DataModel.SearchStatus.Completed) ? true : false;
+            BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0 && _dataModel.Status == DataModel.SearchStatus.SearchCompleted) ? true : false;
         }
 
         #endregion
@@ -503,25 +529,46 @@ public ApplicationTabs(Page page)
 
         private void listbox_ResultGrouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-          //  if (_doNotRegroup)
-          //  {
-          //      _doNotRegroup = false;
-          //      return;
-          //  }
+ 
+           int s = FileCompareOptions.CurrentGroupModeIndex;
+            //            int i = listbox_ResultGrouping.SelectedIndex;
 
-            ComboBox cb = sender as ComboBox;
-            if (cb.SelectedIndex >= 0)
+            // При включении/выключении CheckBox в аттрибутах сравнения файлов происходит добавление атрибута
+            // в список атрибутов по которым может быть сгруппирован результат поиска и генерируется 
+            // событие SelectionChanged. При этом SelectedIndex становится равным -1
+            // При этом результат последнего поиска теряет смысл в контексте выбранных атрибутов сравнения
+            //
+
+            //if (FileCompareOptions.CurrentGroupModeIndex < 0)
+            //{
+            //    MsgBox.SetButtons(MessageBoxButtons.Yes|MessageBoxButtons.No);
+            //    MsgBox.Message = "Changing file compare options will discard current search results.\n Would you like to change file compare options\n and clear results of last duplicates search?";
+            //    MessageBoxButtons pressedButton =  await MsgBox.Show();
+            //    if (pressedButton == MessageBoxButtons.Yes)
+            //    {
+            //        FileCompareOptions.Commit();
+            //        _dataModel.ResultFilesCollection.Clear();
+            //    }
+
+            //    if (pressedButton == MessageBoxButtons.Yes)
+            //    {
+            //        FileCompareOptions.RollBack();
+            //        _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
+            //        _dataModel.ResultFilesCollection.Invalidate();
+            //    }
+               
+
+            //}
+            if (FileCompareOptions.CurrentGroupModeIndex >= 0 && _dataModel.ResultFilesCollection.Count>0)
             {
-                _dataModel.CurrentGroupMode = (string)cb.SelectedValue;
 
-                FileAttribs grpatr = DataModel.ConvertGroupingNameToFileAttrib(cb.SelectedValue.ToString());
-                _dataModel.RegroupResultsByFileAttribute(grpatr);
+                _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
                 _dataModel.ResultFilesCollection.Invalidate();
-//                _dataModel.SearchStatus = string.Format("Regrouping complete. Regrouped {0} duplicates into {1} groups.",
-//                                                       _dataModel.TotalDuplicatesCount,
-//                                                       _dataModel.ResultFilesCollection.Count);
-                _dataModel.ResultFilesCollection.Invalidate();
+
             }
+//            else
+//                FileCompareOptions.CurrentGroupModeIndex = 0;
+
         }
 
         private void listview_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
@@ -532,15 +579,16 @@ public ApplicationTabs(Page page)
                 listview_Duplicates.SelectedItems.Add(e.ClickedItem);
           //  _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
-
         #endregion
-
         //---------------------------------------------------------------------------
         #region Search Options Tab event handlers
         //---------------------------------------------------------------------------
         private void listbox_ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _dataModel.CurrentGroupMode = ((string)((ComboBox)sender).SelectedValue);
+            //SelectedIndex = "{Binding CurrentGroupModeIndex}"
+            //listbox_ResultGrouping.SelectedIndex = ((int)((ComboBox)sender).SelectedIndex);
+//            _dataModel.FileCompareOptions.CurrentGroupModeIndex = ((int)((ComboBox)sender).SelectedIndex);
+            //_dataModel.FileCompareOptions.CurrentGroupMode = ((string)((ComboBox)sender).SelectedValue);
         }
 
         #endregion

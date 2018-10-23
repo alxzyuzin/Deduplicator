@@ -89,35 +89,10 @@
         </Grid>
 
         <Border x:Name="WorkArea" Grid.Row="1">
-                <!--local:ApplicationTabs Grid.Row="2" Grid.Column="0" Margin="30,0,30,0"/-->
-                <!--UserControl x:Name="WorkArea" Margin="0,3,0,2" IsTabStop="False" 
-                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/-->
-        </Border>
+                <local:ApplicationTabs x:Name="appTabs" Grid.Row="2" Grid.Column="0" Margin="30,0,30,0"/>
+         </Border>
 
-        <!--
-        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right"
-                    Margin="20,5,20,15">
-            <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" Content="Add folder" 
-                        Tapped="button_AddFolder_Tapped"/>
-            <Button x:Name="button_DelFolder"  Style="{StaticResource CmdButtonStyle}" Content="Delete selected folders"
-                         IsEnabled="False" Tapped="button_DelFolder_Tapped"/>
-            <Button x:Name="button_DelSelectedFiles" Style="{StaticResource CmdButtonStyle}" 
-                        Content="Delete selected files" Visibility="Collapsed" IsEnabled="False"
-                        Tapped="button_DeleteSelectedFiles_Tapped"/>
-            <Button x:Name="button_StartSearch" Content="Start search" Style="{StaticResource CmdButtonStyle}"
-                        Tapped="button_StartSearch_Tapped"/>
-            <Button x:Name="button_CancelSearch" Content="Cancel search" Style="{StaticResource CmdButtonStyle}"
-                        Tapped="button_CancelSearch_Tapped"/>
-            <Button x:Name="button_SaveSettings" Style="{StaticResource CmdButtonStyle}" Content="Save settings" 
-                       Tapped="button_SaveSettings_Tapped" />
-        </StackPanel>
-
-        <TextBlock x:Name="textbox_SearchStatus" Grid.Row="3"
-                   Text="{Binding SearchStatus}" HorizontalAlignment="Stretch"  VerticalAlignment="Center"
-                   FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,0,30,0"/>
-
-        -->
-        <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
+          <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>
     </Border>
 </Page>

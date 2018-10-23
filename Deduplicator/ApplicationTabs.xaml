@@ -18,7 +18,7 @@
         
         <Style x:Key="TextBlockStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontSize" Value="18"/>
         </Style>
 
         <Style x:Key="TextBlockStatusLineStyle" TargetType="TextBlock">
@@ -55,9 +55,11 @@
         <Style x:Key="TextBoxStyle" TargetType="TextBox">
             <Setter Property="Margin" Value="40,0,40,10"/>
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="10"/>
         </Style>
-        
+
+       
+
         <DataTemplate x:Key="FolderTemplate" >
 
             <Grid x:Name="Folder" Height="80" HorizontalAlignment="Stretch">
@@ -108,19 +110,20 @@
             <Grid x:Name="File" Height="60" HorizontalAlignment="Stretch" Margin="0,0,25,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="460"/>
+                    <ColumnDefinition Width="520"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Name}"  Style="{StaticResource TextBlockStyle}"   TextWrapping="WrapWholeWords"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Name}"  
+                           Style="{StaticResource TextBlockStyle}" TextWrapping="WrapWholeWords"/>
                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="180"/>
-                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="210"/>
+                            <ColumnDefinition Width="210"/>
                             <ColumnDefinition Width="100"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Margin="5,5,0,0" Text="{Binding DateCreated}"  Style="{StaticResource TextBlockStyle}"  />
@@ -190,20 +193,21 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="60"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="59"/>
+            <RowDefinition Height="35"/>
         </Grid.RowDefinitions>
 
         <TextBlock x:Name="tbx_TabHeader" Grid.Row="0" Text="{Binding TabHeader}" 
                    Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
 
         <StackPanel x:Name="stackpanel_GroupingSelector" Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,0,0">
-            <TextBlock x:Name="txtblk_GroupBy" Text="Group files by" Style="{StaticResource TextBlockTabHeaderStyle}" Width="130"/>
-            <ComboBox  x:Name="listbox_ResultGrouping"  Width="150px"
+            <TextBlock x:Name="txtblk_GroupBy" Text="Group files by " Style="{StaticResource TextBlockTabHeaderStyle}" Width="150"/>
+            <ComboBox  x:Name="listbox_ResultGrouping"  Width="180px" FontSize="16" FontWeight="Medium"
+                       SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"      
                        SelectionChanged="listbox_ResultGrouping_SelectionChanged"/>
         </StackPanel>
 
-        <Border x:Name="WhereToSearchtab" Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0">
+        <Border x:Name="WhereToSearchtab" Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
             <ListView x:Name="listview_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
                       ScrollViewer.VerticalScrollMode="Enabled"
@@ -216,7 +220,7 @@
             </ListView>
         </Border>
 
-        <Grid x:Name="SearchOptionsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
+        <Grid x:Name="SearchOptionsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -261,9 +265,10 @@
                 <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
                 <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
-                <ComboBox  x:Name="listbox_ResultGroupingModes" Width="250" FontSize="18" FontWeight="Medium"
-                              HorizontalAlignment="Left" Margin="30,5,0,0"
-                               SelectionChanged="listbox_ResultGroupingModes_SelectionChanged">
+                <ComboBox  x:Name="listbox_ResultGroupingModes" Width="250" FontSize="16" FontWeight="Medium"
+                           HorizontalAlignment="Left" Margin="30,5,0,0"
+                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"                                   
+                           SelectionChanged="listbox_ResultGroupingModes_SelectionChanged">
                 </ComboBox>
             </StackPanel>
         </Grid>
@@ -279,9 +284,9 @@
             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="180"/>
-                        <ColumnDefinition Width="180"/>
-                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="210"/>
+                        <ColumnDefinition Width="210"/>
+                        <ColumnDefinition Width="150"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0"  Text="Created"  Style="{StaticResource TextBlockHeaderStyle}"/>
                     <TextBlock Grid.Column="1"  Text="Modified" Style="{StaticResource TextBlockHeaderStyle}"/>
@@ -323,7 +328,7 @@
                    Text="{Binding EmptyContentMessage}" TextWrapping="WrapWholeWords"
                    Visibility="{Binding EmptyContentMessageVisibility}"/>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,5,20,15">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
             <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" 
                     Content="Add folder" Tapped="button_AddFolder_Tapped" Visibility="{Binding BtnAddFolderVisibility}"
                     IsEnabled="{Binding BtnAddFolderEnabled}"/>
@@ -342,8 +347,8 @@
                     Content="Save settings" Tapped="button_SaveSettings_Tapped" Visibility="{Binding BtnSaveSettingsVisibility}"/>
         </StackPanel>
                 
-        <TextBlock x:Name="SearchStatus" Grid.Row="4" 
-                   Text="{Binding ApplicationStatus}" FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,4,30,0"/>
+        <TextBlock x:Name="SearchStatus" Grid.Row="3" 
+                   Text="{Binding ApplicationStatus}" FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,4,30,4"/>
                 
         <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>

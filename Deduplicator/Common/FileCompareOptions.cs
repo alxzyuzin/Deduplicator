@@ -104,7 +104,7 @@ namespace Deduplicator.Common
         private List<FileAttribs> _compareAttribs = new List<FileAttribs>();
         public List<FileAttribs> CompareAttribsList { get { return _compareAttribs; } }
 
-        private FileAttribs _currentGroupModeAttrib= FileAttribs.None;
+//        private FileAttribs _currentGroupModeAttrib= FileAttribs.None;
         public FileAttribs CurrentGroupModeAttrib
         {
             get

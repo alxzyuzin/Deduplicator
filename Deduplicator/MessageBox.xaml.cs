@@ -44,13 +44,33 @@ namespace Deduplicator
             
         }
 
+        public MessageBox(int width, int height)
+        {
+            this.InitializeComponent();
+
+            GridMain.DataContext = this;
+            GridMain.ColumnDefinitions[1].Width = new GridLength(width);
+            GridMain.RowDefinitions[1].Height = new GridLength(height);
+
+            
+
+            button_Yes.Visibility = Visibility.Collapsed;
+            button_No.Visibility = Visibility.Collapsed;
+            button_Continue.Visibility = Visibility.Collapsed;
+            button_Cancel.Visibility = Visibility.Collapsed;
+            button_Close.Visibility = Visibility.Collapsed;
+
+
+        }
+
         public string Message
         {
             get { return (string)GetValue(MessageProperty); }
             set { SetValue(MessageProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Message.  This enables animation, styling, binding, etc...
+        // Using a DependencyProperty as the backing store for Message. 
+        //This enables animation, styling, binding, etc...
         public static readonly DependencyProperty MessageProperty =
             DependencyProperty.Register("Message", typeof(string), typeof(MessageBox), null);
 

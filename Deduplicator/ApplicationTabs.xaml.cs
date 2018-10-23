@@ -32,7 +32,7 @@ namespace Deduplicator
             SaveSettings     =  8,
             AddFolder        = 16,
             DelFolder        = 32
-        }
+         }
 
         [Flags]
         public enum Tabs { WhereToSearch = 1, SearchOptions = 2, SearchResults = 4, Settings = 8}
@@ -80,7 +80,6 @@ namespace Deduplicator
         {
             get { return _cmdButtonsVisualState.HasFlag(CmdButtons.DelSelectedFiles) ? Visibility.Visible : Visibility.Collapsed; }
         }
-
         public Visibility BtnStartSearchVisibility
         {
             get { return _cmdButtonsVisualState.HasFlag(CmdButtons.StartSearch) ? Visibility.Visible : Visibility.Collapsed; }
@@ -102,6 +101,34 @@ namespace Deduplicator
             get { return _cmdButtonsVisualState.HasFlag(CmdButtons.DelFolder) ? Visibility.Visible : Visibility.Collapsed; }
         }
 
+        private Visibility _groupingSelectorVisibility = Visibility.Collapsed;
+        public Visibility GroupingSelectorVisibility
+        {
+            get { return _groupingSelectorVisibility; }
+            private set
+            {
+                if (_groupingSelectorVisibility!=value)
+                {
+                    _groupingSelectorVisibility = value;
+                    NotifyPropertyChanged("GroupingSelectorVisibility");
+                    NotifyPropertyChanged("GroupingSelectorText");
+                }
+            }
+        }
+
+        private Visibility _groupByPrimaryFolderVisibility = Visibility.Collapsed;
+        public Visibility GroupByPrimaryFolderVisibility
+        {
+            get { return _groupByPrimaryFolderVisibility; }
+            private set
+            {
+                if (_groupByPrimaryFolderVisibility != value)
+                {
+                    _groupByPrimaryFolderVisibility = value;
+                    NotifyPropertyChanged("GroupByPrimaryFolderVisibility");
+                 }
+            }
+        }
 
         public bool _btnAddFolderEnabled = true;
         public bool BtnAddFolderEnabled
@@ -162,6 +189,24 @@ namespace Deduplicator
                 {
                     _btnStopSearchEnabled = value;
                     NotifyPropertyChanged("BtnStopSearchEnabled");
+                }
+            }
+        }
+
+        private bool _btnDelFilesEnabled = false;
+        public bool BtnDelFilesEnabled
+        {
+            get
+            {
+                return _btnDelFilesEnabled;
+
+            }
+            set
+            {
+                if (_btnDelFilesEnabled != value)
+                {
+                    _btnDelFilesEnabled = value;
+                    NotifyPropertyChanged("BtnDelFilesEnabled");
                 }
             }
         }
@@ -250,15 +295,21 @@ namespace Deduplicator
                 FileCompareOptions.CurrentGroupModeIndex >= 0
                 && _dataModel.ResultFilesCollection.Count >0)
             {
+                // Изменилось выбранное значение в Listbox на странице опций поиска или на странице
+                // просмотра результатов поиска если изменение произошло не в результате изменения одного из своиств
+                // "CheckName" "CheckSize" "CheckCreationDateTime" "CheckModificationDateTime" "CheckContent"
+                // и список дубликатов не пустой выполняем перегруппировку
+                // При включении/выключении CheckBox в аттрибутах сравнения файлов происходит добавление атрибута
+                // в список атрибутов по которым может быть сгруппирован результат поиска и генерируется 
+                // событие SelectionChanged. При этом SelectedIndex становится равным -1
                 await _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
-                _dataModel.ResultFilesCollection.Invalidate();
             }
 
             if (e.PropertyName == "CheckName" || e.PropertyName == "CheckSize" ||
                 e.PropertyName == "CheckCreationDateTime" || e.PropertyName == "CheckModificationDateTime" ||
                 e.PropertyName == "CheckContent")
             {
-                // Если событие возникает в процессе отката изменений параметров то игнорируем его
+                 // Если событие возникает в процессе отката изменений параметров то игнорируем его
                 if (FileCompareOptions.IsRollBack)
                     return;
 
@@ -309,7 +360,9 @@ namespace Deduplicator
             SearchOptionsTab.Visibility = Visibility.Collapsed;
             SearchResultsTab.Visibility = Visibility.Collapsed;
             brd_SettingsTab.Visibility = Visibility.Collapsed;
-            stackpanel_GroupingSelector.Visibility = Visibility.Collapsed;
+            GroupingSelectorVisibility = Visibility.Collapsed;
+            GroupByPrimaryFolderVisibility = Visibility.Collapsed;
+            
 
             switch (tab)
             {
@@ -329,7 +382,17 @@ namespace Deduplicator
                 case Tabs.SearchResults:
                     SearchResultsTab.Visibility = Visibility.Visible;
                     TabHeader = "Search results.";
-                    stackpanel_GroupingSelector.Visibility = Visibility.Visible;
+                    if (_dataModel.PrimaryFolder==null)
+                    {
+                        GroupingSelectorVisibility = Visibility.Visible;
+                        GroupByPrimaryFolderVisibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        GroupingSelectorVisibility = Visibility.Collapsed;
+                        GroupByPrimaryFolderVisibility = Visibility.Visible;
+                    }
+//                    stackpanel_GroupingSelector.Visibility = Visibility.Visible;
                     CmdButtonsVisualState = CmdButtons.DelSelectedFiles | CmdButtons.StartSearch | CmdButtons.CancelSearch;
                     EmptyContentMessage = "No duplicates found.";
                     break;
@@ -456,6 +519,8 @@ namespace Deduplicator
             BtnDelFolderEnabled = false;
             BtnStartSearchEnabled = false;
             BtnStopSearchEnabled = true;
+
+ //           GroupingSelectorVisibility = _dataModel.PrimaryFolder != null ? Visibility.Collapsed : Visibility.Visible;
             await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.CompareAttribsList);
         }
 
@@ -494,6 +559,7 @@ namespace Deduplicator
                 _dataModel.PrimaryFolder = null;
             }
         }
+        
 
         private void listvew_Folders_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -513,6 +579,8 @@ namespace Deduplicator
             {
                 listview_Duplicates.SelectedItems.Add(f);
             }
+
+            BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
             //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
 
@@ -524,51 +592,8 @@ namespace Deduplicator
             {
                 listview_Duplicates.SelectedItems.Remove(f);
             }
+            BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
             //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
-        }
-
-        private void listbox_ResultGrouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
- 
-           int s = FileCompareOptions.CurrentGroupModeIndex;
-            //            int i = listbox_ResultGrouping.SelectedIndex;
-
-            // При включении/выключении CheckBox в аттрибутах сравнения файлов происходит добавление атрибута
-            // в список атрибутов по которым может быть сгруппирован результат поиска и генерируется 
-            // событие SelectionChanged. При этом SelectedIndex становится равным -1
-            // При этом результат последнего поиска теряет смысл в контексте выбранных атрибутов сравнения
-            //
-
-            //if (FileCompareOptions.CurrentGroupModeIndex < 0)
-            //{
-            //    MsgBox.SetButtons(MessageBoxButtons.Yes|MessageBoxButtons.No);
-            //    MsgBox.Message = "Changing file compare options will discard current search results.\n Would you like to change file compare options\n and clear results of last duplicates search?";
-            //    MessageBoxButtons pressedButton =  await MsgBox.Show();
-            //    if (pressedButton == MessageBoxButtons.Yes)
-            //    {
-            //        FileCompareOptions.Commit();
-            //        _dataModel.ResultFilesCollection.Clear();
-            //    }
-
-            //    if (pressedButton == MessageBoxButtons.Yes)
-            //    {
-            //        FileCompareOptions.RollBack();
-            //        _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
-            //        _dataModel.ResultFilesCollection.Invalidate();
-            //    }
-               
-
-            //}
-            if (FileCompareOptions.CurrentGroupModeIndex >= 0 && _dataModel.ResultFilesCollection.Count>0)
-            {
-
-                _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
-                _dataModel.ResultFilesCollection.Invalidate();
-
-            }
-//            else
-//                FileCompareOptions.CurrentGroupModeIndex = 0;
-
         }
 
         private void listview_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
@@ -577,20 +602,33 @@ namespace Deduplicator
                 listview_Duplicates.SelectedItems.Remove(e.ClickedItem);
             else
                 listview_Duplicates.SelectedItems.Add(e.ClickedItem);
-          //  _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
-        }
-        #endregion
-        //---------------------------------------------------------------------------
-        #region Search Options Tab event handlers
-        //---------------------------------------------------------------------------
-        private void listbox_ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //SelectedIndex = "{Binding CurrentGroupModeIndex}"
-            //listbox_ResultGrouping.SelectedIndex = ((int)((ComboBox)sender).SelectedIndex);
-//            _dataModel.FileCompareOptions.CurrentGroupModeIndex = ((int)((ComboBox)sender).SelectedIndex);
-            //_dataModel.FileCompareOptions.CurrentGroupMode = ((string)((ComboBox)sender).SelectedValue);
+
+            BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
+            //  _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
 
+        private async void DeleteFiles()
+        {
+            List<File> deletedFiles = new List<File>();
+            foreach (File file in listview_Duplicates.SelectedItems)
+            {
+                if (!file.IsProtected)
+                {
+                    StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
+                    await f.DeleteAsync(StorageDeleteOption.Default);
+                    deletedFiles.Add(file);
+                }
+
+            }
+            foreach (File file in deletedFiles)
+            {
+                foreach (var group in _dataModel.ResultFilesCollection)
+                {
+                    if (group.Contains(file))
+                        group.Remove(file);
+                }
+            }
+        }
         #endregion
     }
 

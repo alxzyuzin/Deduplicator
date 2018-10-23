@@ -14,7 +14,6 @@ namespace Deduplicator
     /// </summary>
     /// 
 
-
     public sealed partial class MainPage : Page
     {
         [Flags]

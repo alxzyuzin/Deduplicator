@@ -1,0 +1,369 @@
+﻿<UserControl
+    x:Class="Deduplicator.ApplicationTabs"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Deduplicator"
+    xmlns:common="using:Deduplicator.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="800"
+    d:DesignWidth="1000">
+
+    <UserControl.Resources>
+        <CollectionViewSource x:Name="GroupedFiles" IsSourceGrouped="true"/>
+        
+        <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
+        <SolidColorBrush x:Key="MainBackgroundBrush" Color="#FF303030"/>
+        
+        <Style x:Key="TextBlockStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontSize" Value="18"/>
+        </Style>
+
+        <Style x:Key="TextBlockStatusLineStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="ExtraLight" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="50,10,0,0" />
+        </Style>
+
+        <Style x:Key="TextBlockTabHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Margin" Value="5,5,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        
+        <Style x:Key="TextBlockHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Margin" Value="5,5,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="TextBlockFileGroupHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize"   Value="18"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin"     Value="15,5,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Margin" Value="40,0,40,10"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontSize" Value="10"/>
+        </Style>
+
+       
+
+        <DataTemplate x:Key="FolderTemplate" >
+
+            <Grid x:Name="Folder" Height="80" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="750"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="5,5,0,0" 
+                          Text="{Binding FullName}" HorizontalAlignment="Stretch" Foreground="Orange"  
+                          TextWrapping="WrapWholeWords" Style="{StaticResource TextBlockStyle}" />
+                <!--Border HorizontalAlignment="Right"  Grid.Column="1"-->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="1">
+                    <ToggleSwitch x:Name="toggleswitch_SearchInSubfolders"  
+                                     Style="{StaticResource ToggleSwitchStyle}"
+                                     OnContent="Search in subfolders"      
+                    	             OffContent="Search in this folder only"
+                                     FontSize="20" FontWeight="Normal"
+                                     Toggled="toggleswitch_SetPrimary_Toggled"
+                                     Margin="0,-15,10,0"
+                                     IsOn="{Binding SearchInSubfolders, Mode=TwoWay}"/>
+                    <ToggleSwitch x:Name="toggleswitch_SetPrimary"  
+                                     Style="{StaticResource ToggleSwitchStyle}"
+                                     OnContent="Primary"      
+                    	             OffContent="Set as primary"
+                                     FontSize="20" FontWeight="Normal"
+                                     Toggled="toggleswitch_SetPrimary_Toggled"
+                                     Margin="0,-15,10,0"
+                                     IsOn="{Binding IsPrimary, Mode=TwoWay}"/>
+                    <ToggleSwitch x:Name="toggleswitch_Protected"  
+                                     Style="{StaticResource ToggleSwitchStyle}"
+                                     OnContent="Protected"      
+                    	             OffContent="Protect"
+                                     FontSize="20" FontWeight="Normal"
+                                     Toggled="toggleswitch_SetPrimary_Toggled"
+                                     Margin="0,-15,10,0"
+                                     IsOn="{Binding Protected, Mode=TwoWay}"/>
+                </StackPanel>
+                <!--/-->
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FileTemplate">
+            <Grid x:Name="File" Height="60" HorizontalAlignment="Stretch" Margin="0,0,25,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="520"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Name}"  
+                           Style="{StaticResource TextBlockStyle}" TextWrapping="WrapWholeWords"/>
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="210"/>
+                            <ColumnDefinition Width="210"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Margin="5,5,0,0" Text="{Binding DateCreated}"  Style="{StaticResource TextBlockStyle}"  />
+                        <TextBlock Grid.Column="1" Margin="5,5,0,0" Text="{Binding DateModifyed}"  Style="{StaticResource TextBlockStyle}" />
+                        <TextBlock Grid.Column="2" Margin="5,5,0,0" Text="{Binding Size}"  Style="{StaticResource TextBlockStyle}"   HorizontalAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+                <TextBlock Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
+                           TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" />
+                <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">
+                    <TextBlock Margin="5,5,0,0" Text="{Binding Protected}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FileGroupHeaderTemplate">
+            <Grid HorizontalAlignment="Stretch"  Height="40" Width="{Binding ActualWidth, ElementName=listview_Duplicates}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="700"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text='{Binding Name}' Grid.Column="0"  
+                           Style="{StaticResource TextBlockFileGroupHeaderStyle}"
+                           HorizontalAlignment="Stretch" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock  Text="Files in group  "    Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
+                    <TextBlock  Text="{Binding Count}"     Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
+                    <TextBlock  Text=".  Total group file size " Style="{StaticResource TextBlockFileGroupHeaderStyle}" Margin="0,5,0,0"/>
+                    <TextBlock  Text="{Binding TotalSize}"       Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
+                    <TextBlock  Text=" byte."                    Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
+                    <CheckBox x:Name="checkbox_SelectGroup" Content="Select group" Margin="40,0,30,0" 
+                              FontWeight="SemiBold" FontSize ="16" VerticalAlignment="Center"
+                              FlowDirection="RightToLeft" Foreground="Orange"
+                              Checked="checkbox_SelectGroup_Checked" 
+                              Unchecked="checkbox_SelectGroup_Unchecked"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid x:Name="gr_Main" VerticalAlignment="Stretch" >
+
+        <Grid.Resources>
+
+            <Storyboard x:Name="Show">
+                <DoubleAnimation Storyboard.TargetName="ContentRoot"
+                             Storyboard.TargetProperty="Opacity" From="0.0" To="1.0" Duration="0:0:0.60"/>
+            </Storyboard>
+
+            <Storyboard x:Name="Hide">
+                <DoubleAnimation Storyboard.TargetName="ContentRoot"
+                             Storyboard.TargetProperty="Opacity" From="1.0" To="0.0" Duration="0:0:0.60"/>
+            </Storyboard>
+
+        </Grid.Resources>
+        <!--
+            <Grid.Transitions>
+                <TransitionCollection>
+                    <PaneThemeTransition Edge="Top"/>
+                </TransitionCollection>
+            </Grid.Transitions>
+            -->
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="59"/>
+            <RowDefinition Height="35"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="tbx_TabHeader" Grid.Row="0" Text="{Binding TabHeader}" 
+                   Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
+
+        <StackPanel x:Name="stackpanel_GroupingSelector" Grid.Row="0" HorizontalAlignment="Right" 
+                    Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupingSelectorVisibility}">
+                     <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
+                       Width="150" FontSize="18"/>
+                    <ComboBox  x:Name="listbox_ResultGrouping"  Width="180px" FontSize="16" FontWeight="Medium"
+                       SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"/>
+        </StackPanel>
+        
+        <StackPanel x:Name="stackpanel_GroupByPrimaryFolder" Grid.Row="0" HorizontalAlignment="Right" 
+                    Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupByPrimaryFolderVisibility}">
+            <TextBlock Text="Files grouped by names of files in primary folder" FontSize="18"
+                       Style="{StaticResource TextBlockTabHeaderStyle}"/>
+        </StackPanel>
+
+        
+
+        <Border x:Name="WhereToSearchtab" Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
+            <ListView x:Name="listview_Folders" Grid.Row="0" VerticalAlignment="Stretch"
+                      ItemTemplate="{StaticResource FolderTemplate}"
+                      ScrollViewer.VerticalScrollMode="Enabled"
+                      SelectionMode="Multiple"
+                      Margin="0,5,0,0"
+                      ItemContainerStyle="{StaticResource ListViewItemStyle}"
+                      Tapped="listvew_Folders_Tapped">
+                <ListViewItem/>
+                <ListViewItem/>
+            </ListView>
+        </Border>
+
+        <Grid x:Name="SearchOptionsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="stackpanel_FileSelectionOptions" Grid.Column="0" Margin="20,0,10,0">
+                <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
+                           FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
+                <RadioButton x:Name="rb_AllFiles" Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
+                             FontWeight="Medium"  GroupName="FileSelection"
+                             IsChecked="{Binding Path=AllFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                <RadioButton x:Name="rb_SpecificFiles" Content="  specific files"  Height="35" FontSize="18" 
+                             FontWeight="Medium" Margin="30,0,0,0" GroupName="FileSelection"
+                             IsChecked="{Binding Path=SpecificFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                <CheckBox    Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding ImageFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  audio files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AudioFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  video files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding VideoFiles , Mode=TwoWay}"/>
+                <TextBlock   Text="with extensions:" FontSize="18" Height="32" FontWeight="Medium"  Margin="50,10,0,0"/>
+                <TextBox     x:Name="textbox_SpecificExtentions" FontSize="18" FontWeight="Normal" 
+                             Margin="70,0,40,0"  Height="35" MinWidth="200"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             PlaceholderText="Type here list of file extentions separated with semicolon"
+                             Text="{Binding SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                <TextBlock/>
+                <TextBlock   Text="Exclude extensions:" FontSize="18" FontWeight="Medium"  Margin="0,10,0,0"/>
+                <TextBox     x:Name="textbox_ExcludeExtentions" FontSize="18" FontWeight="Normal" Margin="20,0,40,0"
+                             Height="35" MinWidth="200" 
+                             PlaceholderText="Type here list of file extentions separated with semicolon"
+                             Text="{Binding ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+            </StackPanel>
+            <StackPanel x:Name="stackpanel_FileCompareOptions" Grid.Column="1" Margin="10,0,20,0">
+                <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
+                                   FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
+                <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckName, Mode=TwoWay}"/>
+                <CheckBox Content="  Size" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckSize, Mode=TwoWay}"/>
+                <CheckBox Content="  Creation date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckCreationDateTime, Mode=TwoWay}"/>
+                <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
+                <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
+                <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
+                <ComboBox  x:Name="listbox_ResultGroupingModes" Width="250" FontSize="16" FontWeight="Medium"
+                           HorizontalAlignment="Left" Margin="30,5,0,0"
+                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}">
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="SearchResultsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0"  Text="File"  Style="{StaticResource  TextBlockHeaderStyle}"
+                       Padding="40,0,0,0" HorizontalAlignment="Left"/>
+            <!-- Заголовок списка файлов -->
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="210"/>
+                        <ColumnDefinition Width="210"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"  Text="Created"  Style="{StaticResource TextBlockHeaderStyle}"/>
+                    <TextBlock Grid.Column="1"  Text="Modified" Style="{StaticResource TextBlockHeaderStyle}"/>
+                    <TextBlock Grid.Column="2"  Text="Size"     Style="{StaticResource TextBlockHeaderStyle}"/>
+                </Grid>
+            </StackPanel>
+        
+        <Border BorderBrush="White" Grid.Row="1" BorderThickness="1" Margin="0,0,0,5">
+            <common:GListView x:Name="listview_Duplicates"  Grid.Row="1"  BorderBrush="White" BorderThickness="1"
+                          VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding Source={StaticResource GroupedFiles}}"
+                          ItemContainerStyle="{StaticResource ListViewItemStyle}"
+                          ItemTemplate="{StaticResource FileTemplate}"
+                          SelectionMode="Multiple" 
+                          ItemClick="listview_Duplicates_ItemClick"
+                          IsItemClickEnabled="True">
+
+                <ListView.GroupStyle>
+                    <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}"/>
+                </ListView.GroupStyle>
+             </common:GListView>
+        </Border>
+    </Grid>
+
+        <Border x:Name="brd_SettingsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
+                BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" d:IsHidden="True">
+            <StackPanel >
+                <TextBlock   Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox    x:Name="textbox_ImageFileExtentions" Text="{Binding ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
+                <TextBlock    Text="Audio files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox    x:Name="textbox_AudioFileExtentions" Text="{Binding AudioFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+                <TextBlock    Text="Video files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox    x:Name="textbox_VideoFileExtentions" Text="{Binding VideoFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+            </StackPanel>
+        </Border>
+
+        <TextBlock x:Name="tbx_EmptyContentMessage"  Grid.Row="1" Height="60"
+                   FontSize="20" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Center"
+                   Text="{Binding EmptyContentMessage}" TextWrapping="WrapWholeWords"
+                   Visibility="{Binding EmptyContentMessageVisibility}"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
+            <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" 
+                    Content="Add folder" Tapped="button_AddFolder_Tapped" 
+                    Visibility="{Binding BtnAddFolderVisibility}"
+                    IsEnabled="{Binding BtnAddFolderEnabled}"/>
+            <Button x:Name="button_DelFolder"  Style="{StaticResource CmdButtonStyle}" 
+                    Content="Delete selected folders" Tapped="button_DelFolder_Tapped"
+                    Visibility="{Binding BtnDelFolderVisibility}"
+                    IsEnabled="{Binding BtnDelFolderEnabled}"/>
+            <Button x:Name="button_DelSelectedFiles" Style="{StaticResource CmdButtonStyle}" 
+                    Content="Delete selected files" Tapped="button_DeleteSelectedFiles_Tapped" 
+                    Visibility="{Binding BtnDelSelectedFilesVisibility}"
+                    IsEnabled="{Binding BtnDelFilesEnabled}"/>
+            <Button x:Name="button_StartSearch" Style="{StaticResource CmdButtonStyle}"
+                    Content="Start search" Tapped="button_StartSearch_Tapped" 
+                    Visibility="{Binding BtnStartSearchVisibility}"
+                    IsEnabled="{Binding BtnStartSearchEnabled}"/>
+            <Button x:Name="button_CancelSearch" Style="{StaticResource CmdButtonStyle}"
+                    Content="Cancel search" Tapped="button_CancelSearch_Tapped" Visibility="{Binding BtnCancelSearchVisibility}"
+                    IsEnabled="{Binding BtnStopSearchEnabled}"/>
+            <Button x:Name="button_SaveSettings" Style="{StaticResource CmdButtonStyle}" 
+                    Content="Save settings" Tapped="button_SaveSettings_Tapped" 
+                    Visibility="{Binding BtnSaveSettingsVisibility}"/>
+        </StackPanel>
+                
+        <TextBlock x:Name="SearchStatus" Grid.Row="3" 
+                   Text="{Binding ApplicationStatus}" FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,4,30,4"/>
+                
+        <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
+    </Grid>
+ </UserControl>

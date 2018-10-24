@@ -63,15 +63,16 @@
         -->
         
         <Grid x:Name="ContentRoot" Background="{StaticResource MainBackgroundBrush}" >
-        <Grid.RowDefinitions>
-            <RowDefinition Height="15"/>
-            <RowDefinition Height="60"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="60"/>
-            <RowDefinition Height="30"/>
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                 <RowDefinition Height="60"/>
+               <RowDefinition Height="*"/>
+                <!--
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="30"/>
+                -->
+            </Grid.RowDefinitions>
 
-        <Grid x:Name="stackpanel_PageHeader" Grid.Row="1" Grid.Column="0" Margin="20,5,20,15" 
+            <Grid x:Name="stackpanel_PageHeader" Grid.Row="0" Margin="20,5,20,15" 
                     VerticalAlignment="Top" Visibility="Visible">
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="button_SearchLocation" Content="Where to search" Style="{StaticResource CmdButtonStyle}"  
@@ -86,34 +87,12 @@
                         Tapped="button_Settings_Tapped" HorizontalAlignment="Right"/>
             </StackPanel>
         </Grid>
-            
-        <Border x:Name="border_WorkArea" Grid.Row="2" Grid.Column="0" Margin="30,0,30,0">
-            <UserControl x:Name="WorkArea" Margin="0,3,0,2" IsTabStop="False" 
-                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-        </Border>
-            
-        <TextBlock x:Name="textbox_SearchStatus" Grid.Row="4" Grid.Column="0"
-                   Text="{Binding SearchStatus}" HorizontalAlignment="Stretch"  VerticalAlignment="Center"
-                   FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,0,30,0"/>
-        
-        <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right"
-                    Margin="20,5,20,15">
-            <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" Content="Add folder" 
-                        Tapped="button_AddFolder_Tapped"/>
-            <Button x:Name="button_DelFolder"  Style="{StaticResource CmdButtonStyle}" Content="Delete selected folders"
-                         IsEnabled="False" Tapped="button_DelFolder_Tapped"/>
-            <Button x:Name="button_DelSelectedFiles" Style="{StaticResource CmdButtonStyle}" 
-                        Content="Delete selected files" Visibility="Collapsed" IsEnabled="False"
-                        Tapped="button_DeleteSelectedFiles_Tapped"/>
-            <Button x:Name="button_StartSearch" Content="Start search" Style="{StaticResource CmdButtonStyle}"
-                        Tapped="button_StartSearch_Tapped"/>
-            <Button x:Name="button_CancelSearch" Content="Cancel search" Style="{StaticResource CmdButtonStyle}"
-                        Tapped="button_CancelSearch_Tapped"/>
-            <Button x:Name="button_SaveSettings" Style="{StaticResource CmdButtonStyle}" Content="Save settings" 
-                       Tapped="button_SaveSettings_Tapped" />
-        </StackPanel>
 
-        <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
+        <Border x:Name="WorkArea" Grid.Row="1">
+                <local:ApplicationTabs x:Name="appTabs" Grid.Row="2" Grid.Column="0" Margin="30,0,30,0"/>
+         </Border>
+
+          <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>
     </Border>
 </Page>

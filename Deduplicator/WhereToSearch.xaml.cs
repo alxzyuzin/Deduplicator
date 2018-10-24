@@ -67,7 +67,7 @@ namespace Deduplicator
                 return;
             
             String CurrentFolderName = cf.FullName;
-            // Если для выбранный фолдер установлен как Primary  то сбросим флажок на остальных фолдерах 
+            // Если выбранный фолдер установлен как Primary  то сбросим флажок на остальных фолдерах 
             if (cf.IsPrimary)
             {
                 _mainPage.DataModel.PrimaryFolder = cf;

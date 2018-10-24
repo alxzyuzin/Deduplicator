@@ -184,19 +184,6 @@ namespace Deduplicator.Common
                         return 1;
                     
                     return await CompareFileContent(this, file);
-                    /*
-                    byte[] f1 = await this.ReadFile();
-                    byte[] f2 = await file.ReadFile();
-
-                    for (int i = 0; i < f1.Length; i++)
-                    {
-                        if (f1[i] < f2[i])
-                             return -1;
-                        if (f1[i] > f2[i])
-                            return 1;
-                    }
-                    return 0;
-                    */
                 case FileAttribs.Size:
                     return this.Size.CompareTo(file.Size);
             }

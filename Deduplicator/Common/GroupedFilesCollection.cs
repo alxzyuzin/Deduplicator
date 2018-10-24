@@ -12,11 +12,12 @@ namespace Deduplicator.Common
 
         private delegate void NotifyCollectionItemPropertyChangedEventHandler();
 
-        private async void NotifyCollectionChanged()
+        private void NotifyCollectionChanged()
         {
             if (CollectionChanged != null)
             {
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)); });
+                //   await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)); });
+                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
 
@@ -34,26 +35,23 @@ namespace Deduplicator.Common
             _mainPage = mainpage;
         }
 
-        public new void Add(FilesGroup group)
-        {
-            base.Add(group);
-        //    NotifyCollectionChanged();
-        }
+        //        public new void Add(FilesGroup group)
+        //        {
+        //            base.Add(group);
+        //        //    NotifyCollectionChanged();
+        //        }
 
-        public new  void Clear()
-        {
-            base.Clear();
-//            await Task.Delay(TimeSpan.FromMilliseconds(100));
-//            NotifyCollectionChanged();
-        }
+        //public new void Clear()
+        //{
+        //    base.Clear();
+        //    //            await Task.Delay(TimeSpan.FromMilliseconds(100));
+        //    NotifyCollectionChanged();
+        //}
 
         public  void Invalidate()
         {
-//            await Task.Delay(TimeSpan.FromMilliseconds(100));
             NotifyCollectionChanged();
         }
-
-
     }
 
 

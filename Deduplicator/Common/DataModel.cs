@@ -13,13 +13,20 @@ using Windows.Foundation;
 namespace Deduplicator.Common
 {
     public enum AppStatus {SearchOptions, SearchResults, Settings }
-    public enum LastAction { Search, Group}
+//    public enum LastAction { Search, Group}
 
     public sealed class DataModel : INotifyPropertyChanged
 
     {
+        public enum ErrorType
+        {
+            UnknownError,
+            FileNotFound
+        }
         private sealed class ErrorData
         {
+           
+
             public ErrorType Type;
             public string FunctionName;
             public string ModuleName;
@@ -59,14 +66,14 @@ namespace Deduplicator.Common
                 SearchStatusChanged(this, status);
         }
 
-        public event EventHandler<Error> Error;
-        private async void NotifyError(Error error)
-        {
-            if (Error != null)
-            {
-                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { Error(this, error); });
-            }
-        }
+//        public event EventHandler<Error> Error;
+//        private async void NotifyError(Error error)
+//        {
+//            if (Error != null)
+//            {
+//                await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { Error(this, error); });
+//            }
+//        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)
@@ -80,9 +87,9 @@ namespace Deduplicator.Common
         // Первичный каталог (если определён)
         public Folder PrimaryFolder = null;
         // Список файлов отобранных из каталогов в которых искать дубликаты    
-        public FileCollection FilesCollection;
+        private FileCollection FilesCollection;
         // Список файлов из первичного каталога
-        public FileCollection PrimaryFilesCollection;
+        private FileCollection PrimaryFilesCollection;
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту
         public GroupedFilesCollection ResultFilesCollection;
 
@@ -102,7 +109,7 @@ namespace Deduplicator.Common
 
         private IProgress<SearchStatus> _status;
 
-        private int _totalDuplicatesCount=0;
+//        private int _totalDuplicatesCount=0;
 #endregion
 
 #region Properties
@@ -246,9 +253,6 @@ namespace Deduplicator.Common
             _filesHandled = 0;
             _currentStage = StageName(attribute);
             
- //           string currentduplicatestotal = string.Empty;
-            //int _filesHandled = 0;
-            //int _filesTotal = 0;
             // Подсчитаем общее количество файлов подлежащих перегруппировке
             foreach (var group in filegroups)
                 _filesTotal+=group.Count;
@@ -256,14 +260,10 @@ namespace Deduplicator.Common
             try {
                 GroupedFilesCollection groupsbuffer = new GroupedFilesCollection();
                 //Перенесём группы из исходного списка в буфер
-
                 foreach (var group in filegroups)
                     groupsbuffer.Add(group);
                 // Очистим исходный список групп 
                 filegroups.Clear();
-
- //               int handledgroups = 0;
-
                 foreach (var group in groupsbuffer)
                 {
                     if (_stopSearch)  // Необходимо прекратить поиск
@@ -427,7 +427,9 @@ namespace Deduplicator.Common
             catch (FileNotFoundException e)
             {
                 _stopSearch = true;
-                NotifyError(new Error(ErrorType.FileNotFound, "Folder \n" + folder + "\nnot found."));
+                _error.Set(ErrorType.FileNotFound, "GetFolderFiles", 423, e.Message);
+                _status.Report(SearchStatus.Error);
+//                NotifyError(new Error(ErrorType.FileNotFound, "Folder \n" + folder + "\nnot found."));
                 return;
             }
 

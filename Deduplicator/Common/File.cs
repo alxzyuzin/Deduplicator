@@ -70,14 +70,7 @@ namespace Deduplicator.Common
             FromPrimaryFolder = primaryfolder;
             IsProtected = protectedfile;
         }
-/*
-        public async Task Read()
-        {
-            _file = await StorageFile.GetFileFromPathAsync(this.FullName);
-            _buffer = await FileIO.ReadBufferAsync(_file);
-            this.Content = _buffer.ToArray();
-        }
-*/
+
         private async Task<byte[]> ReadFile()
         {
             StorageFile _file = await StorageFile.GetFileFromPathAsync(this.FullName);

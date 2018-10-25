@@ -114,7 +114,6 @@
       <DependentUpon>ApplicationTabs.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\DataModel.cs" />
-    <Compile Include="Common\Error.cs" />
     <Compile Include="Common\File.cs" />
     <Compile Include="Common\FileCollection.cs" />
     <Compile Include="Common\FileCompareOptions.cs" />

@@ -36,7 +36,7 @@ namespace Deduplicator.Common
         public new void Add(File file)
         {
             base.Add(file);
-            //NotifyCollectionChanged();
+            NotifyCollectionChanged();
         }
 
         public new void Clear()

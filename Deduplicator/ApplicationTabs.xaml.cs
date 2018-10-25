@@ -46,7 +46,7 @@ namespace Deduplicator
 
         Tabs _activeTab;
        
-        DataModel.SearchStatus _currentSearchStatus;
+//        DataModel.SearchStatus _currentSearchStatus;
         private ResourceLoader _resldr = new ResourceLoader();
 
         // Список аттрибутов по коорым будет выполняться сравнение файлов при поиске дубликатов

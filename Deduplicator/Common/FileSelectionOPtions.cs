@@ -99,8 +99,6 @@ namespace Deduplicator.Common
             }
         }
 
- //       private string _requestedFileExtentions = string.Empty;
-
         public bool ExtentionRequested(string extention)
         {
 

@@ -104,15 +104,12 @@ namespace Deduplicator.Common
         private List<FileAttribs> _compareAttribs = new List<FileAttribs>();
         public List<FileAttribs> CompareAttribsList { get { return _compareAttribs; } }
 
-//        private FileAttribs _currentGroupModeAttrib= FileAttribs.None;
         public FileAttribs CurrentGroupModeAttrib
         {
             get
             {
-               
-                return (_currentGroupModeIndex>=0)&&(_currentGroupModeIndex < CompareAttribsList.Count)?CompareAttribsList[_currentGroupModeIndex]: FileAttribs.None;
+                 return (_currentGroupModeIndex>=0)&&(_currentGroupModeIndex < CompareAttribsList.Count)?CompareAttribsList[_currentGroupModeIndex]: FileAttribs.None;
             }
-         
         }
 
         private int _currentGroupModeIndexOldValue =0;
@@ -218,8 +215,6 @@ namespace Deduplicator.Common
             NotifyPropertyChanged("ResultGrouppingModesList");
 //            CurrentGroupModeIndex = 0;
         }
-
-
 
         public void Commit()
         {

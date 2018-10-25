@@ -1,10 +1,12 @@
 # Deduplicator
 
-Deduplicator is an utility designed to find and remove duplicate files on your computer. This program gives opportunity to compare files by single attribute or combination of attributes and/or contents, no matter what file types are. 
+Deduplicator is an utility designed to find and remove duplicate files on your computer.
 
-You can select several folders where to search duplicates. Also you can set one of selected folder as "Primary folder". In this case application will search files in in other folders which duplicate files in  "Primary folder"
+This program gives opportunity to compare files by single attribute or combination of attributes and/or contents, no matter what file types are. 
 
-include or exclude files by mask, etc. 
+You can select several folders where to search duplicates. Also you can set one of selected folder as "Primary folder". In this case application will search files in in other folders which duplicate files in  "Primary folder".
+
+
 
 ## Features of Deduplicator
 
@@ -38,3 +40,4 @@ include or exclude files by mask, etc.
 - Enable inexact comparison (some per cent matching). 
 - Turn scanning of idden/system/read-only/archive files and folders on or off. 
 - Made replacement of duplicates with shortcuts 
+- Include or exclude files by mask, etc. 

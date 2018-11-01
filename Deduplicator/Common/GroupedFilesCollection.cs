@@ -23,7 +23,11 @@ namespace Deduplicator.Common
 
         private MainPage _mainPage = null;
 
-        public MainPage MainPage { get { return _mainPage; } set { _mainPage = value; } }
+        public MainPage MainPage
+        {
+            get { return _mainPage; }
+            set { _mainPage = value; }
+        }
 
         public GroupedFilesCollection()
         {

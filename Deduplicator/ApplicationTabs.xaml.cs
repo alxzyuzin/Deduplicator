@@ -285,7 +285,13 @@ namespace Deduplicator
 
             // Подпишемся на события модели данных
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
+            this.SizeChanged += OnSizeChanged;
 
+        }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            listview_Duplicates.InternalWidth = this.ActualWidth;
         }
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -453,7 +459,8 @@ namespace Deduplicator
                 String AccessToken = StorageApplicationPermissions.FutureAccessList.Add(newfolder);
                 _dataModel.FoldersCollection.Add(new Folder(newfolder.Path, false, AccessToken));
 
-                BtnStartSearchEnabled = (_dataModel.Status == DataModel.SearchStatus.SearchCompleted) ? true : false;
+                BtnStartSearchEnabled = (_dataModel.Status == DataModel.SearchStatus.SearchCompleted ||
+                                         _dataModel.Status == DataModel.SearchStatus.JustInitialazed) ? true : false;
                 
                 EmptyContentMessageVisibility = Visibility.Collapsed;
             }

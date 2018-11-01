@@ -207,6 +207,8 @@ namespace Deduplicator.Common
             if (_checkContent)
             {
                 _resultGrouppingModes.Add("Content");
+                if (!_checkSize)
+                    _compareAttribs.Add(FileAttribs.Size);
                 _compareAttribs.Add(FileAttribs.Content);
             }
 

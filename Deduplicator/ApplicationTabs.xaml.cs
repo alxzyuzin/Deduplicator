@@ -22,6 +22,7 @@ namespace Deduplicator
 {
     public  sealed partial class ApplicationTabs : UserControl, INotifyPropertyChanged
     {
+        public enum AppStatus { SearchOptions, SearchResults, Settings }
 
         [Flags]
         private enum CmdButtons
@@ -264,7 +265,7 @@ namespace Deduplicator
             FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
 
             // Tab "Where to search" data binding
-            listview_Folders.ItemsSource = _dataModel.FoldersCollection;
+            lv_Folders.ItemsSource = _dataModel.FoldersCollection;
 
             // Tab "Search options" data binding
             stackpanel_FileSelectionOptions.DataContext = FileSelectionOptions;
@@ -348,11 +349,11 @@ namespace Deduplicator
         {
             ApplicationStatus = _dataModel.SearchStatusInfo;
 
-            if (status == DataModel.SearchStatus.SearchCompleted)
+            if (_dataModel.OperationCompleted)
             {
                 BtnAddFolderEnabled = true;
-                BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0) ? true : false;
-                BtnStartSearchEnabled = (listview_Folders.Items.Count > 0) ? true : false;
+                BtnDelFolderEnabled = (lv_Folders.SelectedItems.Count > 0) ? true : false;
+                BtnStartSearchEnabled = (lv_Folders.Items.Count > 0) ? true : false;
                 BtnStopSearchEnabled = false;
                 _dataModel.ResultFilesCollection.Invalidate();
             }
@@ -376,7 +377,7 @@ namespace Deduplicator
                     WhereToSearchtab.Visibility = Visibility.Visible;
                     TabHeader = "List of folders where to search duplicates.";
                     CmdButtonsVisualState = CmdButtons.AddFolder|CmdButtons.DelFolder|CmdButtons.StartSearch|CmdButtons.CancelSearch;
-                    EmptyContentMessageVisibility = (listview_Folders.Items.Count > 0) ? Visibility.Collapsed : Visibility.Visible;
+                    EmptyContentMessageVisibility = (lv_Folders.Items.Count > 0) ? Visibility.Collapsed : Visibility.Visible;
                     EmptyContentMessage = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
                     break;
                 case Tabs.SearchOptions:
@@ -459,8 +460,7 @@ namespace Deduplicator
                 String AccessToken = StorageApplicationPermissions.FutureAccessList.Add(newfolder);
                 _dataModel.FoldersCollection.Add(new Folder(newfolder.Path, false, AccessToken));
 
-                BtnStartSearchEnabled = (_dataModel.Status == DataModel.SearchStatus.SearchCompleted ||
-                                         _dataModel.Status == DataModel.SearchStatus.JustInitialazed) ? true : false;
+                BtnStartSearchEnabled = (_dataModel.OperationCompleted) ? true : false;
                 
                 EmptyContentMessageVisibility = Visibility.Collapsed;
             }
@@ -470,7 +470,7 @@ namespace Deduplicator
         {
             List<Folder> foldersBuffer = new List<Folder>();
             // Перенесём фолдеры подлежащие удалению в буферный список 
-            foreach (Folder f in listview_Folders.SelectedItems)
+            foreach (Folder f in lv_Folders.SelectedItems)
                 foldersBuffer.Add(f);
             // А теперь удалим из основного списка фоолдеры попавшие в буферный список
             foreach (Folder f in foldersBuffer)
@@ -481,14 +481,11 @@ namespace Deduplicator
 
             BtnDelFolderEnabled = false;
             // Если после удаления список фолдеров пуст то сделаем кнопку запуска поиска неактивной
-            BtnStartSearchEnabled = (listview_Folders.Items.Count > 0) ? true : false;
-            EmptyContentMessageVisibility = (listview_Folders.Items.Count > 0) ? Visibility.Collapsed:Visibility.Visible;
+            BtnStartSearchEnabled = (lv_Folders.Items.Count > 0) ? true : false;
+            EmptyContentMessageVisibility = (lv_Folders.Items.Count > 0) ? Visibility.Collapsed:Visibility.Visible;
         }
         
-        private void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-
-        }
+      
 
         private async void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -531,18 +528,18 @@ namespace Deduplicator
             await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.CompareAttribsList);
         }
 
-        private async void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
+        private void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await _dataModel.StopSearch();
+            _dataModel.CancelOperation();
         }
 
         private void button_SaveSettings_Tapped(object sender, TappedRoutedEventArgs e)
         {
             Settings.Save();
         }
-        //---------------------------------------------------------------------------
-        #region Where To Search Tab event handlers
-        //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+#region Where To Search Tab event handlers
+//---------------------------------------------------------------------------
         private void toggleswitch_SetPrimary_Toggled(object sender, RoutedEventArgs e)
         {
             Folder cf = (sender as ToggleSwitch).DataContext as Folder;
@@ -570,14 +567,14 @@ namespace Deduplicator
 
         private void listvew_Folders_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            BtnDelFolderEnabled = (listview_Folders.SelectedItems.Count > 0 && _dataModel.Status == DataModel.SearchStatus.SearchCompleted) ? true : false;
+            BtnDelFolderEnabled = (lv_Folders.SelectedItems.Count > 0 && _dataModel.OperationCompleted)? true : false;
         }
 
-        #endregion
+#endregion
 
-        //---------------------------------------------------------------------------
-        #region  Search Results Tab event handlers
-        //---------------------------------------------------------------------------
+
+#region  Search Results Tab event handlers
+
         private void checkbox_SelectGroup_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox cbx = sender as CheckBox;
@@ -588,8 +585,7 @@ namespace Deduplicator
             }
 
             BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
-            //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
-        }
+         }
 
         private void checkbox_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
         {
@@ -600,8 +596,7 @@ namespace Deduplicator
                 listview_Duplicates.SelectedItems.Remove(f);
             }
             BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
-            //_mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
-        }
+         }
 
         private void listview_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
         {
@@ -611,10 +606,10 @@ namespace Deduplicator
                 listview_Duplicates.SelectedItems.Add(e.ClickedItem);
 
             BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
-            //  _mainPage.UpdateDeleteSelectedFilesButton(listview_Duplicates.SelectedItems.Count);
         }
 
-        private async void DeleteFiles()
+
+        private async void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
             List<File> deletedFiles = new List<File>();
             foreach (File file in listview_Duplicates.SelectedItems)
@@ -636,7 +631,9 @@ namespace Deduplicator
                 }
             }
         }
-        #endregion
+        
+        
+#endregion
     }
 
 

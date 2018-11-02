@@ -220,7 +220,7 @@
         
 
         <Border x:Name="WhereToSearchtab" Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
-            <ListView x:Name="listview_Folders" Grid.Row="0" VerticalAlignment="Stretch"
+            <ListView x:Name="lv_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
                       ScrollViewer.VerticalScrollMode="Enabled"
                       SelectionMode="Multiple"

@@ -98,7 +98,7 @@ namespace Deduplicator.Common
             }
         }
 
-        public ObservableCollection<string> _resultGrouppingModes = new ObservableCollection<string>();
+        private ObservableCollection<string> _resultGrouppingModes = new ObservableCollection<string>();
         public ObservableCollection<string> ResultGrouppingModesList { get { return _resultGrouppingModes; } }
 
         private List<FileAttribs> _compareAttribs = new List<FileAttribs>();

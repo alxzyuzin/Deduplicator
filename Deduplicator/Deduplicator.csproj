@@ -120,7 +120,6 @@
     <Compile Include="Common\Folder.cs" />
     <Compile Include="Common\GListView.cs" />
     <Compile Include="Common\GroupedFilesCollection.cs" />
-    <Compile Include="Common\ObservableDictionary.cs" />
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="MainPage.xaml.cs">

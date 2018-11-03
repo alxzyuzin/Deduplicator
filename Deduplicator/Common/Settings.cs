@@ -31,8 +31,37 @@ namespace Deduplicator.Common
                 }
             }
         }
-        public string AudioFileExtentions { get; set; }
-        public string VideoFileExtentions { get; set; }
+
+        private string _audioFileExtentions;
+        public string AudioFileExtentions
+        {
+            get { return _audioFileExtentions; }
+            set
+            {
+                if (_audioFileExtentions != value)
+                {
+                    _audioFileExtentions = value;
+                    NotifyPropertyChanged("AudioFileExtentions");
+                }
+            }
+        }
+
+        private string _videoFileExtentions;
+        public string VideoFileExtentions
+        {
+            get { return _videoFileExtentions; }
+            set
+            {
+                if (_videoFileExtentions != value)
+                {
+                    _videoFileExtentions = value;
+                    NotifyPropertyChanged("VideoFileExtentions");
+                }
+            }
+        }
+
+
+
         public bool InitialSetupDone { get; set; }
 
         public void Init()

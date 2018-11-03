@@ -55,7 +55,7 @@
         <Style x:Key="TextBoxStyle" TargetType="TextBox">
             <Setter Property="Margin" Value="40,0,40,10"/>
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontSize" Value="18"/>
         </Style>
 
        
@@ -200,15 +200,16 @@
             <RowDefinition Height="35"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="tbx_TabHeader" Grid.Row="0" Text="{Binding TabHeader}" 
+        <TextBlock Grid.Row="0" Text="{Binding TabHeader}" 
                    Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
-
-        <StackPanel x:Name="stackpanel_GroupingSelector" Grid.Row="0" HorizontalAlignment="Right" 
+        <!-- Выбор группировки на странице результатов поиска -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Right" 
                     Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupingSelectorVisibility}">
                      <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
                        Width="150" FontSize="18"/>
-                    <ComboBox  x:Name="listbox_ResultGrouping"  Width="180px" FontSize="16" FontWeight="Medium"
-                       SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"/>
+                    <ComboBox  x:Name="lb_ResultGrouping"  Width="180px" FontSize="16" FontWeight="Medium"
+                       SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"
+                       ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"/>
         </StackPanel>
         
         <StackPanel x:Name="stackpanel_GroupByPrimaryFolder" Grid.Row="0" HorizontalAlignment="Right" 
@@ -233,12 +234,13 @@
             </ListView>
         </Border>
 
-        <Grid x:Name="SearchOptionsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
+        <Grid x:Name="SearchOptionsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" 
+              Margin="0,10,0,0" d:IsHidden="True">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <StackPanel x:Name="stackpanel_FileSelectionOptions" Grid.Column="0" Margin="20,0,10,0">
+            <StackPanel x:Name="stackpanel_FileSelectionOptions" Grid.Column="0" Margin="20,0,10,0" DataContext="{Binding FileSelectionOptions}">
                 <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
                            FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
                 <RadioButton x:Name="rb_AllFiles" Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
@@ -269,7 +271,7 @@
                              PlaceholderText="Type here list of file extentions separated with semicolon"
                              Text="{Binding ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
             </StackPanel>
-            <StackPanel x:Name="stackpanel_FileCompareOptions" Grid.Column="1" Margin="10,0,20,0">
+            <StackPanel x:Name="stackpanel_FileCompareOptions" Grid.Column="1" Margin="10,0,20,0" DataContext="{Binding FileCompareOptions}">
                 <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
                                    FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
                 <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckName, Mode=TwoWay}"/>
@@ -280,7 +282,8 @@
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
                 <ComboBox  x:Name="listbox_ResultGroupingModes" Width="250" FontSize="16" FontWeight="Medium"
                            HorizontalAlignment="Left" Margin="30,5,0,0"
-                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}">
+                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"
+                           ItemsSource="{Binding Path=ResultGrouppingModesList}">
                 </ComboBox>
             </StackPanel>
         </Grid>
@@ -323,8 +326,9 @@
         </Border>
     </Grid>
 
-        <Border x:Name="brd_SettingsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
-                BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" d:IsHidden="True">
+        <Border x:Name="bd_SettingsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
+                BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" 
+                DataContext="{Binding Settings}" d:IsHidden="True">
             <StackPanel >
                 <TextBlock   Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
                 <TextBox    x:Name="textbox_ImageFileExtentions" Text="{Binding ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />

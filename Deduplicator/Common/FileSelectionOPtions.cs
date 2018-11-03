@@ -59,7 +59,6 @@ namespace Deduplicator.Common
 
         public string ExcludeExtentions { get; set; } = string.Empty;
 
-
         private string _audioFileExtentions = ".aif;.iff;.m3u;.m4a;.mid;.mp3;.mpa;.ra;.wav;.wma;.flac;";
         public string AudioFileExtentions
         {   get { return _audioFileExtentions; }

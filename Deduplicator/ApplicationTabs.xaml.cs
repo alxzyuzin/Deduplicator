@@ -18,8 +18,6 @@ namespace Deduplicator
 {
     public sealed partial class ApplicationTabs : UserControl, INotifyPropertyChanged
     {
-//        public enum AppStatus { SearchOptions, SearchResults, Settings }
-
         [Flags]
         private enum CmdButtons
         {
@@ -41,16 +39,14 @@ namespace Deduplicator
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        Tabs _activeTab;
-
         private ResourceLoader _resldr = new ResourceLoader();
 
         // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
-        private FileCompareOptions FileCompareOptions = new FileCompareOptions();
+        private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
-        private FileSelectionOptions FileSelectionOptions = new FileSelectionOptions();
+        private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
 
-        public Settings Settings = new Settings();
+        
 
 #region Properties
         CmdButtons _cmdButtonsVisualState;
@@ -244,33 +240,34 @@ namespace Deduplicator
         {
             get {return _dataModel;}
         }
-#endregion
+
+        public FileSelectionOptions FileSelectionOptions
+        {
+            get { return _fileSelectionOptions; }
+        }
+
+        public FileCompareOptions FileCompareOptions
+        {
+            get { return _fileCompareOptions; }
+        }
+
+        public Settings _settings = new Settings();
+        public Settings Settings
+        {
+            get { return _settings; }
+        }
+        #endregion
 
         public ApplicationTabs()
         {
-            this.InitializeComponent();
-            this.DataContext = this;
+            InitializeComponent();
+            DataContext = this;
 
             Settings.Restore();
 
             FileSelectionOptions.AudioFileExtentions = Settings.AudioFileExtentions;
             FileSelectionOptions.ImageFileExtentions = Settings.ImageFileExtentions;
             FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
-
-             // Tab "Search options" data binding
-            stackpanel_FileSelectionOptions.DataContext = FileSelectionOptions;
-            stackpanel_FileCompareOptions.DataContext = FileCompareOptions;
-
-            // Tab "Search results" data binding
-//            GroupedFiles.Source = _dataModel.DuplicatedFiles;
-            listbox_ResultGroupingModes.ItemsSource = FileCompareOptions.ResultGrouppingModesList;
-            
-            listbox_ResultGrouping.ItemsSource = FileCompareOptions.ResultGrouppingModesList;
-            listbox_ResultGrouping.DataContext = FileCompareOptions;
-            FileCompareOptions.CurrentGroupModeIndex = 0;
-
-            // Tab "Settings" data binding
-            brd_SettingsTab.DataContext = Settings;
 
             FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
 
@@ -350,53 +347,36 @@ namespace Deduplicator
 
         public void SwitchTo(Tabs tab)
         {
-            _activeTab = tab;
 
-            WhereToSearchtab.Visibility = Visibility.Collapsed;
-            SearchOptionsTab.Visibility = Visibility.Collapsed;
-            SearchResultsTab.Visibility = Visibility.Collapsed;
-            brd_SettingsTab.Visibility = Visibility.Collapsed;
-            GroupingSelectorVisibility = Visibility.Collapsed;
-            GroupByPrimaryFolderVisibility = Visibility.Collapsed;
-            
+            WhereToSearchtab.Visibility = tab.HasFlag(Tabs.WhereToSearch) ? Visibility.Visible : Visibility.Collapsed;
+            SearchOptionsTab.Visibility = tab.HasFlag(Tabs.SearchOptions) ? Visibility.Visible : Visibility.Collapsed;
+            SearchResultsTab.Visibility = tab.HasFlag(Tabs.SearchResults) ? Visibility.Visible : Visibility.Collapsed;
+            bd_SettingsTab.Visibility   = tab.HasFlag(Tabs.Settings)      ? Visibility.Visible : Visibility.Collapsed;
+
+            GroupingSelectorVisibility     = _dataModel.PrimaryFolder == null ? Visibility.Visible : Visibility.Collapsed;
+            GroupByPrimaryFolderVisibility = _dataModel.PrimaryFolder == null ? Visibility.Collapsed : Visibility.Visible;
+
+            EmptyContentMessage = string.Empty;
 
             switch (tab)
             {
                 case Tabs.WhereToSearch:
-                    WhereToSearchtab.Visibility = Visibility.Visible;
                     TabHeader = "List of folders where to search duplicates.";
                     CmdButtonsVisualState = CmdButtons.AddFolder|CmdButtons.DelFolder|CmdButtons.StartSearch|CmdButtons.CancelSearch;
-                    EmptyContentMessageVisibility = (lv_Folders.Items.Count > 0) ? Visibility.Collapsed : Visibility.Visible;
                     EmptyContentMessage = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
                     break;
                 case Tabs.SearchOptions:
-                    SearchOptionsTab.Visibility = Visibility.Visible;
                     TabHeader = "Search options.";
                     CmdButtonsVisualState = CmdButtons.StartSearch | CmdButtons.CancelSearch;
-                    EmptyContentMessage = string.Empty;
                     break;
                 case Tabs.SearchResults:
-                    SearchResultsTab.Visibility = Visibility.Visible;
                     TabHeader = "Search results.";
-                    if (_dataModel.PrimaryFolder==null)
-                    {
-                        GroupingSelectorVisibility = Visibility.Visible;
-                        GroupByPrimaryFolderVisibility = Visibility.Collapsed;
-                    }
-                    else
-                    {
-                        GroupingSelectorVisibility = Visibility.Collapsed;
-                        GroupByPrimaryFolderVisibility = Visibility.Visible;
-                    }
-
                     CmdButtonsVisualState = CmdButtons.DelSelectedFiles | CmdButtons.StartSearch | CmdButtons.CancelSearch;
                     EmptyContentMessage = "No duplicates found.";
                     break;
                 case Tabs.Settings:
-                    brd_SettingsTab.Visibility = Visibility.Visible;
                     TabHeader = "Settings.";
                     CmdButtonsVisualState = CmdButtons.SaveSettings;
-                    EmptyContentMessage = string.Empty;
                     break;
             }
         }

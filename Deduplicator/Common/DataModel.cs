@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
@@ -81,11 +82,11 @@ namespace Deduplicator.Common
         // Первичный каталог (если определён)
         public Folder PrimaryFolder = null;
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту
-        public GroupedFilesCollection ResultFilesCollection;
+        public GroupedFilesCollection ResultFilesCollection = new GroupedFilesCollection();
         // Список файлов отобранных из каталогов в которых искать дубликаты    
-        private FileCollection FilesCollection;
+        private ObservableCollection<File> FilesCollection = new ObservableCollection<File>();
         // Список файлов из первичного каталога
-        private FileCollection PrimaryFilesCollection;
+        private ObservableCollection<File> PrimaryFilesCollection = new ObservableCollection<File>();
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
 
 #region Fields
@@ -93,8 +94,6 @@ namespace Deduplicator.Common
         int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
         int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
         string _currentStage = string.Empty;
-
-        private MainPage _mainPage = null;
         private ErrorData _error = new ErrorData("DataModel.cs");
 #endregion
 
@@ -152,13 +151,8 @@ namespace Deduplicator.Common
 
 #endregion
 
-        public DataModel( MainPage mainpage)
+        public DataModel()
         {
-            _mainPage = mainpage;
-            
-            FilesCollection = new FileCollection(mainpage);
-            PrimaryFilesCollection = new FileCollection(mainpage);
-            ResultFilesCollection = new GroupedFilesCollection(mainpage);
         }
 
  
@@ -434,7 +428,7 @@ namespace Deduplicator.Common
         /// условия которым должен удовлетворять файл для включения в список файлов
         /// </param>
         /// <returns></returns>
-        private async Task GetFolderFiles(Folder folder, FileCollection filelist, FileSelectionOptions options,
+        private async Task GetFolderFiles(Folder folder, ObservableCollection<File> filelist, FileSelectionOptions options,
                                             IProgress<SearchStatus> selectingFilesStatus, CancellationToken canselationToken)
         {
             IReadOnlyList<IStorageItem> folderitems = null;

@@ -47,7 +47,6 @@ namespace Deduplicator
 
         Tabs _activeTab;
        
-//        DataModel.SearchStatus _currentSearchStatus;
         private ResourceLoader _resldr = new ResourceLoader();
 
         // Список аттрибутов по коорым будет выполняться сравнение файлов при поиске дубликатов
@@ -250,7 +249,7 @@ namespace Deduplicator
             set { _applicationStatus = value; NotifyPropertyChanged("ApplicationStatus"); }
         }
 
-        private DataModel _dataModel = new DataModel(null);
+        private DataModel _dataModel = new DataModel();
 
         
         public ApplicationTabs()
@@ -399,7 +398,7 @@ namespace Deduplicator
                         GroupingSelectorVisibility = Visibility.Collapsed;
                         GroupByPrimaryFolderVisibility = Visibility.Visible;
                     }
-//                    stackpanel_GroupingSelector.Visibility = Visibility.Visible;
+
                     CmdButtonsVisualState = CmdButtons.DelSelectedFiles | CmdButtons.StartSearch | CmdButtons.CancelSearch;
                     EmptyContentMessage = "No duplicates found.";
                     break;
@@ -472,7 +471,7 @@ namespace Deduplicator
             // Перенесём фолдеры подлежащие удалению в буферный список 
             foreach (Folder f in lv_Folders.SelectedItems)
                 foldersBuffer.Add(f);
-            // А теперь удалим из основного списка фоолдеры попавшие в буферный список
+            // А теперь удалим из основного списка фолдеры попавшие в буферный список
             foreach (Folder f in foldersBuffer)
             {
                 StorageApplicationPermissions.FutureAccessList.Remove(f.AccessToken);
@@ -484,8 +483,6 @@ namespace Deduplicator
             BtnStartSearchEnabled = (lv_Folders.Items.Count > 0) ? true : false;
             EmptyContentMessageVisibility = (lv_Folders.Items.Count > 0) ? Visibility.Collapsed:Visibility.Visible;
         }
-        
-      
 
         private async void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -518,13 +515,12 @@ namespace Deduplicator
                 if (pressedbutton == MessageBoxButtons.No)
                     return;
             }
-            // await NavigateToSearchResults();
+ 
             BtnAddFolderEnabled = false;
             BtnDelFolderEnabled = false;
             BtnStartSearchEnabled = false;
             BtnStopSearchEnabled = true;
-
- //           GroupingSelectorVisibility = _dataModel.PrimaryFolder != null ? Visibility.Collapsed : Visibility.Visible;
+            
             await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.CompareAttribsList);
         }
 
@@ -537,9 +533,9 @@ namespace Deduplicator
         {
             Settings.Save();
         }
-//---------------------------------------------------------------------------
+
 #region Where To Search Tab event handlers
-//---------------------------------------------------------------------------
+
         private void toggleswitch_SetPrimary_Toggled(object sender, RoutedEventArgs e)
         {
             Folder cf = (sender as ToggleSwitch).DataContext as Folder;
@@ -563,7 +559,6 @@ namespace Deduplicator
                 _dataModel.PrimaryFolder = null;
             }
         }
-        
 
         private void listvew_Folders_Tapped(object sender, TappedRoutedEventArgs e)
         {

@@ -19,7 +19,8 @@ namespace Deduplicator.Common
         DateModified = 16,
         Size =32,
         Content=64,
-        Extention=128
+        Extention=128,
+        Hash = 256
     }
 
     public sealed class File

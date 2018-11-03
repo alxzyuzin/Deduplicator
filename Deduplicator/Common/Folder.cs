@@ -4,8 +4,6 @@ using System.ComponentModel;
 
 namespace Deduplicator.Common
 {
-    //public enum enumFileType {File, Folder }
-
     public sealed class Folder : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -18,16 +16,11 @@ namespace Deduplicator.Common
             }
         }
 
-        #region Fields
-
-        bool _isPrimary = false;
-
-        #endregion
-
-        #region Properties
+ #region Properties
 
         public string FullName { get; set; } = String.Empty;
 
+        bool _isPrimary = false;
         public bool IsPrimary
         {
             get
@@ -60,26 +53,12 @@ namespace Deduplicator.Common
 
         public String AccessToken { get; set; }
 
-        //public Folder TopLevelFolder { get; set; }        
-        #endregion
+#endregion
 
-        #region Constructors
+#region Constructors
         public Folder()
         {
             FullName = String.Empty;
-        //    TopLevelFolder = this;
-        }
-
-        public Folder(string fullname)
-        {
-            FullName = fullname;
-        //    TopLevelFolder = this;
-        }
-
-        public Folder(string fullname, String accesstoken)
-        {
-            FullName = fullname;
-        //    TopLevelFolder = this;
         }
 
         public Folder(string fullname, bool isprimary, bool searchinsubfolders, bool protectedfolder)
@@ -95,11 +74,7 @@ namespace Deduplicator.Common
             FullName = fullname;
             IsPrimary = isprimary;
             AccessToken = accesstoken;
-        //    TopLevelFolder = this;
         }
-        #endregion
-
-        #region Methods
         #endregion
 
     }

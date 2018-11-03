@@ -115,9 +115,8 @@
     </Compile>
     <Compile Include="Common\DataModel.cs" />
     <Compile Include="Common\File.cs" />
-    <Compile Include="Common\FileCollection.cs" />
     <Compile Include="Common\FileCompareOptions.cs" />
-    <Compile Include="Common\FileSelectionOPtions.cs" />
+    <Compile Include="Common\FileSelectionOptions.cs" />
     <Compile Include="Common\Folder.cs" />
     <Compile Include="Common\FolderColection.cs" />
     <Compile Include="Common\GListView.cs" />

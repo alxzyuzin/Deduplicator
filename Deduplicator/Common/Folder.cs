@@ -56,6 +56,7 @@ namespace Deduplicator.Common
 #endregion
 
 #region Constructors
+
         public Folder()
         {
             FullName = String.Empty;
@@ -75,7 +76,7 @@ namespace Deduplicator.Common
             IsPrimary = isprimary;
             AccessToken = accesstoken;
         }
-        #endregion
+#endregion
 
     }
 }

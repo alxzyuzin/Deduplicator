@@ -118,7 +118,6 @@
     <Compile Include="Common\FileCompareOptions.cs" />
     <Compile Include="Common\FileSelectionOptions.cs" />
     <Compile Include="Common\Folder.cs" />
-    <Compile Include="Common\FolderColection.cs" />
     <Compile Include="Common\GListView.cs" />
     <Compile Include="Common\GroupedFilesCollection.cs" />
     <Compile Include="Common\ObservableDictionary.cs" />

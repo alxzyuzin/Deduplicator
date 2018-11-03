@@ -78,7 +78,8 @@ namespace Deduplicator.Common
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
         // Список каталогов в которых искать дубликаты
-        public FolderColection FoldersCollection = new FolderColection();  
+        //public FolderColection FoldersCollection = new FolderColection();  
+        public ObservableCollection<Folder> FoldersCollection = new ObservableCollection<Folder>();
         // Первичный каталог (если определён)
         public Folder PrimaryFolder = null;
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту

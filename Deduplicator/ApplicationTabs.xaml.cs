@@ -11,7 +11,6 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml.Data;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -46,13 +45,14 @@ namespace Deduplicator
 
         private ResourceLoader _resldr = new ResourceLoader();
 
-        // Список аттрибутов по коорым будет выполняться сравнение файлов при поиске дубликатов
-        public FileCompareOptions FileCompareOptions = new FileCompareOptions();
+        // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
+        private FileCompareOptions FileCompareOptions = new FileCompareOptions();
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
-        public FileSelectionOptions FileSelectionOptions = new FileSelectionOptions();
+        private FileSelectionOptions FileSelectionOptions = new FileSelectionOptions();
 
         public Settings Settings = new Settings();
 
+#region Properties
         CmdButtons _cmdButtonsVisualState;
         private CmdButtons CmdButtonsVisualState
         {
@@ -239,20 +239,13 @@ namespace Deduplicator
             }
         }
 
-        //private string _applicationStatus;
-        //public string ApplicationStatus
-        //{
-        //    get { return _applicationStatus; }
-        //    set { _applicationStatus = value; NotifyPropertyChanged("ApplicationStatus"); }
-        //}
-
         private DataModel _dataModel = new DataModel();
         public DataModel AppData
         {
             get {return _dataModel;}
         }
+#endregion
 
-        
         public ApplicationTabs()
         {
             this.InitializeComponent();
@@ -264,15 +257,12 @@ namespace Deduplicator
             FileSelectionOptions.ImageFileExtentions = Settings.ImageFileExtentions;
             FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
 
-            // Tab "Where to search" data binding
-            lv_Folders.ItemsSource = _dataModel.Folders;
-
-            // Tab "Search options" data binding
+             // Tab "Search options" data binding
             stackpanel_FileSelectionOptions.DataContext = FileSelectionOptions;
             stackpanel_FileCompareOptions.DataContext = FileCompareOptions;
 
             // Tab "Search results" data binding
-            GroupedFiles.Source = _dataModel.ResultFilesCollection;
+//            GroupedFiles.Source = _dataModel.DuplicatedFiles;
             listbox_ResultGroupingModes.ItemsSource = FileCompareOptions.ResultGrouppingModesList;
             
             listbox_ResultGrouping.ItemsSource = FileCompareOptions.ResultGrouppingModesList;
@@ -300,7 +290,7 @@ namespace Deduplicator
 
             if (e.PropertyName == "CurrentGroupModeIndex" && 
                 FileCompareOptions.CurrentGroupModeIndex >= 0
-                && _dataModel.ResultFilesCollection.Count >0)
+                && _dataModel.DuplicatesCount > 0)
             {
                 // Изменилось выбранное значение в Listbox на странице опций поиска или на странице
                 // просмотра результатов поиска если изменение произошло не в результате изменения одного из своиств
@@ -320,7 +310,7 @@ namespace Deduplicator
                 if (FileCompareOptions.IsRollBack)
                     return;
 
-                if (_dataModel.ResultFilesCollection.Count == 0)
+                if (_dataModel.DuplicatesCount == 0)
                 {
                     // Если поиск дубликатов не выполнялся то просто сохраняем новые значения
                     FileCompareOptions.Commit();
@@ -507,7 +497,7 @@ namespace Deduplicator
                 return;
             }
             // Проверим есть ли результат предыдущего поиска и если есть покажем предупреждающее сообщение
-            if (_dataModel.ResultFilesCollection.Count > 0)
+            if (_dataModel.DuplicatesCount > 0)
             {
                  MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
                  MsgBox.Message = _resldr.GetString("DuplicatedAlreadyFound");
@@ -560,7 +550,7 @@ namespace Deduplicator
             }
         }
 
-        private void listvew_Folders_Tapped(object sender, TappedRoutedEventArgs e)
+        private void lv_Folders_Tapped(object sender, TappedRoutedEventArgs e)
         {
             BtnDelFolderEnabled = (lv_Folders.SelectedItems.Count > 0 && _dataModel.OperationCompleted)? true : false;
         }
@@ -619,7 +609,7 @@ namespace Deduplicator
             }
             foreach (File file in deletedFiles)
             {
-                foreach (var group in _dataModel.ResultFilesCollection)
+                foreach (var group in _dataModel.DuplicatedFiles)
                 {
                     if (group.Contains(file))
                         group.Remove(file);

@@ -15,18 +15,7 @@ namespace Deduplicator.Common
         private void NotifyCollectionChanged()
         {
             if (CollectionChanged != null)
-            {
-                //   await _mainPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate { CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)); });
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            }
-        }
-
-        private MainPage _mainPage = null;
-
-        public MainPage MainPage
-        {
-            get { return _mainPage; }
-            set { _mainPage = value; }
         }
 
         public GroupedFilesCollection()
@@ -34,25 +23,13 @@ namespace Deduplicator.Common
 
         }
 
-        public GroupedFilesCollection(MainPage mainpage)
-        {
-            _mainPage = mainpage;
-        }
-
-        //        public new void Add(FilesGroup group)
-        //        {
-        //            base.Add(group);
-        //        //    NotifyCollectionChanged();
-        //        }
-
         //public new void Clear()
         //{
         //    base.Clear();
-        //    //            await Task.Delay(TimeSpan.FromMilliseconds(100));
-        //    NotifyCollectionChanged();
+        ////    NotifyCollectionChanged();
         //}
 
-        public  void Invalidate()
+        public void Invalidate()
         {
             NotifyCollectionChanged();
         }

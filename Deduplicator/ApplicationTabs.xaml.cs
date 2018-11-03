@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -15,28 +11,29 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.Xaml.Data;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace Deduplicator
 {
-    public  sealed partial class ApplicationTabs : UserControl, INotifyPropertyChanged
+    public sealed partial class ApplicationTabs : UserControl, INotifyPropertyChanged
     {
-        public enum AppStatus { SearchOptions, SearchResults, Settings }
+//        public enum AppStatus { SearchOptions, SearchResults, Settings }
 
         [Flags]
         private enum CmdButtons
         {
-            DelSelectedFiles =  1,
-            StartSearch      =  2,
-            CancelSearch     =  4,
-            SaveSettings     =  8,
-            AddFolder        = 16,
-            DelFolder        = 32
-         }
+            DelSelectedFiles = 1,
+            StartSearch = 2,
+            CancelSearch = 4,
+            SaveSettings = 8,
+            AddFolder = 16,
+            DelFolder = 32
+        }
 
         [Flags]
-        public enum Tabs { WhereToSearch = 1, SearchOptions = 2, SearchResults = 4, Settings = 8}
+        public enum Tabs { WhereToSearch = 1, SearchOptions = 2, SearchResults = 4, Settings = 8 }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)
@@ -46,7 +43,7 @@ namespace Deduplicator
         }
 
         Tabs _activeTab;
-       
+
         private ResourceLoader _resldr = new ResourceLoader();
 
         // Список аттрибутов по коорым будет выполняться сравнение файлов при поиске дубликатов
@@ -75,7 +72,7 @@ namespace Deduplicator
                 }
             }
         }
-        
+
         public Visibility BtnDelSelectedFilesVisibility
         {
             get { return _cmdButtonsVisualState.HasFlag(CmdButtons.DelSelectedFiles) ? Visibility.Visible : Visibility.Collapsed; }
@@ -107,7 +104,7 @@ namespace Deduplicator
             get { return _groupingSelectorVisibility; }
             private set
             {
-                if (_groupingSelectorVisibility!=value)
+                if (_groupingSelectorVisibility != value)
                 {
                     _groupingSelectorVisibility = value;
                     NotifyPropertyChanged("GroupingSelectorVisibility");
@@ -126,7 +123,7 @@ namespace Deduplicator
                 {
                     _groupByPrimaryFolderVisibility = value;
                     NotifyPropertyChanged("GroupByPrimaryFolderVisibility");
-                 }
+                }
             }
         }
 
@@ -147,7 +144,7 @@ namespace Deduplicator
         public bool _btnDelFolderEnabled = false;
         public bool BtnDelFolderEnabled
         {
-            get { return _btnDelFolderEnabled;}
+            get { return _btnDelFolderEnabled; }
             set
             {
                 if (_btnDelFolderEnabled != value)
@@ -242,14 +239,18 @@ namespace Deduplicator
             }
         }
 
-        private string _applicationStatus;
-        public string ApplicationStatus
-        {
-            get { return _applicationStatus; }
-            set { _applicationStatus = value; NotifyPropertyChanged("ApplicationStatus"); }
-        }
+        //private string _applicationStatus;
+        //public string ApplicationStatus
+        //{
+        //    get { return _applicationStatus; }
+        //    set { _applicationStatus = value; NotifyPropertyChanged("ApplicationStatus"); }
+        //}
 
         private DataModel _dataModel = new DataModel();
+        public DataModel AppData
+        {
+            get {return _dataModel;}
+        }
 
         
         public ApplicationTabs()
@@ -264,7 +265,7 @@ namespace Deduplicator
             FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
 
             // Tab "Where to search" data binding
-            lv_Folders.ItemsSource = _dataModel.FoldersCollection;
+            lv_Folders.ItemsSource = _dataModel.Folders;
 
             // Tab "Search options" data binding
             stackpanel_FileSelectionOptions.DataContext = FileSelectionOptions;
@@ -346,15 +347,14 @@ namespace Deduplicator
 
         private void OnSearchStatusChanged(object sender, DataModel.SearchStatus status)
         {
-            ApplicationStatus = _dataModel.SearchStatusInfo;
-
+  
             if (_dataModel.OperationCompleted)
             {
                 BtnAddFolderEnabled = true;
                 BtnDelFolderEnabled = (lv_Folders.SelectedItems.Count > 0) ? true : false;
                 BtnStartSearchEnabled = (lv_Folders.Items.Count > 0) ? true : false;
                 BtnStopSearchEnabled = false;
-                _dataModel.ResultFilesCollection.Invalidate();
+//                _dataModel.ResultFilesCollection.Invalidate();
             }
         }
 
@@ -422,14 +422,14 @@ namespace Deduplicator
             if (newfolder != null)
             {
                 // Проверим что такого каталога ещё нет в списке каталогов для поиска дубликатов
-                if (_dataModel.FoldersCollection.Any(Folder => Folder.FullName == newfolder.Path))
+                if (_dataModel.Folders.Any(Folder => Folder.FullName == newfolder.Path))
                 {
                     MsgBox.Message = "Folder\n" + newfolder.Path + "\nalready in the folders list.";
                     await MsgBox.Show();
                     return;
                 }
                 // Проверим что добавляемый каталог не являеся подкаталогом каталога уже присутствующего в списке
-                foreach (Folder folder in _dataModel.FoldersCollection)
+                foreach (Folder folder in _dataModel.Folders)
                 {
                     if (newfolder.Path.StartsWith(folder.FullName))
                     {
@@ -443,7 +443,7 @@ namespace Deduplicator
                     }
                 }
                 // Проверим что ни один из каталогов присутствующих в списке не являеся подкаталогом добавляемого каталога
-                foreach (Folder folder in _dataModel.FoldersCollection)
+                foreach (Folder folder in _dataModel.Folders)
                 {
                     if (folder.FullName.StartsWith(newfolder.Path))
                     {
@@ -457,7 +457,7 @@ namespace Deduplicator
                     }
                 }
                 String AccessToken = StorageApplicationPermissions.FutureAccessList.Add(newfolder);
-                _dataModel.FoldersCollection.Add(new Folder(newfolder.Path, false, AccessToken));
+                _dataModel.Folders.Add(new Folder(newfolder.Path, false, AccessToken));
 
                 BtnStartSearchEnabled = (_dataModel.OperationCompleted) ? true : false;
                 
@@ -475,7 +475,7 @@ namespace Deduplicator
             foreach (Folder f in foldersBuffer)
             {
                 StorageApplicationPermissions.FutureAccessList.Remove(f.AccessToken);
-                _dataModel.FoldersCollection.Remove(f);
+                _dataModel.Folders.Remove(f);
             }
 
             BtnDelFolderEnabled = false;
@@ -488,7 +488,7 @@ namespace Deduplicator
         {
             // Проверим что если один из каталогов помечен как Primary то в списке должен присутствовать 
             // хотя бы ещё один каталог 
-            if (_dataModel.FoldersCollection.Count < 2 & _dataModel.PrimaryFolder != null)
+            if (_dataModel.Folders.Count < 2 & _dataModel.PrimaryFolder != null)
             {
                 MsgBox.SetButtons(MessageBoxButtons.Close);
                 MsgBox.Message = _resldr.GetString("SinglePrimaryDirectory");
@@ -548,7 +548,7 @@ namespace Deduplicator
             if (cf.IsPrimary)
             {
                 _dataModel.PrimaryFolder = cf;
-                foreach (Folder f in _dataModel.FoldersCollection)
+                foreach (Folder f in _dataModel.Folders)
                 {
                     if (f.FullName != cf.FullName)
                         f.IsPrimary = false;

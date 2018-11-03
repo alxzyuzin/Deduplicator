@@ -364,10 +364,10 @@
                     Content="Save settings" Tapped="button_SaveSettings_Tapped" 
                     Visibility="{Binding BtnSaveSettingsVisibility}"/>
         </StackPanel>
-                
-        <TextBlock x:Name="SearchStatus" Grid.Row="3" 
-                   Text="{Binding ApplicationStatus}" FontSize="20" FontWeight="Normal" Foreground="Orange" Margin="30,4,30,4"/>
-                
+
+        <TextBlock x:Name="SearchStatus" Grid.Row="3" FontSize="20" FontWeight="Normal" 
+                   Foreground="Orange" Margin="30,4,30,4" Text="{Binding Path=AppData.SearchStatusInfo}"/>
+        
         <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>
  </UserControl>

@@ -142,8 +142,10 @@
         <DataTemplate x:Key="FileGroupHeaderTemplate">
 
                  <Grid HorizontalAlignment="Stretch"  
-                       Height="40" Width="{Binding InternalWidth, ElementName=listview_Duplicates}">
-                <Grid.ColumnDefinitions>
+                       Height="40" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
+                <!--Grid HorizontalAlignment="Stretch"  
+                       Height="40" Width="{Binding ActuallWidth}"-->
+                    <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="700"/>
                 </Grid.ColumnDefinitions>
@@ -154,12 +156,12 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" 
                             VerticalAlignment="Center">
-                    <TextBlock  Text="Files in group  "    Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
-                    <TextBlock  Text="{Binding Count}"     Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
-                    <TextBlock  Text=".  Total group file size " Style="{StaticResource TextBlockFileGroupHeaderStyle}" Margin="0,5,0,0"/>
-                    <TextBlock  Text="{Binding TotalSize}"       Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
-                    <TextBlock  Text=" byte."                    Style="{StaticResource TextBlockFileGroupHeaderStyle}" />
-                    <CheckBox x:Name="checkbox_SelectGroup" Content="Select group" Margin="40,0,30,0" 
+                    <TextBlock Text="Files in group  "    Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
+                    <TextBlock Text="{Binding Count}"     Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
+                    <TextBlock Text=".  Total group file size " Style="{StaticResource TextBlockFileGroupHeaderStyle}" Margin="0,5,0,0"/>
+                    <TextBlock Text="{Binding TotalSize}"       Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
+                    <TextBlock Text=" byte."                    Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
+                    <CheckBox  Content="Select group" Margin="40,0,30,0" 
                               FontWeight="SemiBold" FontSize ="16" VerticalAlignment="Center"
                               FlowDirection="RightToLeft" Foreground="Orange"
                               Checked="checkbox_SelectGroup_Checked" 
@@ -170,7 +172,7 @@
 
     </UserControl.Resources>
 
-    <Grid x:Name="gr_Main" VerticalAlignment="Stretch"  >
+    <Grid VerticalAlignment="Stretch"  >
 
         <Grid.Resources>
 
@@ -202,25 +204,25 @@
 
         <TextBlock Grid.Row="0" Text="{Binding TabHeader}" 
                    Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
-        <!-- Выбор группировки на странице результатов поиска -->
+        <!-- Selecting grouping mode on Search results page -->
         <StackPanel Grid.Row="0" HorizontalAlignment="Right" 
                     Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupingSelectorVisibility}">
-                     <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
+            <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
                        Width="150" FontSize="18"/>
-                    <ComboBox  x:Name="lb_ResultGrouping"  Width="180px" FontSize="16" FontWeight="Medium"
+            <ComboBox Width="180px" FontSize="16" FontWeight="Medium"
                        SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"
-                       ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"/>
+                       ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"
+                       SelectionChanged="GroupingModes_SelectionChanged"/>
         </StackPanel>
-        
-        <StackPanel x:Name="stackpanel_GroupByPrimaryFolder" Grid.Row="0" HorizontalAlignment="Right" 
+        <!-- Display this text if search duplicates made for Primary folder -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Right" 
                     Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupByPrimaryFolderVisibility}">
             <TextBlock Text="Files grouped by names of files in primary folder" FontSize="18"
                        Style="{StaticResource TextBlockTabHeaderStyle}"/>
         </StackPanel>
-
-        
-
-        <Border x:Name="WhereToSearchtab" Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True">
+        <!-- Folders list where to search duplicates -->
+        <Border Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True"
+                Visibility="{Binding ViewWhereToSearchVisibility}">
             <ListView x:Name="lv_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
                       ItemsSource="{Binding Path=AppData.Folders}"
@@ -233,17 +235,17 @@
                 <ListViewItem/>
             </ListView>
         </Border>
-
-        <Grid x:Name="SearchOptionsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" 
-              Margin="0,10,0,0" d:IsHidden="True">
+        <!-- Search options -->
+        <Grid Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
+              Visibility="{Binding ViewOptionsVisibility}" d:IsHidden="True">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <StackPanel x:Name="stackpanel_FileSelectionOptions" Grid.Column="0" Margin="20,0,10,0" DataContext="{Binding FileSelectionOptions}">
+            <StackPanel Grid.Column="0" Margin="20,0,10,0" DataContext="{Binding FileSelectionOptions}">
                 <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
                            FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
-                <RadioButton x:Name="rb_AllFiles" Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
+                <RadioButton Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
                              FontWeight="Medium"  GroupName="FileSelection"
                              IsChecked="{Binding Path=AllFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
                 <RadioButton x:Name="rb_SpecificFiles" Content="  specific files"  Height="35" FontSize="18" 
@@ -258,20 +260,19 @@
                 <CheckBox    Content="  video files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
                              IsChecked="{Binding VideoFiles , Mode=TwoWay}"/>
-                <TextBlock   Text="with extensions:" FontSize="18" Height="32" FontWeight="Medium"  Margin="50,10,0,0"/>
-                <TextBox     x:Name="textbox_SpecificExtentions" FontSize="18" FontWeight="Normal" 
-                             Margin="70,0,40,0"  Height="35" MinWidth="200"
+                <TextBlock   Text="and files with extensions:" FontSize="18" Height="32" FontWeight="Medium"  Margin="50,10,0,0"/>
+                <TextBox     FontSize="18" FontWeight="Normal" Margin="70,0,40,0"  Height="35" MinWidth="200"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
                              PlaceholderText="Type here list of file extentions separated with semicolon"
                              Text="{Binding SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
                 <TextBlock/>
                 <TextBlock   Text="Exclude extensions:" FontSize="18" FontWeight="Medium"  Margin="0,10,0,0"/>
-                <TextBox     x:Name="textbox_ExcludeExtentions" FontSize="18" FontWeight="Normal" Margin="20,0,40,0"
+                <TextBox     FontSize="18" FontWeight="Normal" Margin="20,0,40,0"
                              Height="35" MinWidth="200" 
                              PlaceholderText="Type here list of file extentions separated with semicolon"
                              Text="{Binding ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
             </StackPanel>
-            <StackPanel x:Name="stackpanel_FileCompareOptions" Grid.Column="1" Margin="10,0,20,0" DataContext="{Binding FileCompareOptions}">
+            <StackPanel Grid.Column="1" Margin="10,0,20,0" DataContext="{Binding FileCompareOptions}">
                 <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
                                    FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
                 <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckName, Mode=TwoWay}"/>
@@ -280,15 +281,17 @@
                 <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
                 <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
-                <ComboBox  x:Name="listbox_ResultGroupingModes" Width="250" FontSize="16" FontWeight="Medium"
+                <ComboBox  Width="250" FontSize="16" FontWeight="Medium"
                            HorizontalAlignment="Left" Margin="30,5,0,0"
                            SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"
-                           ItemsSource="{Binding Path=ResultGrouppingModesList}">
+                           ItemsSource="{Binding Path=ResultGrouppingModesList}"
+                           SelectionChanged="GroupingModes_SelectionChanged">
                 </ComboBox>
             </StackPanel>
         </Grid>
-
-        <Grid x:Name="SearchResultsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0">
+        <!-- Search results -->
+        <Grid Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
+              Visibility="{Binding ViewSearchResultsVisibility}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="*"/>
@@ -296,7 +299,7 @@
             <TextBlock Grid.Row="0"  Text="File"  Style="{StaticResource  TextBlockHeaderStyle}"
                        Padding="40,0,0,0" HorizontalAlignment="Left"/>
             <!-- Заголовок списка файлов -->
-            <StackPanel x:Name="FileListHeader" Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="210"/>
@@ -308,16 +311,16 @@
                     <TextBlock Grid.Column="2"  Text="Size"     Style="{StaticResource TextBlockHeaderStyle}"/>
                 </Grid>
             </StackPanel>
-            <!--ItemsSource="{Binding Source={StaticResource GroupedFiles}}"-->
-            <Border x:Name="ListViewBorder" BorderBrush="White" Grid.Row="1" BorderThickness="1" Margin="0,0,0,5">
-            <common:GListView x:Name="listview_Duplicates"  Grid.Row="1"  BorderBrush="White" BorderThickness="1"
+  
+            <Border BorderBrush="White" Grid.Row="1" BorderThickness="1" Margin="0,0,0,5">
+            <common:GListView x:Name="lv_Duplicates"  Grid.Row="1"  BorderBrush="White" BorderThickness="1"
                           VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                           ItemsSource="{Binding Source={StaticResource GroupedFiles}}"
                           ItemContainerStyle="{StaticResource ListViewItemStyle}"
                           ItemTemplate="{StaticResource FileTemplate}"
                           SelectionMode="Multiple" 
-                          ItemClick="listview_Duplicates_ItemClick"
-                          IsItemClickEnabled="True">
+                          ItemClick="lv_Duplicates_ItemClick"
+                          >
 
                 <ListView.GroupStyle>
                     <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}"/>
@@ -326,50 +329,50 @@
         </Border>
     </Grid>
 
-        <Border x:Name="bd_SettingsTab" Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
+        <Border Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
                 BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" 
-                DataContext="{Binding Settings}" d:IsHidden="True">
+                Visibility="{Binding ViewSettingsVisibility}" d:IsHidden="True">
             <StackPanel >
-                <TextBlock   Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
-                <TextBox    x:Name="textbox_ImageFileExtentions" Text="{Binding ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
-                <TextBlock    Text="Audio files extentions:" Style="{StaticResource TextBlockStyle}"/>
-                <TextBox    x:Name="textbox_AudioFileExtentions" Text="{Binding AudioFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
-                <TextBlock    Text="Video files extentions:" Style="{StaticResource TextBlockStyle}"/>
-                <TextBox    x:Name="textbox_VideoFileExtentions" Text="{Binding VideoFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+                <TextBlock Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
+                <TextBlock Text="Audio files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.AudioFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+                <TextBlock Text="Video files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.VideoFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
             </StackPanel>
         </Border>
 
-        <TextBlock x:Name="tbx_EmptyContentMessage"  Grid.Row="1" Height="60"
-                   FontSize="20" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Center"
-                   Text="{Binding EmptyContentMessage}" TextWrapping="WrapWholeWords"
-                   Visibility="{Binding EmptyContentMessageVisibility}"/>
+        <TextBlock Grid.Row="1" Height="60" FontSize="20" FontWeight="Medium" VerticalAlignment="Center" 
+                   HorizontalAlignment="Center" TextWrapping="WrapWholeWords"
+                   Text="{Binding EmptyContentMessage}" Visibility="{Binding EmptyContentMessageVisibility}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
-            <Button x:Name="button_AddFolder" Style="{StaticResource CmdButtonStyle}" 
+            <Button Style="{StaticResource CmdButtonStyle}" 
                     Content="Add folder" Tapped="button_AddFolder_Tapped" 
                     Visibility="{Binding BtnAddFolderVisibility}"
                     IsEnabled="{Binding BtnAddFolderEnabled}"/>
-            <Button x:Name="button_DelFolder"  Style="{StaticResource CmdButtonStyle}" 
+            <Button Style="{StaticResource CmdButtonStyle}" 
                     Content="Delete selected folders" Tapped="button_DelFolder_Tapped"
                     Visibility="{Binding BtnDelFolderVisibility}"
                     IsEnabled="{Binding BtnDelFolderEnabled}"/>
-            <Button x:Name="button_DelSelectedFiles" Style="{StaticResource CmdButtonStyle}" 
+            <Button Style="{StaticResource CmdButtonStyle}" 
                     Content="Delete selected files" Tapped="button_DeleteSelectedFiles_Tapped" 
                     Visibility="{Binding BtnDelSelectedFilesVisibility}"
                     IsEnabled="{Binding BtnDelFilesEnabled}"/>
-            <Button x:Name="button_StartSearch" Style="{StaticResource CmdButtonStyle}"
+            <Button Style="{StaticResource CmdButtonStyle}"
                     Content="Start search" Tapped="button_StartSearch_Tapped" 
                     Visibility="{Binding BtnStartSearchVisibility}"
                     IsEnabled="{Binding BtnStartSearchEnabled}"/>
-            <Button x:Name="button_CancelSearch" Style="{StaticResource CmdButtonStyle}"
-                    Content="Cancel search" Tapped="button_CancelSearch_Tapped" Visibility="{Binding BtnCancelSearchVisibility}"
+            <Button Style="{StaticResource CmdButtonStyle}"
+                    Content="Cancel search" Tapped="button_CancelSearch_Tapped" 
+                    Visibility="{Binding BtnCancelSearchVisibility}"
                     IsEnabled="{Binding BtnStopSearchEnabled}"/>
-            <Button x:Name="button_SaveSettings" Style="{StaticResource CmdButtonStyle}" 
+            <Button Style="{StaticResource CmdButtonStyle}" 
                     Content="Save settings" Tapped="button_SaveSettings_Tapped" 
                     Visibility="{Binding BtnSaveSettingsVisibility}"/>
         </StackPanel>
 
-        <TextBlock x:Name="SearchStatus" Grid.Row="3" FontSize="20" FontWeight="Normal" 
+        <TextBlock Grid.Row="3" FontSize="20" FontWeight="Normal" 
                    Foreground="Orange" Margin="30,4,30,4" Text="{Binding Path=AppData.SearchStatusInfo}"/>
         
         <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>

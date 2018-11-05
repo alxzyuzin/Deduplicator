@@ -69,6 +69,62 @@ namespace Deduplicator
             }
         }
 
+        private Visibility _viewWhereToSearchVisibility = Visibility.Collapsed;
+        public Visibility ViewWhereToSearchVisibility
+        {
+            get { return _viewWhereToSearchVisibility; }
+            set
+            {
+                if (_viewWhereToSearchVisibility != value)
+                {
+                    _viewWhereToSearchVisibility = value;
+                    NotifyPropertyChanged("ViewWhereToSearchVisibility");
+                }
+            }
+        }
+
+        private Visibility _viewSearchResultsVisibility = Visibility.Collapsed;
+        public Visibility ViewSearchResultsVisibility
+        {
+            get { return _viewSearchResultsVisibility; }
+            set
+            {
+                if (_viewSearchResultsVisibility != value)
+                {
+                    _viewSearchResultsVisibility = value;
+                    NotifyPropertyChanged("ViewSearchResultsVisibility");
+                }
+            }
+        }
+
+        private Visibility _viewSettingsVisibility = Visibility.Collapsed;
+        public Visibility ViewSettingsVisibility
+        {
+            get { return _viewSettingsVisibility; }
+            set
+            {
+                if (_viewSettingsVisibility != value)
+                {
+                    _viewSettingsVisibility = value;
+                    NotifyPropertyChanged("ViewSettingsVisibility");
+                }
+            }
+        }
+
+        private Visibility _viewOptionsVisibility = Visibility.Collapsed;
+        public Visibility ViewOptionsVisibility
+        {
+            get { return _viewOptionsVisibility; }
+            set
+            {
+                if (_viewOptionsVisibility != value)
+                {
+                    _viewOptionsVisibility = value;
+                    NotifyPropertyChanged("ViewOptionsVisibility");
+                }
+            }
+        }
+
         public Visibility BtnDelSelectedFilesVisibility
         {
             get { return _cmdButtonsVisualState.HasFlag(CmdButtons.DelSelectedFiles) ? Visibility.Visible : Visibility.Collapsed; }
@@ -251,23 +307,16 @@ namespace Deduplicator
             get { return _fileCompareOptions; }
         }
 
-        public Settings _settings = new Settings();
-        public Settings Settings
-        {
-            get { return _settings; }
-        }
-        #endregion
+ #endregion
 
         public ApplicationTabs()
         {
             InitializeComponent();
             DataContext = this;
 
-            Settings.Restore();
-
-            FileSelectionOptions.AudioFileExtentions = Settings.AudioFileExtentions;
-            FileSelectionOptions.ImageFileExtentions = Settings.ImageFileExtentions;
-            FileSelectionOptions.VideoFileExtentions = Settings.VideoFileExtentions;
+            FileSelectionOptions.AudioFileExtentions = _dataModel.Settings.AudioFileExtentions;
+            FileSelectionOptions.ImageFileExtentions = _dataModel.Settings.ImageFileExtentions;
+            FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
 
             FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
 
@@ -279,7 +328,7 @@ namespace Deduplicator
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            listview_Duplicates.InternalWidth = this.ActualWidth;
+            lv_Duplicates.InternalWidth = this.ActualWidth;
         }
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -348,10 +397,10 @@ namespace Deduplicator
         public void SwitchTo(Tabs tab)
         {
 
-            WhereToSearchtab.Visibility = tab.HasFlag(Tabs.WhereToSearch) ? Visibility.Visible : Visibility.Collapsed;
-            SearchOptionsTab.Visibility = tab.HasFlag(Tabs.SearchOptions) ? Visibility.Visible : Visibility.Collapsed;
-            SearchResultsTab.Visibility = tab.HasFlag(Tabs.SearchResults) ? Visibility.Visible : Visibility.Collapsed;
-            bd_SettingsTab.Visibility   = tab.HasFlag(Tabs.Settings)      ? Visibility.Visible : Visibility.Collapsed;
+            ViewWhereToSearchVisibility = tab.HasFlag(Tabs.WhereToSearch) ? Visibility.Visible : Visibility.Collapsed;
+            ViewOptionsVisibility       = tab.HasFlag(Tabs.SearchOptions) ? Visibility.Visible : Visibility.Collapsed;
+            ViewSearchResultsVisibility = tab.HasFlag(Tabs.SearchResults) ? Visibility.Visible : Visibility.Collapsed;
+            ViewSettingsVisibility      = tab.HasFlag(Tabs.Settings)      ? Visibility.Visible : Visibility.Collapsed;
 
             GroupingSelectorVisibility     = _dataModel.PrimaryFolder == null ? Visibility.Visible : Visibility.Collapsed;
             GroupByPrimaryFolderVisibility = _dataModel.PrimaryFolder == null ? Visibility.Collapsed : Visibility.Visible;
@@ -501,7 +550,7 @@ namespace Deduplicator
 
         private void button_SaveSettings_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Settings.Save();
+            _dataModel.Settings.Save();
         }
 
 #region Where To Search Tab event handlers
@@ -546,10 +595,10 @@ namespace Deduplicator
             FilesGroup datacontext = cbx.DataContext as FilesGroup;
             foreach (File f in datacontext)
             {
-                listview_Duplicates.SelectedItems.Add(f);
+                lv_Duplicates.SelectedItems.Add(f);
             }
 
-            BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
+            BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
         private void checkbox_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
@@ -558,26 +607,25 @@ namespace Deduplicator
             FilesGroup datacontext = cbx.DataContext as FilesGroup;
             foreach (File f in datacontext)
             {
-                listview_Duplicates.SelectedItems.Remove(f);
+                lv_Duplicates.SelectedItems.Remove(f);
             }
-            BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
+            BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
-        private void listview_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
+        private void lv_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (listview_Duplicates.SelectedItems.Contains(e.ClickedItem))
-                listview_Duplicates.SelectedItems.Remove(e.ClickedItem);
+            if (((ListView)sender).SelectedItems.Contains(e.ClickedItem))
+                ((ListView)sender).SelectedItems.Remove(e.ClickedItem);
             else
-                listview_Duplicates.SelectedItems.Add(e.ClickedItem);
+                ((ListView)sender).SelectedItems.Add(e.ClickedItem);
 
-            BtnDelFilesEnabled = listview_Duplicates.SelectedItems.Count > 0 ? true : false;
+            BtnDelFilesEnabled = ((ListView)sender).SelectedItems.Count > 0 ? true : false;
         }
-
 
         private async void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
             List<File> deletedFiles = new List<File>();
-            foreach (File file in listview_Duplicates.SelectedItems)
+            foreach (File file in ((ListView)sender).SelectedItems)
             {
                 if (!file.IsProtected)
                 {
@@ -585,7 +633,6 @@ namespace Deduplicator
                     await f.DeleteAsync(StorageDeleteOption.Default);
                     deletedFiles.Add(file);
                 }
-
             }
             foreach (File file in deletedFiles)
             {
@@ -596,9 +643,19 @@ namespace Deduplicator
                 }
             }
         }
-        
-        
-#endregion
+
+
+        #endregion
+
+        private async void GroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedItem = ((ComboBox)sender).SelectedItem;
+            if (selectedItem != null && _dataModel.DuplicatesCount != 0)
+            {
+                FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());
+                await _dataModel.RegroupResultsByFileAttribute(attribute);
+            }
+        }
     }
 
 

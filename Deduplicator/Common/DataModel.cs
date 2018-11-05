@@ -105,7 +105,9 @@ namespace Deduplicator.Common
 #region Properties
 
         public ObservableCollection<Folder> Folders
-        { get {return _foldersCollection;} }
+        {
+            get {return _foldersCollection;}
+        }
 
         public GroupedFilesCollection DuplicatedFiles
         {
@@ -160,10 +162,16 @@ namespace Deduplicator.Common
             }
         }
 
-#endregion
+        public Settings _settings = new Settings();
+        public Settings Settings
+        {
+            get { return _settings; }
+        }
+        #endregion
 
         public DataModel()
         {
+            Settings.Restore();
         }
 
  
@@ -580,6 +588,19 @@ namespace Deduplicator.Common
                 case FileAttribs.Name: return "Name";
                 case FileAttribs.Size: return "Size";
                 default: return "";
+            }
+        }
+
+        public FileAttribs FileAttributeFromName(string attribName)
+        {
+            switch (attribName)
+            {
+                case "Content": return FileAttribs.Content;
+                case "Creation date time": return FileAttribs.DateCreated;
+                case "Modification date time": return FileAttribs.DateModified;
+                case "Name": return FileAttribs.Name;
+                case "Size": return FileAttribs.Size;
+                default: return FileAttribs.None;
             }
         }
     }

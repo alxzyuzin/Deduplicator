@@ -27,7 +27,7 @@ You can select several folders where to search duplicates. Also you can set one 
 
 
 ## Planned to implement
-
+- Search using MD5 Hash, SHA-1 Hash, Cyclic Redunduncy Check (CRC)
 - Load and save search results. 
 - Saving last search results automatically on program exit. 
 - Delete files to Recycle Bin or directly from hard disk. 

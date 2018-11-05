@@ -204,21 +204,22 @@
 
         <TextBlock Grid.Row="0" Text="{Binding TabHeader}" 
                    Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
-        <!-- Selecting grouping mode on Search results page -->
-        <StackPanel Grid.Row="0" HorizontalAlignment="Right" 
-                    Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupingSelectorVisibility}">
-            <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
-                       Width="150" FontSize="18"/>
-            <ComboBox Width="180px" FontSize="16" FontWeight="Medium"
-                       SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"
-                       ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"
-                       SelectionChanged="GroupingModes_SelectionChanged"/>
-        </StackPanel>
-        <!-- Display this text if search duplicates made for Primary folder -->
-        <StackPanel Grid.Row="0" HorizontalAlignment="Right" 
-                    Orientation="Horizontal" Margin="0,0,0,0" Visibility="{Binding GroupByPrimaryFolderVisibility}">
-            <TextBlock Text="Files grouped by names of files in primary folder" FontSize="18"
-                       Style="{StaticResource TextBlockTabHeaderStyle}"/>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Right"
+                     Visibility="{Binding ViewSearchResultsVisibility}">
+            <!-- Selecting grouping mode on Search results page -->
+            <StackPanel   Visibility="{Binding GroupingSelectorVisibility}" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
+                       Width="100" FontSize="18"/>
+                <ComboBox x:Name="cb_ResGroping" Width="180px" FontSize="16" FontWeight="Medium"
+                          SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
+                          ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"
+                          SelectionChanged="ResultGroupingModes_SelectionChanged"/>
+            </StackPanel>
+            <!-- Display this text if search duplicates made for Primary folder -->
+            <StackPanel  Visibility="{Binding GroupByPrimaryFolderVisibility}">
+                <TextBlock Text="Files grouped by names of files in primary folder." FontSize="18"
+                           Style="{StaticResource TextBlockTabHeaderStyle}"/>
+            </StackPanel>
         </StackPanel>
         <!-- Folders list where to search duplicates -->
         <Border Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True"
@@ -242,6 +243,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <!-- File selection options -->
             <StackPanel Grid.Column="0" Margin="20,0,10,0" DataContext="{Binding FileSelectionOptions}">
                 <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
                            FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
@@ -272,6 +274,7 @@
                              PlaceholderText="Type here list of file extentions separated with semicolon"
                              Text="{Binding ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
             </StackPanel>
+            <!-- File compare options -->
             <StackPanel Grid.Column="1" Margin="10,0,20,0" DataContext="{Binding FileCompareOptions}">
                 <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
                                    FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
@@ -281,11 +284,11 @@
                 <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
                 <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
-                <ComboBox  Width="250" FontSize="16" FontWeight="Medium"
+                <ComboBox  x:Name="cb_OptGroping" Width="250" FontSize="16" FontWeight="Medium"
                            HorizontalAlignment="Left" Margin="30,5,0,0"
-                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"
+                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
                            ItemsSource="{Binding Path=ResultGrouppingModesList}"
-                           SelectionChanged="GroupingModes_SelectionChanged">
+                           SelectionChanged="OptionsGroupingModes_SelectionChanged">
                 </ComboBox>
             </StackPanel>
         </Grid>
@@ -319,9 +322,7 @@
                           ItemContainerStyle="{StaticResource ListViewItemStyle}"
                           ItemTemplate="{StaticResource FileTemplate}"
                           SelectionMode="Multiple" 
-                          ItemClick="lv_Duplicates_ItemClick"
-                          >
-
+                          ItemClick="lv_Duplicates_ItemClick">
                 <ListView.GroupStyle>
                     <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}"/>
                 </ListView.GroupStyle>
@@ -374,7 +375,6 @@
 
         <TextBlock Grid.Row="3" FontSize="20" FontWeight="Normal" 
                    Foreground="Orange" Margin="30,4,30,4" Text="{Binding Path=AppData.SearchStatusInfo}"/>
-        
         <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>
  </UserControl>

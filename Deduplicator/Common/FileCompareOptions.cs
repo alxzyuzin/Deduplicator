@@ -112,8 +112,8 @@ namespace Deduplicator.Common
             }
         }
 
-        private int _currentGroupModeIndexOldValue =0;
-        private int _currentGroupModeIndex = 0;
+        private int _currentGroupModeIndexOldValue;
+        private int _currentGroupModeIndex = -1;
         public  int CurrentGroupModeIndex
         {
             get { return _currentGroupModeIndex; }
@@ -133,7 +133,7 @@ namespace Deduplicator.Common
             CheckName = true;
             CheckSize = true;
             UpdateActiveAttribsLists();
-            CurrentGroupModeIndex = 0; 
+            CurrentGroupModeIndex = -1; 
             _checkNameOldValue = _checkName;
             _checkSizeOldValue = _checkSize;
             _checkCreationDateTimeOldValue = _checkCreationDateTime;
@@ -226,7 +226,6 @@ namespace Deduplicator.Common
             _checkModificationDateTimeOldValue = _checkModificationDateTime;
             _checkContentOldValue = _checkContent;
             UpdateActiveAttribsLists();
-            //_currentGroupModeIndexOldValue = _currentGroupModeIndex;
         }
 
         public void RollBack()

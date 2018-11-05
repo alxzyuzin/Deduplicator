@@ -11,6 +11,7 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
+using System.Threading.Tasks;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -30,7 +31,7 @@ namespace Deduplicator
         }
 
         [Flags]
-        public enum Tabs { WhereToSearch = 1, SearchOptions = 2, SearchResults = 4, Settings = 8 }
+        public enum View { WhereToSearch = 1, SearchOptions = 2, SearchResults = 4, Settings = 8 }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)
@@ -319,6 +320,7 @@ namespace Deduplicator
             FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
 
             FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
+            FileCompareOptions.CurrentGroupModeIndex = 0;
 
             // Подпишемся на события модели данных
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
@@ -333,21 +335,7 @@ namespace Deduplicator
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-
-            if (e.PropertyName == "CurrentGroupModeIndex" && 
-                FileCompareOptions.CurrentGroupModeIndex >= 0
-                && _dataModel.DuplicatesCount > 0)
-            {
-                // Изменилось выбранное значение в Listbox на странице опций поиска или на странице
-                // просмотра результатов поиска если изменение произошло не в результате изменения одного из своиств
-                // "CheckName" "CheckSize" "CheckCreationDateTime" "CheckModificationDateTime" "CheckContent"
-                // и список дубликатов не пустой выполняем перегруппировку
-                // При включении/выключении CheckBox в аттрибутах сравнения файлов происходит добавление атрибута
-                // в список атрибутов по которым может быть сгруппирован результат поиска и генерируется 
-                // событие SelectionChanged. При этом SelectedIndex становится равным -1
-                await _dataModel.RegroupResultsByFileAttribute(FileCompareOptions.CurrentGroupModeAttrib);
-            }
-
+            
             if (e.PropertyName == "CheckName" || e.PropertyName == "CheckSize" ||
                 e.PropertyName == "CheckCreationDateTime" || e.PropertyName == "CheckModificationDateTime" ||
                 e.PropertyName == "CheckContent")
@@ -394,36 +382,36 @@ namespace Deduplicator
             }
         }
 
-        public void SwitchTo(Tabs tab)
+        public void SwitchTo(View view)
         {
 
-            ViewWhereToSearchVisibility = tab.HasFlag(Tabs.WhereToSearch) ? Visibility.Visible : Visibility.Collapsed;
-            ViewOptionsVisibility       = tab.HasFlag(Tabs.SearchOptions) ? Visibility.Visible : Visibility.Collapsed;
-            ViewSearchResultsVisibility = tab.HasFlag(Tabs.SearchResults) ? Visibility.Visible : Visibility.Collapsed;
-            ViewSettingsVisibility      = tab.HasFlag(Tabs.Settings)      ? Visibility.Visible : Visibility.Collapsed;
+            ViewWhereToSearchVisibility = view.HasFlag(View.WhereToSearch) ? Visibility.Visible : Visibility.Collapsed;
+            ViewOptionsVisibility       = view.HasFlag(View.SearchOptions) ? Visibility.Visible : Visibility.Collapsed;
+            ViewSearchResultsVisibility = view.HasFlag(View.SearchResults) ? Visibility.Visible : Visibility.Collapsed;
+            ViewSettingsVisibility      = view.HasFlag(View.Settings)      ? Visibility.Visible : Visibility.Collapsed;
 
             GroupingSelectorVisibility     = _dataModel.PrimaryFolder == null ? Visibility.Visible : Visibility.Collapsed;
             GroupByPrimaryFolderVisibility = _dataModel.PrimaryFolder == null ? Visibility.Collapsed : Visibility.Visible;
 
             EmptyContentMessage = string.Empty;
 
-            switch (tab)
+            switch (view)
             {
-                case Tabs.WhereToSearch:
+                case View.WhereToSearch:
                     TabHeader = "List of folders where to search duplicates.";
                     CmdButtonsVisualState = CmdButtons.AddFolder|CmdButtons.DelFolder|CmdButtons.StartSearch|CmdButtons.CancelSearch;
                     EmptyContentMessage = "No folders selected for searching duplicated files.\n Add folders where search duplicates.";
                     break;
-                case Tabs.SearchOptions:
+                case View.SearchOptions:
                     TabHeader = "Search options.";
                     CmdButtonsVisualState = CmdButtons.StartSearch | CmdButtons.CancelSearch;
                     break;
-                case Tabs.SearchResults:
+                case View.SearchResults:
                     TabHeader = "Search results.";
                     CmdButtonsVisualState = CmdButtons.DelSelectedFiles | CmdButtons.StartSearch | CmdButtons.CancelSearch;
                     EmptyContentMessage = "No duplicates found.";
                     break;
-                case Tabs.Settings:
+                case View.Settings:
                     TabHeader = "Settings.";
                     CmdButtonsVisualState = CmdButtons.SaveSettings;
                     break;
@@ -562,7 +550,6 @@ namespace Deduplicator
             if (cf == null)
                 return;
 
-            String CurrentFolderName = cf.FullName;
             // Если выбранный фолдер установлен как Primary  то сбросим флажок на остальных фолдерах 
             if (cf.IsPrimary)
             {
@@ -647,9 +634,22 @@ namespace Deduplicator
 
         #endregion
 
-        private async void GroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selectedItem = ((ComboBox)sender).SelectedItem;
+            cb_ResGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
+            await RegroupResult(((ComboBox)sender).SelectedItem);
+        }
+
+        private async void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            cb_OptGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
+            await RegroupResult(((ComboBox)sender).SelectedItem);
+        }
+
+        private async Task RegroupResult(object selectedItem)
+        {
+            //FileCompareOptions.CurrentGroupModeIndex >= 0 && _dataModel.DuplicatesCount > 0
+
             if (selectedItem != null && _dataModel.DuplicatesCount != 0)
             {
                 FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());

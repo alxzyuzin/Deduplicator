@@ -9,11 +9,7 @@ using Windows.UI.Xaml.Input;
 
 namespace Deduplicator
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    /// 
-
+  
     public sealed partial class MainPage : Page
     {
         [Flags]
@@ -27,14 +23,10 @@ namespace Deduplicator
 
         private ResourceLoader _resldr = new ResourceLoader();
 
-        //ApplicationTabs appTabs = new ApplicationTabs();
-
-        public MainPage()
+         public MainPage()
         {
             this.InitializeComponent();
-           // WorkArea.Child = appTabs;
-            appTabs.SwitchTo(ApplicationTabs.Tabs.WhereToSearch);
-            DisableButton(ApplicationTabs.Tabs.WhereToSearch);
+            SwitchVewTo(ApplicationTabs.View.WhereToSearch);
             this.Unloaded += MainPage_Unloaded;
         }
 
@@ -45,37 +37,33 @@ namespace Deduplicator
 
         private void button_SearchLocation_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            appTabs.SwitchTo(ApplicationTabs.Tabs.WhereToSearch);
-            DisableButton(ApplicationTabs.Tabs.WhereToSearch);
+            SwitchVewTo(ApplicationTabs.View.WhereToSearch);
         }
 
         private void button_SearchOptions_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            appTabs.SwitchTo(ApplicationTabs.Tabs.SearchOptions);
-            DisableButton(ApplicationTabs.Tabs.SearchOptions);
+            SwitchVewTo(ApplicationTabs.View.SearchOptions);
         }
 
         private void button_SearchResults_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            appTabs.SwitchTo(ApplicationTabs.Tabs.SearchResults);
-            DisableButton(ApplicationTabs.Tabs.SearchResults);
+            SwitchVewTo(ApplicationTabs.View.SearchResults);
         }
 
         private void button_Settings_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            appTabs.SwitchTo(ApplicationTabs.Tabs.Settings);
-            DisableButton(ApplicationTabs.Tabs.Settings);
+            SwitchVewTo(ApplicationTabs.View.Settings);
         }
 
-
-        private void DisableButton(ApplicationTabs.Tabs selectedTab)
+        private void SwitchVewTo(ApplicationTabs.View selectedView)
         {
-            button_SearchLocation.IsEnabled = selectedTab == ApplicationTabs.Tabs.WhereToSearch ? false : true;
-            button_SearchOptions.IsEnabled  = selectedTab == ApplicationTabs.Tabs.SearchOptions ? false : true;
-            button_SearchResults.IsEnabled  = selectedTab == ApplicationTabs.Tabs.SearchResults ? false : true;
-            button_Settings.IsEnabled       = selectedTab == ApplicationTabs.Tabs.Settings ? false : true;
+            appTabs.SwitchTo(selectedView);
+            button_SearchLocation.IsEnabled = selectedView.HasFlag(ApplicationTabs.View.WhereToSearch) ? false : true;
+            button_SearchOptions.IsEnabled =  selectedView.HasFlag(ApplicationTabs.View.SearchOptions) ? false : true;
+            button_SearchResults.IsEnabled =  selectedView.HasFlag(ApplicationTabs.View.SearchResults) ? false : true;
+            button_Settings.IsEnabled =       selectedView.HasFlag(ApplicationTabs.View.Settings) ? false : true;
         }
-      }
+    }
 }
 
 

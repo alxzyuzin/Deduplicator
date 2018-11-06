@@ -38,7 +38,7 @@ namespace Deduplicator.Common
         public DateTime DateCreated { get; set; } = DateTime.Today;
         public DateTime DateModifyed { get; set; } = DateTime.Today;
         public ulong Size { get; set; } = 0;
-        public bool Duplicated { get; set; } = false; // Проверить. Возможно бесполезное свойство
+//        public bool Duplicated { get; set; } = false; // Проверить. Возможно бесполезное свойство
         public bool FromPrimaryFolder { get; set; } = false;
         public string Extention
         {
@@ -72,12 +72,12 @@ namespace Deduplicator.Common
             IsProtected = protectedfile;
         }
 
-        private async Task<byte[]> ReadFile()
-        {
-            StorageFile _file = await StorageFile.GetFileFromPathAsync(this.FullName);
-            IBuffer _buffer = await FileIO.ReadBufferAsync(_file);
-            return _buffer.ToArray();
-        }
+        //private async Task<byte[]> ReadFile()
+        //{
+        //    StorageFile _file = await StorageFile.GetFileFromPathAsync(this.FullName);
+        //    IBuffer _buffer = await FileIO.ReadBufferAsync(_file);
+        //    return _buffer.ToArray();
+        //}
 
         private async Task<int> CompareFileContent(File file1, File file2)
         {
@@ -134,25 +134,11 @@ namespace Deduplicator.Common
                     break;
                 case FileAttribs.Content:
                     if (this.Size != file.Size)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        if (await CompareFileContent(this, file) != 0)
+                         return false;
+                     else
+                         if (await CompareFileContent(this, file) != 0)
                             return false;
-                        break;
-                        /*
-
-                                                byte[] f1 = await this.ReadFile();
-                                                byte[] f2 = await file.ReadFile();
-
-                                                for (ulong i = 0; i < f1.Length; i++)
-                                                   if (f1[i] != f2[i])
-                                                        return false;
-                        */
-                    }
-                    
+                     break;
                 case FileAttribs.Size:
                     if (this.Size!=file.Size)
                         return false;

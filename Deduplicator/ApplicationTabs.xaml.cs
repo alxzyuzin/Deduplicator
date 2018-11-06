@@ -180,6 +180,23 @@ namespace Deduplicator
             }
         }
 
+        private Visibility _emptyContentMessageVisibility;
+        public Visibility EmptyContentMessageVisibility
+        {
+            get
+            {
+                return _emptyContentMessageVisibility;
+            }
+            set
+            {
+                if (_emptyContentMessageVisibility != value)
+                {
+                    _emptyContentMessageVisibility = value;
+                    NotifyPropertyChanged("EmptyContentMessageVisibility");
+                }
+            }
+        }
+
         public bool _btnAddFolderEnabled = true;
         public bool BtnAddFolderEnabled
         {
@@ -261,6 +278,21 @@ namespace Deduplicator
             }
         }
 
+
+        private bool _groupingModeSelectorEnabled = true;
+        public bool GroupingModeSelectorEnabled
+        {
+            get { return _groupingModeSelectorEnabled; }
+            set
+            {
+                if (_groupingModeSelectorEnabled == value)
+                {
+                    _groupingModeSelectorEnabled = value;
+                    NotifyPropertyChanged("GroupingModeSelectorEnabled");
+                }
+            }
+        }
+
         private string _tabHeader = string.Empty;
         public string TabHeader
         {
@@ -275,22 +307,7 @@ namespace Deduplicator
             set { _emptyContentMessage = value; NotifyPropertyChanged("EmptyContentMessage"); }
         }
 
-        private Visibility _emptyContentMessageVisibility;
-        public Visibility EmptyContentMessageVisibility
-        {
-            get
-            {
-                return _emptyContentMessageVisibility;
-            }
-            set
-            {
-                if (_emptyContentMessageVisibility != value)
-                {
-                    _emptyContentMessageVisibility = value;
-                    NotifyPropertyChanged("EmptyContentMessageVisibility");
-                }
-            }
-        }
+ 
 
         private DataModel _dataModel = new DataModel();
         public DataModel AppData
@@ -378,7 +395,7 @@ namespace Deduplicator
                 BtnDelFolderEnabled = (lv_Folders.SelectedItems.Count > 0) ? true : false;
                 BtnStartSearchEnabled = (lv_Folders.Items.Count > 0) ? true : false;
                 BtnStopSearchEnabled = false;
-//                _dataModel.ResultFilesCollection.Invalidate();
+                GroupingModeSelectorEnabled = true;
             }
         }
 
@@ -533,6 +550,7 @@ namespace Deduplicator
 
         private void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            BtnStopSearchEnabled = false;
             _dataModel.CancelOperation();
         }
 
@@ -648,10 +666,13 @@ namespace Deduplicator
 
         private async Task RegroupResult(object selectedItem)
         {
-            //FileCompareOptions.CurrentGroupModeIndex >= 0 && _dataModel.DuplicatesCount > 0
-
             if (selectedItem != null && _dataModel.DuplicatesCount != 0)
             {
+                BtnAddFolderEnabled = false;
+                BtnDelFolderEnabled = false;
+                BtnStartSearchEnabled = false;
+                BtnStopSearchEnabled = true;
+                GroupingModeSelectorEnabled = false;
                 FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());
                 await _dataModel.RegroupResultsByFileAttribute(attribute);
             }

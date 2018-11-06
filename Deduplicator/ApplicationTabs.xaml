@@ -213,6 +213,7 @@
                 <ComboBox x:Name="cb_ResGroping" Width="180px" FontSize="16" FontWeight="Medium"
                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
                           ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"
+                          IsEnabled="{Binding GroupingModeSelectorEnabled}"
                           SelectionChanged="ResultGroupingModes_SelectionChanged"/>
             </StackPanel>
             <!-- Display this text if search duplicates made for Primary folder -->
@@ -288,6 +289,7 @@
                            HorizontalAlignment="Left" Margin="30,5,0,0"
                            SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
                            ItemsSource="{Binding Path=ResultGrouppingModesList}"
+                           IsEnabled="{Binding GroupingModeSelectorEnabled}"
                            SelectionChanged="OptionsGroupingModes_SelectionChanged">
                 </ComboBox>
             </StackPanel>
@@ -365,7 +367,7 @@
                     Visibility="{Binding BtnStartSearchVisibility}"
                     IsEnabled="{Binding BtnStartSearchEnabled}"/>
             <Button Style="{StaticResource CmdButtonStyle}"
-                    Content="Cancel search" Tapped="button_CancelSearch_Tapped" 
+                    Content="Cancel operation" Tapped="button_CancelSearch_Tapped" 
                     Visibility="{Binding BtnCancelSearchVisibility}"
                     IsEnabled="{Binding BtnStopSearchEnabled}"/>
             <Button Style="{StaticResource CmdButtonStyle}" 

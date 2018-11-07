@@ -162,8 +162,8 @@ namespace Deduplicator.Common
                         return -1;
                     if (this.Size > file.Size)
                         return 1;
-                    
-                    return await CompareFileContent(this, file);
+                    int i = await CompareFileContent(this, file);
+                    return i;
                 case FileAttribs.Size:
                     return this.Size.CompareTo(file.Size);
             }

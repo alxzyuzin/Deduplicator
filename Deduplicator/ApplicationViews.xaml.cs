@@ -11,13 +11,11 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
-using System.Threading.Tasks;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace Deduplicator
-{
-    public sealed partial class ApplicationTabs : UserControl, INotifyPropertyChanged
+namespace Deduplicator {
+    public sealed partial class ApplicationViews : UserControl, INotifyPropertyChanged
     {
         [Flags]
         private enum CmdButtons
@@ -31,7 +29,17 @@ namespace Deduplicator
         }
 
         [Flags]
-        public enum View { WhereToSearch = 1, SearchOptions = 2, SearchResults = 4, Settings = 8 }
+        public enum View {
+            WhereToSearch = 1,
+            SearchOptions = 2,
+            SearchResults = 4,
+            Settings = 8
+        }
+
+        private enum Operation {
+            Search,
+            Regroup
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)
@@ -307,8 +315,6 @@ namespace Deduplicator
             set { _emptyContentMessage = value; NotifyPropertyChanged("EmptyContentMessage"); }
         }
 
- 
-
         private DataModel _dataModel = new DataModel();
         public DataModel AppData
         {
@@ -327,7 +333,7 @@ namespace Deduplicator
 
  #endregion
 
-        public ApplicationTabs()
+        public ApplicationViews()
         {
             InitializeComponent();
             DataContext = this;
@@ -343,6 +349,13 @@ namespace Deduplicator
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
             this.SizeChanged += OnSizeChanged;
 
+            lv_Duplicates.ItemClick += Lv_Duplicates_ItemClick;
+
+        }
+
+        private void Lv_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -539,12 +552,8 @@ namespace Deduplicator
                 if (pressedbutton == MessageBoxButtons.No)
                     return;
             }
- 
-            BtnAddFolderEnabled = false;
-            BtnDelFolderEnabled = false;
-            BtnStartSearchEnabled = false;
-            BtnStopSearchEnabled = true;
-            
+
+            DisableComandButtons();
             await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.CompareAttribsList);
         }
 
@@ -559,7 +568,7 @@ namespace Deduplicator
             _dataModel.Settings.Save();
         }
 
-#region Where To Search Tab event handlers
+#region Where To Search view event handlers
 
         private void toggleswitch_SetPrimary_Toggled(object sender, RoutedEventArgs e)
         {
@@ -592,9 +601,9 @@ namespace Deduplicator
 #endregion
 
 
-#region  Search Results Tab event handlers
+#region  Search Results view event handlers
 
-        private void checkbox_SelectGroup_Checked(object sender, RoutedEventArgs e)
+        private void cbx_SelectGroup_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox cbx = sender as CheckBox;
             FilesGroup datacontext = cbx.DataContext as FilesGroup;
@@ -606,7 +615,7 @@ namespace Deduplicator
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
-        private void checkbox_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
+        private void cbx_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
         {
             CheckBox cbx = sender as CheckBox;
             FilesGroup datacontext = cbx.DataContext as FilesGroup;
@@ -650,34 +659,38 @@ namespace Deduplicator
         }
 
 
-        #endregion
+#endregion
 
-        private async void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             cb_ResGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
-            await RegroupResult(((ComboBox)sender).SelectedItem);
+            RegroupResult(((ComboBox)sender).SelectedItem);
         }
 
-        private async void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             cb_OptGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
-            await RegroupResult(((ComboBox)sender).SelectedItem);
+            RegroupResult(((ComboBox)sender).SelectedItem);
         }
 
-        private async Task RegroupResult(object selectedItem)
+        private void RegroupResult(object selectedItem)
         {
             if (selectedItem != null && _dataModel.DuplicatesCount != 0)
             {
-                BtnAddFolderEnabled = false;
-                BtnDelFolderEnabled = false;
-                BtnStartSearchEnabled = false;
-                BtnStopSearchEnabled = true;
-                GroupingModeSelectorEnabled = false;
                 FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());
-                await _dataModel.RegroupResultsByFileAttribute(attribute);
+                DisableComandButtons();
+                _dataModel.RegroupResultsByFileAttribute(attribute);
             }
         }
-    }
 
+        private void DisableComandButtons()
+        {
+            BtnAddFolderEnabled = false;
+            BtnDelFolderEnabled = false;
+            BtnStartSearchEnabled = false;
+            BtnStopSearchEnabled = true;
+            GroupingModeSelectorEnabled = false;
+        }
 
-}
+    } // Class ApplicationViews
+} // Namespace Deduplicator

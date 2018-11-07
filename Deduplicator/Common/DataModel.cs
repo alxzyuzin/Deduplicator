@@ -164,7 +164,7 @@ namespace Deduplicator.Common
                        _status == SearchStatus.GroupingCompleted ||
                        _status == SearchStatus.GroupingCanceled ||
                        _status == SearchStatus.JustInitialazed ||
-                        _status == SearchStatus.ComparingCompleted ||
+                       _status == SearchStatus.ComparingCompleted ||
                        _status == SearchStatus.JustInitialazed
                        ? true : false;
             }
@@ -229,6 +229,7 @@ namespace Deduplicator.Common
                         await SplitGroupsByAttribute(_resultFilesCollection, attrib, false, searchStatus, canselationToken);
                     }
                 }
+                // Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
                 if (PrimaryFolder != null)
                 {
 
@@ -325,26 +326,27 @@ namespace Deduplicator.Common
                     // выполняем сортировку по текущему атрибуту файла
                     // Сравниваем файлы в группе по текущему атрибуту попарно первый со вторым второй с третьим и тд
                     // и при равенстве файлов добавляем файлы в новую группу
-                    // при несовпадении файлов удаляем из группы в буфере файлы, добавленные в новую группу
+                    // при первом несовпадении файлов считаем формирование группы файлов совпадающих по заданному атрибуту
+                    // завершенным.
+                    // Удаляем из группы в буфере файлы, добавленные в новую группу.
                     // Если количество файлов в новой группе больше 1, новую группу добавляем в список групп 
                     // с результатами поиска (если в группе только один файл значит он не является дубликатом)
                     // Процесс повторяем до те по пока в группе из буфера присутствуют файлы 
 
                     foreach (var group in groupsBuffer)
                     {
-                        await QuickSortGroupByAttrib(group, 0, group.Count - 1, attribute);   // 10500 файлoв время 0.118s 
+                        await QuickSortGroupByAttrib(group, 0, group.Count - 1, attribute); 
 
                         while (group.Count > 1)
                         {
                             FilesGroup newgroup = new FilesGroup();
-
                             newgroup.Add(group[0]);
                             for (int i = 0; i < group.Count - 1; i++)
                             {
                                 canselationToken.ThrowIfCancellationRequested();
-                                _filesHandled++;
                                 status.Report(regrouping ? SearchStatus.Grouping : SearchStatus.Comparing);
-                                if (await group[i].IsEqualTo(group[i + 1], attribute))
+                                int compareResult = await group[i].CompareTo(group[i + 1], attribute);
+                                if (compareResult == 0)
                                     newgroup.Add(group[i + 1]);
                                 else
                                     break;
@@ -362,11 +364,7 @@ namespace Deduplicator.Common
                         }
                     }
                 }
-                status.Report(regrouping ? SearchStatus.GroupingCompleted : SearchStatus.ComparingCompleted);
-                _currentResultGroupingAttribute = attribute;
-                // Все группы обработаны, Почистим за собой сразу не дожидаясь сборщика мусора
-                groupsBuffer.Clear();
-            }
+             }
             catch (OperationCanceledException)
             {
                 if (regrouping)
@@ -551,8 +549,8 @@ namespace Deduplicator.Common
 
             for (int j = i; j <= lastindex; j++)
             {
-                
-                if (( await files[j].CompareTo(files[lastindex], compareattrib)) <= 0)
+                int compareResult = await files[j].CompareTo(files[lastindex], compareattrib);
+                if (compareResult <= 0)
                 {
                     File t = files[i];
                     files[i] = files[j];
@@ -567,21 +565,22 @@ namespace Deduplicator.Common
         /// Перегруппировывает результаты поиска дубликатов по заданному атрибуту
         /// </summary>
         /// <param name="attribute"></param>
-        public async Task RegroupResultsByFileAttribute(FileAttribs attribute)
+        public async void RegroupResultsByFileAttribute(FileAttribs attribute)
         {
             if (_currentResultGroupingAttribute == attribute)
                 return;
 
-           
-                Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
-                _tokenSource = new CancellationTokenSource();
-                CancellationToken token = _tokenSource.Token;
+            _currentResultGroupingAttribute = attribute;
+            Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
+            _tokenSource = new CancellationTokenSource();
+            CancellationToken token = _tokenSource.Token;
 
-                WorkItemHandler workhandler = delegate { RegroupFiles(_resultFilesCollection, attribute, true, status, token); };
-                await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
+            WorkItemHandler workhandler = delegate { Regroup(_resultFilesCollection, attribute, true, status, token); };
+            await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
+            _resultFilesCollection.Invalidate();
         }
         
-        private async void RegroupFiles(GroupedFilesCollection filegroups, FileAttribs attribute,
+        private async void Regroup(GroupedFilesCollection filegroups, FileAttribs attribute,
                                                     bool regrouping, IProgress<SearchStatus> status, CancellationToken token)
         {
             GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection();
@@ -600,19 +599,20 @@ namespace Deduplicator.Common
             try
             {
                 await SplitGroupsByAttribute(_resultFilesCollection, attribute, true, status, token);
+                status.Report(SearchStatus.GroupingCompleted);
             }
             catch (OperationCanceledException)
             {
                 _resultFilesCollection.Clear();
 
-                if (_error.Type == ErrorType.SearchCanceled)
+                if (_error.Type == ErrorType.RegroupingCanceled)
                 {
                     foreach (var group in rollbackGroupsBuffer)
                         _resultFilesCollection.Add(group);
-                    ReportStatus(SearchStatus.SearchCanceled);
+                     status.Report(SearchStatus.GroupingCanceled);
                 }
                 else
-                    ReportStatus(SearchStatus.Error);
+                    status.Report(SearchStatus.Error);
             }
         }
 

@@ -4,6 +4,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml.Input;
+using Deduplicator;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -26,7 +27,8 @@ namespace Deduplicator
          public MainPage()
         {
             this.InitializeComponent();
-            SwitchVewTo(ApplicationTabs.View.WhereToSearch);
+            ApplicationViews.View g = ApplicationViews.View.WhereToSearch;
+            SwitchVewTo(ApplicationViews.View.WhereToSearch);
             this.Unloaded += MainPage_Unloaded;
         }
 
@@ -37,31 +39,31 @@ namespace Deduplicator
 
         private void button_SearchLocation_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            SwitchVewTo(ApplicationTabs.View.WhereToSearch);
+            SwitchVewTo(ApplicationViews.View.WhereToSearch);
         }
 
         private void button_SearchOptions_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            SwitchVewTo(ApplicationTabs.View.SearchOptions);
+            SwitchVewTo(ApplicationViews.View.SearchOptions);
         }
 
         private void button_SearchResults_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            SwitchVewTo(ApplicationTabs.View.SearchResults);
+            SwitchVewTo(ApplicationViews.View.SearchResults);
         }
 
         private void button_Settings_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            SwitchVewTo(ApplicationTabs.View.Settings);
+            SwitchVewTo(ApplicationViews.View.Settings);
         }
 
-        private void SwitchVewTo(ApplicationTabs.View selectedView)
+        private void SwitchVewTo(ApplicationViews.View selectedView)
         {
-            appTabs.SwitchTo(selectedView);
-            button_SearchLocation.IsEnabled = selectedView.HasFlag(ApplicationTabs.View.WhereToSearch) ? false : true;
-            button_SearchOptions.IsEnabled =  selectedView.HasFlag(ApplicationTabs.View.SearchOptions) ? false : true;
-            button_SearchResults.IsEnabled =  selectedView.HasFlag(ApplicationTabs.View.SearchResults) ? false : true;
-            button_Settings.IsEnabled =       selectedView.HasFlag(ApplicationTabs.View.Settings) ? false : true;
+            appViews.SwitchTo(selectedView);
+            button_SearchLocation.IsEnabled = selectedView.HasFlag(ApplicationViews.View.WhereToSearch) ? false : true;
+            button_SearchOptions.IsEnabled =  selectedView.HasFlag(ApplicationViews.View.SearchOptions) ? false : true;
+            button_SearchResults.IsEnabled =  selectedView.HasFlag(ApplicationViews.View.SearchResults) ? false : true;
+            button_Settings.IsEnabled =       selectedView.HasFlag(ApplicationViews.View.Settings) ? false : true;
         }
     }
 }

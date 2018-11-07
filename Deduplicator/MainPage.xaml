@@ -89,8 +89,8 @@
         </Grid>
 
         <Border x:Name="WorkArea" Grid.Row="1">
-                <local:ApplicationTabs x:Name="appTabs" Grid.Row="2" Grid.Column="0" Margin="30,0,30,0"/>
-         </Border>
+                <local:ApplicationViews x:Name="appViews" Grid.Row="2" Grid.Column="0" Margin="30,0,30,0"/>
+            </Border>
 
           <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>

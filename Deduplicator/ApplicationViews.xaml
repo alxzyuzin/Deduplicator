@@ -216,7 +216,7 @@
                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
                           ItemsSource="{Binding Path=FileCompareOptions.GrouppingAttributes}"
                           IsEnabled="{Binding GroupingModeSelectorEnabled}"
-                          SelectionChanged="ResultGroupingModes_SelectionChanged"/>
+                          SelectionChanged="Grouping_SelectionChanged"/>
             </StackPanel>
             <!-- Display this text if search duplicates made for Primary folder -->
             <StackPanel  Visibility="{Binding GroupByPrimaryFolderVisibility}">
@@ -293,7 +293,7 @@
                            SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"  
                            ItemsSource="{Binding GrouppingAttributes}"
                            IsEnabled="{Binding GroupingModeSelectorEnabled}"
-                           SelectionChanged="OptionsGroupingModes_SelectionChanged">
+                           SelectionChanged="Grouping_SelectionChanged">
                 </ComboBox>
             </StackPanel>
         </Grid>

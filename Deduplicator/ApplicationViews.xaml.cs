@@ -659,18 +659,23 @@ namespace Deduplicator {
         }
 
 
-#endregion
+        #endregion
 
-        private void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Grouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-             RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
+            RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
         }
 
-        private void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        //private void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        //{
+        //     RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
+        //}
+
+        //private void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        //{
        
-             RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
-        }
+        //     RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
+        //}
 
         private void RegroupResult(GroupingAttribute selectedItem)
         {

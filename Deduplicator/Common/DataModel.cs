@@ -99,15 +99,15 @@ namespace Deduplicator.Common
         private DateTime _startTime = DateTime.Now;
         private int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
         private int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
-        string _currentStage = string.Empty;
+//        string _currentStage = string.Empty;
         private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
 
-        private FileAttribs _currentResultGroupingAttribute = FileAttribs.None;
-        #endregion
+        private GroupingAttribute _currentGroupingAttribute = null;
+#endregion
 
-        #region Properties
+#region Properties
 
         public ObservableCollection<Folder> Folders
         {
@@ -183,7 +183,7 @@ namespace Deduplicator.Common
         }
 
  
-        public async Task StartSearch(FileSelectionOptions selectionOptions, List<FileAttribs> compareAttribsList)
+        public async Task StartSearch(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList)
         {
             FilesCollection.Clear();
             _resultFilesCollection.Clear();
@@ -203,7 +203,7 @@ namespace Deduplicator.Common
         /// Поиск дубликатов файлов
         /// </summary>
         /// <returns></returns>
-        private async void Search(FileSelectionOptions selectionOptions, List<FileAttribs> compareAttribsList, 
+        private async void Search(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList, 
                                   IProgress<SearchStatus> searchStatus, CancellationToken canselationToken)
         {
             _error.Set(ErrorType.OperationCanceled, "", 0, "");
@@ -291,13 +291,14 @@ namespace Deduplicator.Common
         /// </summary>
         /// <param name="filegroups">Коллекция групп файлов</param>
         /// <param name="attribute">Атрибут значение которого проверяется на уникальность</param>
-        private async Task SplitGroupsByAttribute(GroupedFilesCollection filegroups, FileAttribs attribute, 
+        private async Task SplitGroupsByAttribute(GroupedFilesCollection filegroups, GroupingAttribute attribute, 
                                                     bool regrouping, IProgress<SearchStatus> status, CancellationToken canselationToken)
         {
             _filesTotal = 0;
             _filesHandled = 0;
-            _currentStage = StageName(attribute);
-            
+            _currentGroupingAttribute = attribute;
+            //_currentStageName = attribute.Name;
+
             // Подсчитаем общее количество файлов подлежащих перегруппировке
             foreach (var group in filegroups)
                 _filesTotal+=group.Count;
@@ -312,7 +313,7 @@ namespace Deduplicator.Common
                 filegroups.Clear();
 
                 // Если attribute == FileAttribs.None прсто собираем все файлы в одну группу
-                if (attribute == FileAttribs.None)
+                if (attribute.Attribute == FileAttribs.None)
                 {
                     FilesGroup newgroup = new FilesGroup();
                     foreach (FilesGroup group in groupsBuffer)
@@ -335,7 +336,7 @@ namespace Deduplicator.Common
 
                     foreach (var group in groupsBuffer)
                     {
-                        await QuickSortGroupByAttrib(group, 0, group.Count - 1, attribute); 
+                        await QuickSortGroupByAttrib(group, 0, group.Count - 1, attribute.Attribute); 
 
                         while (group.Count > 1)
                         {
@@ -345,7 +346,7 @@ namespace Deduplicator.Common
                             {
                                 canselationToken.ThrowIfCancellationRequested();
                                 status.Report(regrouping ? SearchStatus.Grouping : SearchStatus.Comparing);
-                                int compareResult = await group[i].CompareTo(group[i + 1], attribute);
+                                int compareResult = await group[i].CompareTo(group[i + 1], attribute.Attribute);
                                 if (compareResult == 0)
                                     newgroup.Add(group[i + 1]);
                                 else
@@ -394,7 +395,7 @@ namespace Deduplicator.Common
                 case SearchStatus.Grouping:
                 case SearchStatus.GroupingStarted:
                     SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
-                                                    _currentStage, _filesHandled, _filesTotal);
+                                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
                     break;
                 case SearchStatus.GroupingCompleted:
                     SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
@@ -404,7 +405,7 @@ namespace Deduplicator.Common
                 case SearchStatus.Comparing:
                 case SearchStatus.ComparingStarted:
                     SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
-                                                    _currentStage, _filesHandled, _filesTotal);
+                                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
                     break;
                 case SearchStatus.ComparingCompleted:
                     SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
@@ -565,12 +566,12 @@ namespace Deduplicator.Common
         /// Перегруппировывает результаты поиска дубликатов по заданному атрибуту
         /// </summary>
         /// <param name="attribute"></param>
-        public async void RegroupResultsByFileAttribute(FileAttribs attribute)
+        public async void RegroupResultsByFileAttribute(GroupingAttribute attribute)
         {
-            if (_currentResultGroupingAttribute == attribute)
+            if (_currentGroupingAttribute.Attribute == attribute.Attribute)
                 return;
 
-            _currentResultGroupingAttribute = attribute;
+//            _currentGroupingAttribute = attribute;
             Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
             _tokenSource = new CancellationTokenSource();
             CancellationToken token = _tokenSource.Token;
@@ -580,7 +581,7 @@ namespace Deduplicator.Common
             _resultFilesCollection.Invalidate();
         }
         
-        private async void Regroup(GroupedFilesCollection filegroups, FileAttribs attribute,
+        private async void Regroup(GroupedFilesCollection filegroups, GroupingAttribute attribute,
                                                     bool regrouping, IProgress<SearchStatus> status, CancellationToken token)
         {
             GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection();
@@ -636,17 +637,17 @@ namespace Deduplicator.Common
             }
         }
 
-        public FileAttribs FileAttributeFromName(string attribName)
-        {
-            switch (attribName)
-            {
-                case "Content": return FileAttribs.Content;
-                case "Creation date time": return FileAttribs.DateCreated;
-                case "Modification date time": return FileAttribs.DateModified;
-                case "Name": return FileAttribs.Name;
-                case "Size": return FileAttribs.Size;
-                default: return FileAttribs.None;
-            }
-        }
+        //public FileAttribs FileAttributeFromName(string attribName)
+        //{
+        //    switch (attribName)
+        //    {
+        //        case "Content": return FileAttribs.Content;
+        //        case "Creation date time": return FileAttribs.DateCreated;
+        //        case "Modification date time": return FileAttribs.DateModified;
+        //        case "Name": return FileAttribs.Name;
+        //        case "Size": return FileAttribs.Size;
+        //        default: return FileAttribs.None;
+        //    }
+        //}
     }
 }

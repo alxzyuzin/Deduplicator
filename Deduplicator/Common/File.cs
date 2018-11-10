@@ -72,13 +72,6 @@ namespace Deduplicator.Common
             IsProtected = protectedfile;
         }
 
-        //private async Task<byte[]> ReadFile()
-        //{
-        //    StorageFile _file = await StorageFile.GetFileFromPathAsync(this.FullName);
-        //    IBuffer _buffer = await FileIO.ReadBufferAsync(_file);
-        //    return _buffer.ToArray();
-        //}
-
         private async Task<int> CompareFileContent(File file1, File file2)
         {
             StorageFile f1 = await StorageFile.GetFileFromPathAsync(file1.FullName);

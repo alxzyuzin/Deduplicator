@@ -6,12 +6,12 @@ namespace Deduplicator.Common
 {
     public class FileCompareOptions : INotifyPropertyChanged
     {
-        private const string Content          = @"Content";
-        private const string Name             = @"Name";
-        private const string Size             = @"Size";
-        private const string CreationDate     = @"Creation date";
-        private const string ModificationDate = @"Modification date";
-        private const string None             = @"Do not group";
+        private GroupingAttribute Content = new GroupingAttribute( @"Content",FileAttribs.Content);
+        private GroupingAttribute Name = new GroupingAttribute(@"Name", FileAttribs.Name);
+        private GroupingAttribute Size = new GroupingAttribute(@"Size", FileAttribs.Size);
+        private GroupingAttribute CreationDate = new GroupingAttribute(@"Creation date", FileAttribs.DateCreated);
+        private GroupingAttribute ModificationDate = new GroupingAttribute(@"Modification date", FileAttribs.DateModified);
+        private GroupingAttribute None = new GroupingAttribute(@"Do not group", FileAttribs.None);
 
         private enum CheckBoxAction {Checked = 1, Unchecked = 0}
         public event PropertyChangedEventHandler PropertyChanged;
@@ -36,8 +36,7 @@ namespace Deduplicator.Common
                 if (_checkName != value)
                 {
                     _checkName = value;
-                    UpdateGroupingModeList(new GroupingAttribute(Name, FileAttribs.Name),
-                       value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
+                    UpdateGroupingModeList(Name, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckName");
                 }
             }
@@ -53,8 +52,7 @@ namespace Deduplicator.Common
                 if (_checkSize != value)
                 {
                     _checkSize = value;
-                    UpdateGroupingModeList(new GroupingAttribute(Size, FileAttribs.Size),
-                                           value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
+                    UpdateGroupingModeList(Size, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckSize");
                 }
             }
@@ -70,9 +68,7 @@ namespace Deduplicator.Common
                 if (_checkCreationDateTime != value)
                 {
                     _checkCreationDateTime = value;
-                    UpdateGroupingModeList(new GroupingAttribute(CreationDate, FileAttribs.DateCreated),
-                                           value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
-
+                    UpdateGroupingModeList(CreationDate, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckCreationDateTime");
                 }
             }
@@ -88,9 +84,7 @@ namespace Deduplicator.Common
                 if (_checkModificationDateTime != value)
                 {
                     _checkModificationDateTime = value;
-                    UpdateGroupingModeList(new GroupingAttribute(ModificationDate, FileAttribs.DateModified),
-                        value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
-
+                    UpdateGroupingModeList(ModificationDate, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckModificationDateTime");
                 }
             }
@@ -106,8 +100,7 @@ namespace Deduplicator.Common
                 if (_checkContent != value)
                 {
                     _checkContent = value;
-                    UpdateGroupingModeList( new GroupingAttribute(Content,FileAttribs.Content),
-                                            value? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
+                    UpdateGroupingModeList(Content, value? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckContent");
                 }
             }
@@ -116,14 +109,12 @@ namespace Deduplicator.Common
         private ObservableCollection<GroupingAttribute> _grouppingAttributes = new ObservableCollection<GroupingAttribute>();
         public ObservableCollection<GroupingAttribute> GrouppingAttributes { get { return _grouppingAttributes; } }
 
-        public FileAttribs CurrentGroupModeAttrib
+        private GroupingAttribute _currentGroupModeAttrib;
+        public GroupingAttribute CurrentGroupModeAttrib
         {
             get
             {
-                if ((_currentGroupModeIndex >= 0) && (_currentGroupModeIndex < _grouppingAttributes.Count))
-                    return _grouppingAttributes[_currentGroupModeIndex].Attribute;
-                else
-                    return FileAttribs.None;
+                return _currentGroupModeAttrib;
             }
         }
 
@@ -137,14 +128,15 @@ namespace Deduplicator.Common
                 if (_currentGroupModeIndex != value)
                 {
                     _currentGroupModeIndex = value;
-                  NotifyPropertyChanged("CurrentGroupModeIndex");
+                    NotifyPropertyChanged("CurrentGroupModeIndex");
                 }
             }
         }
 
+ 
         public FileCompareOptions()
         {
-            _grouppingAttributes.Add(new GroupingAttribute(None, FileAttribs.None));
+            _grouppingAttributes.Add(None);
             CheckName = true;
             CheckSize = true;
             CurrentGroupModeIndex = -1; 
@@ -161,15 +153,11 @@ namespace Deduplicator.Common
             if (action == CheckBoxAction.Checked)
                 _grouppingAttributes.Add(attrib);
             else
-                foreach (var item in _grouppingAttributes)
-                    if (item.Attribute == attrib.Attribute)
-                    {
-                        _grouppingAttributes.Remove(item);
-                        break;
-                    }
-
-            if (_grouppingAttributes.Count > 0)
-                CurrentGroupModeIndex = 0;
+            {
+//                int i = _grouppingAttributes.IndexOf(CurrentGroupModeAttrib);
+                _grouppingAttributes.Remove(attrib);
+                CurrentGroupModeIndex = 0; // _grouppingAttributes.IndexOf(CurrentGroupModeAttrib); 
+            }
             NotifyPropertyChanged("ResultGrouppingModesList");
          }
 
@@ -185,7 +173,6 @@ namespace Deduplicator.Common
             _checkCreationDateTimeOldValue = _checkCreationDateTime;
             _checkModificationDateTimeOldValue = _checkModificationDateTime;
             _checkContentOldValue = _checkContent;
-//            UpdateGroupingModeList();
         }
 
         public void RollBack()
@@ -201,7 +188,6 @@ namespace Deduplicator.Common
                 CheckModificationDateTime = _checkModificationDateTimeOldValue;
             if (_checkContent != _checkContentOldValue)
                 CheckContent = _checkContentOldValue;
-//            UpdateGroupingModeList();
             _currentGroupModeIndex = _currentGroupModeIndexOldValue;
             _isRollBack = false;
         }

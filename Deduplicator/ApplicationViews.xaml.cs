@@ -554,7 +554,7 @@ namespace Deduplicator {
             }
 
             DisableComandButtons();
-            await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.CompareAttribsList);
+       //     await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.GrouppingAttributes);
         }
 
         private void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)
@@ -663,23 +663,23 @@ namespace Deduplicator {
 
         private void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            cb_ResGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
-            RegroupResult(((ComboBox)sender).SelectedItem);
+       //     cb_ResGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
+              RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
         }
 
         private void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            cb_OptGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
-            RegroupResult(((ComboBox)sender).SelectedItem);
+       //     cb_OptGroping.SelectedIndex = ((ComboBox)sender).SelectedIndex;
+              RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
         }
 
-        private void RegroupResult(object selectedItem)
+        private void RegroupResult(GroupingAttribute selectedItem)
         {
             if (selectedItem != null && _dataModel.DuplicatesCount != 0)
             {
-                FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());
-                DisableComandButtons();
-                _dataModel.RegroupResultsByFileAttribute(attribute);
+       //         FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());
+               DisableComandButtons();
+                _dataModel.RegroupResultsByFileAttribute(selectedItem.Attribute);
             }
         }
 

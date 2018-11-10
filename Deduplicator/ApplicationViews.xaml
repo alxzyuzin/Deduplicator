@@ -211,9 +211,10 @@
                           HorizontalAlignment="Right">
                 <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
                        Width="100" FontSize="16"/>
+                <!--  -->
                 <ComboBox x:Name="cb_ResGroping" Width="180px" FontSize="16" FontWeight="Medium" VerticalAlignment="Stretch"
                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
-                          ItemsSource="{Binding Path=FileCompareOptions.ResultGrouppingModesList}"
+                          ItemsSource="{Binding Path=FileCompareOptions.GrouppingAttributes}"
                           IsEnabled="{Binding GroupingModeSelectorEnabled}"
                           SelectionChanged="ResultGroupingModes_SelectionChanged"/>
             </StackPanel>
@@ -286,10 +287,11 @@
                 <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
                 <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
+                <!--    -->
                 <ComboBox  x:Name="cb_OptGroping" Width="250" FontSize="16" FontWeight="Medium"
                            HorizontalAlignment="Left" Margin="30,5,0,0"
-                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
-                           ItemsSource="{Binding Path=ResultGrouppingModesList}"
+                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"  
+                           ItemsSource="{Binding GrouppingAttributes}"
                            IsEnabled="{Binding GroupingModeSelectorEnabled}"
                            SelectionChanged="OptionsGroupingModes_SelectionChanged">
                 </ComboBox>

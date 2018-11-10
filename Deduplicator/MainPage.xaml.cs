@@ -27,7 +27,7 @@ namespace Deduplicator
          public MainPage()
         {
             this.InitializeComponent();
-            ApplicationViews.View g = ApplicationViews.View.WhereToSearch;
+            //ApplicationViews.View g = ApplicationViews.View.WhereToSearch;
             SwitchVewTo(ApplicationViews.View.WhereToSearch);
             this.Unloaded += MainPage_Unloaded;
         }

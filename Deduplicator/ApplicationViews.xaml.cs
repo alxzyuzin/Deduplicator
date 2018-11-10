@@ -666,22 +666,10 @@ namespace Deduplicator {
             RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
         }
 
-        //private void OptionsGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        //{
-        //     RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
-        //}
-
-        //private void ResultGroupingModes_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        //{
-       
-        //     RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
-        //}
-
         private void RegroupResult(GroupingAttribute selectedItem)
         {
             if (selectedItem != null && _dataModel.DuplicatesCount != 0)
             {
-       //         FileAttribs attribute = _dataModel.FileAttributeFromName(selectedItem.ToString());
                 DisableComandButtons();
                 _dataModel.RegroupResultsByFileAttribute((GroupingAttribute)selectedItem);
             }

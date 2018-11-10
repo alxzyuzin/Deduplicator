@@ -623,31 +623,5 @@ namespace Deduplicator.Common
             _resultFilesCollection.Clear();
             ReportStatus(SearchStatus.ResultsCleared);
         }
-
-        //string StageName(FileAttribs attrib)
-        //{
-        //    switch(attrib)
-        //    {
-        //        case FileAttribs.Content: return "Content";
-        //        case FileAttribs.DateCreated: return "Creation date time";
-        //        case FileAttribs.DateModified: return "Modification date time";
-        //        case FileAttribs.Name: return "Name";
-        //        case FileAttribs.Size: return "Size";
-        //        default: return "";
-        //    }
-        //}
-
-        //public FileAttribs FileAttributeFromName(string attribName)
-        //{
-        //    switch (attribName)
-        //    {
-        //        case "Content": return FileAttribs.Content;
-        //        case "Creation date time": return FileAttribs.DateCreated;
-        //        case "Modification date time": return FileAttribs.DateModified;
-        //        case "Name": return FileAttribs.Name;
-        //        case "Size": return FileAttribs.Size;
-        //        default: return FileAttribs.None;
-        //    }
-        //}
     }
 }

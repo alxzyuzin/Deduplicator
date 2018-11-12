@@ -18,7 +18,7 @@
         
         <Style x:Key="TextBlockStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="16"/>
         </Style>
 
         <Style x:Key="TextBlockStatusLineStyle" TargetType="TextBlock">
@@ -58,11 +58,10 @@
             <Setter Property="FontSize" Value="18"/>
         </Style>
 
-       
-
+        
         <DataTemplate x:Key="FolderTemplate" >
 
-            <Grid x:Name="Folder" Height="80" HorizontalAlignment="Stretch">
+            <Grid x:Name="Folder" Height="60" HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="750"/>
@@ -73,23 +72,25 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="5,5,0,0" 
-                          Text="{Binding FullName}" HorizontalAlignment="Stretch" Foreground="Orange"  
+                          Text=" {Binding FullName}" HorizontalAlignment="Stretch" Foreground="Orange"  
                           TextWrapping="WrapWholeWords" Style="{StaticResource TextBlockStyle}" />
                 <!--Border HorizontalAlignment="Right"  Grid.Column="1"-->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="1">
+                    <TextBlock Text="Search in subfolders" FontSize="16" FontWeight="Medium" Margin="0,5,10,0"/>
                     <ToggleSwitch x:Name="toggleswitch_SearchInSubfolders"  
                                      Style="{StaticResource ToggleSwitchStyle}"
-                                     OnContent="Search in subfolders"      
-                    	             OffContent="Search in this folder only"
-                                     FontSize="20" FontWeight="Normal"
+                                     OnContent="On "      
+                    	             OffContent="Off"
+                                     FontSize="16" FontWeight="Normal"
                                      Toggled="toggleswitch_SetPrimary_Toggled"
                                      Margin="0,-15,10,0"
                                      IsOn="{Binding SearchInSubfolders, Mode=TwoWay}"/>
+                    <TextBlock Text="Set as primary" FontSize="16" FontWeight="Medium" Margin="0,5,10,0"/>
                     <ToggleSwitch x:Name="toggleswitch_SetPrimary"  
                                      Style="{StaticResource ToggleSwitchStyle}"
                                      OnContent="Primary"      
                     	             OffContent="Set as primary"
-                                     FontSize="20" FontWeight="Normal"
+                                     FontSize="16" FontWeight="Normal"
                                      Toggled="toggleswitch_SetPrimary_Toggled"
                                      Margin="0,-15,10,0"
                                      IsOn="{Binding IsPrimary, Mode=TwoWay}"/>
@@ -97,7 +98,7 @@
                                      Style="{StaticResource ToggleSwitchStyle}"
                                      OnContent="Protected"      
                     	             OffContent="Protect"
-                                     FontSize="20" FontWeight="Normal"
+                                     FontSize="16" FontWeight="Normal"
                                      Toggled="toggleswitch_SetPrimary_Toggled"
                                      Margin="0,-15,10,0"
                                      IsOn="{Binding Protected, Mode=TwoWay}"/>
@@ -247,51 +248,53 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <!-- File selection options -->
-            <StackPanel Grid.Column="0" Margin="20,0,10,0" DataContext="{Binding FileSelectionOptions}">
+            <!-- DataContext="{Binding FileSelectionOptions}" -->
+            <StackPanel Grid.Column="0" Margin="20,0,10,0" >
                 <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
                            FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
                 <RadioButton Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
                              FontWeight="Medium"  GroupName="FileSelection"
-                             IsChecked="{Binding Path=AllFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             IsChecked="{Binding Path=FileSelectionOptions.AllFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
                 <RadioButton x:Name="rb_SpecificFiles" Content="  specific files"  Height="35" FontSize="18" 
                              FontWeight="Medium" Margin="30,0,0,0" GroupName="FileSelection"
-                             IsChecked="{Binding Path=SpecificFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             IsChecked="{Binding Path=FileSelectionOptions.SpecificFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
                 <CheckBox    Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
                              IsChecked="{Binding ImageFiles , Mode=TwoWay}"/>
                 <CheckBox    Content="  audio files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
-                             IsChecked="{Binding AudioFiles , Mode=TwoWay}"/>
+                             IsChecked="{Binding FileSelectionOptions.AudioFiles , Mode=TwoWay}"/>
                 <CheckBox    Content="  video files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
-                             IsChecked="{Binding VideoFiles , Mode=TwoWay}"/>
+                             IsChecked="{Binding FileSelectionOptions.VideoFiles , Mode=TwoWay}"/>
                 <TextBlock   Text="and files with extensions:" FontSize="18" Height="32" FontWeight="Medium"  Margin="50,10,0,0"/>
                 <TextBox     FontSize="18" FontWeight="Normal" Margin="70,0,40,0"  Height="35" MinWidth="200"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
                              PlaceholderText="Type here list of file extentions separated with semicolon"
-                             Text="{Binding SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             Text="{Binding FileSelectionOptions.SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
                 <TextBlock/>
                 <TextBlock   Text="Exclude extensions:" FontSize="18" FontWeight="Medium"  Margin="0,10,0,0"/>
                 <TextBox     FontSize="18" FontWeight="Normal" Margin="20,0,40,0"
                              Height="35" MinWidth="200" 
                              PlaceholderText="Type here list of file extentions separated with semicolon"
-                             Text="{Binding ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             Text="{Binding FileSelectionOptions.ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
             </StackPanel>
             <!-- File compare options -->
-            <StackPanel Grid.Column="1" Margin="10,0,20,0" DataContext="{Binding FileCompareOptions}">
+            <!-- DataContext="{Binding FileCompareOptions}" -->
+            <StackPanel Grid.Column="1" Margin="10,0,20,0" >
                 <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
                                    FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
-                <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckName, Mode=TwoWay}"/>
-                <CheckBox Content="  Size" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckSize, Mode=TwoWay}"/>
-                <CheckBox Content="  Creation date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckCreationDateTime, Mode=TwoWay}"/>
-                <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckModificationDateTime, Mode=TwoWay}"/>
-                <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding CheckContent, Mode=TwoWay}"/>
+                <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckName, Mode=TwoWay}"/>
+                <CheckBox Content="  Size" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckSize, Mode=TwoWay}"/>
+                <CheckBox Content="  Creation date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckCreationDateTime, Mode=TwoWay}"/>
+                <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckModificationDateTime, Mode=TwoWay}"/>
+                <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckContent, Mode=TwoWay}"/>
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
                 <!--    -->
                 <ComboBox  x:Name="cb_OptGroping" Width="250" FontSize="16" FontWeight="Medium"
                            HorizontalAlignment="Left" Margin="30,5,0,0"
-                           SelectedIndex="{Binding CurrentGroupModeIndex, Mode=TwoWay}"  
-                           ItemsSource="{Binding GrouppingAttributes}"
+                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"  
+                           ItemsSource="{Binding FileCompareOptions.GrouppingAttributes}"
                            IsEnabled="{Binding GroupingModeSelectorEnabled}"
                            SelectionChanged="Grouping_SelectionChanged">
                 </ComboBox>

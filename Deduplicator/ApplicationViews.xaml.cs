@@ -18,7 +18,7 @@ namespace Deduplicator {
     public sealed partial class ApplicationViews : UserControl, INotifyPropertyChanged
     {
         [Flags]
-        private enum CmdButtons
+        public enum CmdButtons
         {
             DelSelectedFiles = 1,
             StartSearch = 2,
@@ -684,5 +684,9 @@ namespace Deduplicator {
             GroupingModeSelectorEnabled = false;
         }
 
+        private void lv_Folders_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     } // Class ApplicationViews
 } // Namespace Deduplicator

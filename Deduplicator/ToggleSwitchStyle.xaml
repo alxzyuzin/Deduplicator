@@ -21,11 +21,13 @@
         <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
-        <Setter Property="MinWidth" Value="154"/>
+        <Setter Property="MinWidth" Value="15"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleSwitch">
-                    <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                    <Border BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Background="{TemplateBinding Background}">
                         <VisualStateManager.VisualStateGroups>
                           
                             <VisualStateGroup x:Name="CommonStates">
@@ -191,7 +193,12 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <ContentPresenter x:Name="HeaderContentPresenter" AutomationProperties.AccessibilityView="Raw" Grid.ColumnSpan="2" ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" Foreground="{ThemeResource ToggleSwitchHeaderForegroundThemeBrush}" FontWeight="Semilight" Margin="6"/>
+                            <ContentPresenter x:Name="HeaderContentPresenter" AutomationProperties.AccessibilityView="Raw"
+                                              Grid.ColumnSpan="2" 
+                                              ContentTemplate="{TemplateBinding HeaderTemplate}" 
+                                              Content="{TemplateBinding Header}" 
+                                              Foreground="{ThemeResource ToggleSwitchHeaderForegroundThemeBrush}" 
+                                              FontWeight="Semilight" Margin="6"/>
                             <Grid Margin="{TemplateBinding Padding}" Grid.Row="1">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -202,11 +209,18 @@
                                                   ContentTemplate="{TemplateBinding OffContentTemplate}" 
                                                   Content="{TemplateBinding OffContent}" 
                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                                  IsHitTestVisible="False" Margin="6,5,0,16" MinWidth="65" Opacity="0" 
-                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                                <ContentPresenter x:Name="OnContentPresenter" AutomationProperties.AccessibilityView="Raw" ContentTemplate="{TemplateBinding OnContentTemplate}" Content="{TemplateBinding OnContent}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" IsHitTestVisible="False" Margin="6,5,0,16" MinWidth="65" Opacity="0" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"  Foreground="#FFFFB900"/>
+                                                  IsHitTestVisible="False" Margin="5,5,0,16" MinWidth="2" Opacity="0" 
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  Foreground="#FF000000"/>
+                                <ContentPresenter x:Name="OnContentPresenter" AutomationProperties.AccessibilityView="Raw"
+                                                  ContentTemplate="{TemplateBinding OnContentTemplate}" 
+                                                  Content="{TemplateBinding OnContent}" 
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  IsHitTestVisible="False" Margin="5,5,0,16" MinWidth="2" Opacity="0"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                                                  Foreground="#FFFFB900"/>
                                 <Grid Background="Transparent" Grid.Column="2" ManipulationMode="None">
-                                    <Grid x:Name="SwitchKnobBounds" Height="19" Margin="13,5,13,16">
+                                    <Grid x:Name="SwitchKnobBounds" Height="19" Margin="5,5,13,16">
                                         <Border x:Name="OuterBorder" BorderBrush="{ThemeResource ToggleSwitchOuterBorderBorderThemeBrush}" BorderThickness="2" CornerRadius="9">
                                             <Border x:Name="InnerBorder" BorderBrush="{ThemeResource ToggleSwitchTrackBorderThemeBrush}" 
                                                     BorderThickness="1" Background="{ThemeResource ToggleSwitchTrackBackgroundThemeBrush}" CornerRadius="7">

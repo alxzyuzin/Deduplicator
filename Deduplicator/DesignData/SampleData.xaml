@@ -1,0 +1,51 @@
+﻿<data:CommonAppViewsData xmlns:data="using:Deduplicator.DesignData" 
+     
+    ViewOptionsVisibility="Collapsed"
+    ViewSearchResultsVisibility="Collapsed"
+    ViewSettingsVisibility="Collapsed"
+    ViewWhereToSearchVisibility="Visible"
+    
+     BtnAddFolderEnabled ="False"
+     BtnDelFolderEnabled ="True"
+     BtnStartSearchEnabled ="True"
+     BtnStopSearchEnabled ="True"
+     BtnDelFilesEnabled ="True"
+     GroupingModeSelectorEnabled ="True"
+     TabHeader ="Test header"
+     EmptyContentMessage ="Empty content message">
+
+    <data:CommonAppViewsData.AppData>
+        <data:AppData>
+            <data:AppData.Folders>
+                <data:Folder FullName="Folder full name (Jvery very long file name) ooooooooooooooooooooooooooooooo" 
+                             IsPrimary="True" Protected="True" SearchInSubfolders="True"/>
+                <data:Folder FullName="Folder full name" 
+                             IsPrimary="False" Protected="False" SearchInSubfolders="False"/>
+            </data:AppData.Folders>
+        </data:AppData>
+        
+    </data:CommonAppViewsData.AppData>
+    
+    <data:CommonAppViewsData.GrouppingAttributes>
+        <data:GroupAttribute  GroupName="Do not group files" Attribute="None"/>
+        <data:GroupAttribute  GroupName="Name" Attribute="Name"/>
+        <data:GroupAttribute  GroupName="Size" Attribute="Size"/>
+    </data:CommonAppViewsData.GrouppingAttributes>
+    
+    
+    
+    <data:CommonAppViewsData.FileCompareOptions>
+        <data:FileCompareOptions  CheckContent="True" CheckCreationDateTime="True" CurrentGroupModeIndex="0">
+            <data:FileCompareOptions.GrouppingAttributes>
+                <data:GroupAttribute  GroupName="Do not group files" Attribute="None"/>
+                <data:GroupAttribute  GroupName="Name" Attribute="Name"/>
+                <data:GroupAttribute  GroupName="Size" Attribute="Size"/>
+            </data:FileCompareOptions.GrouppingAttributes>
+        </data:FileCompareOptions>
+    </data:CommonAppViewsData.FileCompareOptions>
+
+
+
+</data:CommonAppViewsData>
+
+  

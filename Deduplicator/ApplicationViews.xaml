@@ -7,8 +7,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    d:DesignHeight="800"
-    d:DesignWidth="1000">
+    d:DesignHeight="500"
+    d:DesignWidth="1000"
+    d:DataContext="{d:DesignData Source=./DesignData/SampleData.xaml}">
 
     <UserControl.Resources>
         <CollectionViewSource x:Name="GroupedFiles" Source="{Binding Path=AppData.DuplicatedFiles}" IsSourceGrouped="true"/>
@@ -18,7 +19,8 @@
         
         <Style x:Key="TextBlockStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
         </Style>
 
         <Style x:Key="TextBlockStatusLineStyle" TargetType="TextBlock">
@@ -61,44 +63,47 @@
         
         <DataTemplate x:Key="FolderTemplate" >
 
-            <Grid x:Name="Folder" Height="60" HorizontalAlignment="Stretch">
+            <Grid x:Name="Folder" Height="50" HorizontalAlignment="Stretch" Background="Gray">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="750"/>
+                    <ColumnDefinition Width="850"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="5,5,0,0" 
-                          Text=" {Binding FullName}" HorizontalAlignment="Stretch" Foreground="Orange"  
+                <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="10,0,0,0" 
+                          Text="{Binding FullName}" HorizontalAlignment="Stretch" Foreground="Orange"  
                           TextWrapping="WrapWholeWords" Style="{StaticResource TextBlockStyle}" />
                 <!--Border HorizontalAlignment="Right"  Grid.Column="1"-->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="1">
-                    <TextBlock Text="Search in subfolders" FontSize="16" FontWeight="Medium" Margin="0,5,10,0"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+                    <TextBlock Text="Search in subfolders" Style="{StaticResource TextBlockStyle}" />
                     <ToggleSwitch x:Name="toggleswitch_SearchInSubfolders"  
+                                 
+                                  
                                      Style="{StaticResource ToggleSwitchStyle}"
-                                     OnContent="On "      
+                                     OnContent="On"      
                     	             OffContent="Off"
                                      FontSize="16" FontWeight="Normal"
                                      Toggled="toggleswitch_SetPrimary_Toggled"
                                      Margin="0,-15,10,0"
                                      IsOn="{Binding SearchInSubfolders, Mode=TwoWay}"/>
-                    <TextBlock Text="Set as primary" FontSize="16" FontWeight="Medium" Margin="0,5,10,0"/>
+                    <TextBlock Text="Set as primary" Style="{StaticResource TextBlockStyle}" />
                     <ToggleSwitch x:Name="toggleswitch_SetPrimary"  
                                      Style="{StaticResource ToggleSwitchStyle}"
-                                     OnContent="Primary"      
-                    	             OffContent="Set as primary"
-                                     FontSize="16" FontWeight="Normal"
+                                     OnContent="On"      
+                    	             OffContent="Off"
+                                     FontSize="16" FontWeight="Medium"
                                      Toggled="toggleswitch_SetPrimary_Toggled"
                                      Margin="0,-15,10,0"
                                      IsOn="{Binding IsPrimary, Mode=TwoWay}"/>
-                    <ToggleSwitch x:Name="toggleswitch_Protected"  
+                    <TextBlock Text="Protect" Style="{StaticResource TextBlockStyle}" />
+                    <ToggleSwitch x:Name="toggleswitch_Protected" 
                                      Style="{StaticResource ToggleSwitchStyle}"
-                                     OnContent="Protected"      
-                    	             OffContent="Protect"
-                                     FontSize="16" FontWeight="Normal"
+                                     OnContent="On"      
+                    	             OffContent="Off"
+                                     FontSize="16" FontWeight="Medium"
                                      Toggled="toggleswitch_SetPrimary_Toggled"
                                      Margin="0,-15,10,0"
                                      IsOn="{Binding Protected, Mode=TwoWay}"/>
@@ -226,7 +231,7 @@
             </StackPanel>
         </StackPanel>
         <!-- Folders list where to search duplicates -->
-        <Border Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0" d:IsHidden="True"
+        <Border Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
                 Visibility="{Binding ViewWhereToSearchVisibility}">
             <ListView x:Name="lv_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
@@ -235,14 +240,14 @@
                       SelectionMode="Multiple"
                       Margin="0,5,0,0"
                       ItemContainerStyle="{StaticResource ListViewItemStyle}"
-                      Tapped="lv_Folders_Tapped">
+                      Tapped="lv_Folders_Tapped" SelectionChanged="lv_Folders_SelectionChanged">
                 <ListViewItem/>
                 <ListViewItem/>
             </ListView>
         </Border>
         <!-- Search options -->
         <Grid Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
-              Visibility="{Binding ViewOptionsVisibility}" d:IsHidden="True">
+              Visibility="{Binding ViewOptionsVisibility}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -340,7 +345,7 @@
 
         <Border Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
                 BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" 
-                Visibility="{Binding ViewSettingsVisibility}" d:IsHidden="True">
+                Visibility="{Binding ViewSettingsVisibility}">
             <StackPanel >
                 <TextBlock Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
                 <TextBox   Text="{Binding AppData.Settings.ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
@@ -353,7 +358,7 @@
 
         <TextBlock Grid.Row="1" Height="60" FontSize="20" FontWeight="Medium" VerticalAlignment="Center" 
                    HorizontalAlignment="Center" TextWrapping="WrapWholeWords"
-                   Text="{Binding EmptyContentMessage}" Visibility="{Binding EmptyContentMessageVisibility}"/>
+                   Text="{Binding EmptyContentMessage}" Visibility="{Binding EmptyContentMessageVisibility}" d:IsHidden="True"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
             <Button Style="{StaticResource CmdButtonStyle}" 

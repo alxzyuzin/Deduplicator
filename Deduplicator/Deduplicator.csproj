@@ -122,6 +122,8 @@
     <Compile Include="Common\GroupedFilesCollection.cs" />
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
+    <Compile Include="DesignData\CommonAppViewsData.cs" />
+    <Compile Include="DesignData\DesignTimeAppData.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -152,6 +154,10 @@
     <Page Include="ApplicationViews.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DesignData\SampleData.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="ListviewitemStyle.xaml">
       <SubType>Designer</SubType>

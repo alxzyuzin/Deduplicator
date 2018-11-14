@@ -36,10 +36,10 @@ namespace Deduplicator {
             Settings = 8
         }
 
-        private enum Operation {
-            Search,
-            Regroup
-        }
+        //private enum Operation {
+        //    Search,
+        //    Regroup
+        //}
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)
@@ -286,7 +286,6 @@ namespace Deduplicator {
             }
         }
 
-
         private bool _groupingModeSelectorEnabled = true;
         public bool GroupingModeSelectorEnabled
         {
@@ -347,8 +346,9 @@ namespace Deduplicator {
 
             // Подпишемся на события модели данных
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
-            this.SizeChanged += OnSizeChanged;
+            //this.SizeChanged += OnSizeChanged;
 
+            this.SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; }; 
             lv_Duplicates.ItemClick += Lv_Duplicates_ItemClick;
 
         }
@@ -358,10 +358,10 @@ namespace Deduplicator {
             throw new NotImplementedException();
         }
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            lv_Duplicates.InternalWidth = this.ActualWidth;
-        }
+        //private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        //{
+        //    lv_Duplicates.InternalWidth = this.ActualWidth;
+        //}
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -570,7 +570,7 @@ namespace Deduplicator {
 
 #region Where To Search view event handlers
 
-        private void toggleswitch_SetPrimary_Toggled(object sender, RoutedEventArgs e)
+        private void ts_SetPrimary_Toggled(object sender, RoutedEventArgs e)
         {
             Folder cf = (sender as ToggleSwitch).DataContext as Folder;
 
@@ -591,6 +591,11 @@ namespace Deduplicator {
             {
                 _dataModel.PrimaryFolder = null;
             }
+        }
+
+        private void ts_Protected_Toggled(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void lv_Folders_Tapped(object sender, TappedRoutedEventArgs e)

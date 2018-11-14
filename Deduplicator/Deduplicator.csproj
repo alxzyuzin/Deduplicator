@@ -123,7 +123,6 @@
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="DesignData\CommonAppViewsData.cs" />
-    <Compile Include="DesignData\DesignTimeAppData.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

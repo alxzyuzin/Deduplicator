@@ -12,7 +12,10 @@
     d:DataContext="{d:DesignData Source=./DesignData/SampleData.xaml}">
 
     <UserControl.Resources>
-        <CollectionViewSource x:Name="GroupedFiles" Source="{Binding Path=AppData.DuplicatedFiles}" IsSourceGrouped="true"/>
+        <CollectionViewSource x:Name="GroupedFiles" 
+                              Source="{Binding Path=AppData.DuplicatedFiles}" 
+                              IsSourceGrouped="true"
+                               ItemsPath=""/>
         
         <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
         <SolidColorBrush x:Key="MainBackgroundBrush" Color="#FF303030"/>
@@ -94,7 +97,7 @@
                     <ToggleSwitch x:Name="Protected" 
                                      Style="{StaticResource FolderToggleSwitchStyle}"
                                      Toggled="ts_Protected_Toggled"
-                                     IsOn="{Binding Protected, Mode=TwoWay}"/>
+                                     IsOn="{Binding IsProtected, Mode=TwoWay}"/>
                 </StackPanel>
                 <!--/-->
             </Grid>
@@ -128,7 +131,7 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
                            TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" />
                 <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Margin="5,5,0,0" Text="{Binding Protected}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
+                    <TextBlock Margin="5,5,0,0" Text="{Binding IsProtected}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
                 </StackPanel>
             </Grid>
         </DataTemplate>

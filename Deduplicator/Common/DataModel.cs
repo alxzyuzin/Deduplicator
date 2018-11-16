@@ -491,17 +491,19 @@ namespace Deduplicator.Common
                 if (item.Attributes.HasFlag(FileAttributes.Directory))  
                 {
                     if (folder.SearchInSubfolders)
-                        await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.Protected ), 
+                        await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
                                             filelist, options, selectingFilesStatus, canselationToken);
                 }
                 else
                 {
                     try
                     {
-                        File file = new File(item.Name, item.Path, (item as StorageFile).FileType, item.DateCreated.DateTime,
-                                   new DateTime(), 0, folder.IsPrimary, folder.Protected);
-                        if (options.ExtentionRequested(file.Extention))
+                        string fileExtention = (item as StorageFile).FileType;
+                        if (options.ExtentionRequested(fileExtention))
                         {
+                            File file = new File(item.Name, item.Path, fileExtention, item.DateCreated.DateTime,
+                                                    new DateTime(), 0, folder.IsPrimary, folder.IsProtected);
+                        
                             Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
                             file.DateModifyed = basicproperties.DateModified.DateTime;
                             file.Size = basicproperties.Size;
@@ -622,6 +624,21 @@ namespace Deduplicator.Common
             FilesCollection.Clear();
             _resultFilesCollection.Clear();
             ReportStatus(SearchStatus.ResultsCleared);
+        }
+
+        public void SetFilesProtection(Folder folder, bool isProtected)
+        {
+           foreach (var group in _resultFilesCollection)
+           {
+               foreach (File file in group)
+               {
+                   if (file.Path.StartsWith(folder.FullName))
+                            file.IsProtected = isProtected;
+               }
+               // group.CollectionChanged();
+            }
+
+            _resultFilesCollection.Invalidate();
         }
     }
 }

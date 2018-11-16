@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -23,8 +24,23 @@ namespace Deduplicator.Common
         Hash = 256
     }
 
-    public sealed class File
+    //public enum ProtectStatus
+    //{
+    //    Protected,
+    //    Unprotected
+    //}
+
+    public sealed class File:INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
         public string Name { get; set; } = string.Empty;
         public string FileType { get; set; } 
         public string FullName { get; set; } = string.Empty;
@@ -38,7 +54,6 @@ namespace Deduplicator.Common
         public DateTime DateCreated { get; set; } = DateTime.Today;
         public DateTime DateModifyed { get; set; } = DateTime.Today;
         public ulong Size { get; set; } = 0;
-//        public bool Duplicated { get; set; } = false; // Проверить. Возможно бесполезное свойство
         public bool FromPrimaryFolder { get; set; } = false;
         public string Extention
         {
@@ -54,22 +69,22 @@ namespace Deduplicator.Common
             }
         }
         public bool IsProtected { get; set; } = false;
-        public string Protected { get { return IsProtected ? "Protected" : ""; } }
+        public string Protected { get { return IsProtected ? "Protected" : "Not protected"; } }
 
         public File()
         { }
 
-        public File( string name, string fullname, string filetype, 
-            DateTime datecreated, DateTime datemodifyed, ulong size, bool primaryfolder, bool protectedfile)
+        public File( string name, string fullName, string fileType, 
+            DateTime dateCreated, DateTime dateModifyed, ulong size, bool primaryFolder, bool isProtected)
         {
             Name = name;
-            FileType = filetype;
-            FullName = fullname;
-            DateCreated = datecreated;
-            DateModifyed = datemodifyed;
+            FileType = fileType;
+            FullName = fullName;
+            DateCreated = dateCreated;
+            DateModifyed = dateModifyed;
             Size = size;
-            FromPrimaryFolder = primaryfolder;
-            IsProtected = protectedfile;
+            FromPrimaryFolder = primaryFolder;
+            IsProtected = isProtected;
         }
 
         private async Task<int> CompareFileContent(File file1, File file2)

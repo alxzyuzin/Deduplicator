@@ -49,7 +49,7 @@ namespace Deduplicator.Common
 
         public bool SearchInSubfolders { get; set; } = true;
 
-        public bool Protected { get; set; } = false;
+        public bool IsProtected { get; set; } = false;
 
         public String AccessToken { get; set; }
 
@@ -62,12 +62,12 @@ namespace Deduplicator.Common
             FullName = String.Empty;
         }
 
-        public Folder(string fullname, bool isprimary, bool searchinsubfolders, bool protectedfolder)
+        public Folder(string fullName, bool isPrimary, bool searchInSubfolders, bool isProtected)
         {
-            FullName = fullname;
-            IsPrimary = isprimary;
-            SearchInSubfolders = searchinsubfolders;
-            Protected = protectedfolder;
+            FullName = fullName;
+            IsPrimary = isPrimary;
+            SearchInSubfolders = searchInSubfolders;
+            IsProtected = isProtected;
         }
 
         public Folder(string fullname, bool isprimary, String accesstoken)

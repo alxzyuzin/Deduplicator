@@ -36,11 +36,6 @@ namespace Deduplicator {
             Settings = 8
         }
 
-        //private enum Operation {
-        //    Search,
-        //    Regroup
-        //}
-
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string propertyName)
         {
@@ -348,7 +343,7 @@ namespace Deduplicator {
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
             //this.SizeChanged += OnSizeChanged;
 
-            this.SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; }; 
+            SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; }; 
             lv_Duplicates.ItemClick += Lv_Duplicates_ItemClick;
 
         }
@@ -595,7 +590,13 @@ namespace Deduplicator {
 
         private void ts_Protected_Toggled(object sender, RoutedEventArgs e)
         {
+            if (_dataModel.DuplicatedFiles.Count>0)
+            {
+                _dataModel.SetFilesProtection((sender as ToggleSwitch).DataContext as Folder,((ToggleSwitch)sender).IsOn);
+            }
 
+            lv_Duplicates.UpdateLayout();
+            
         }
 
         private void lv_Folders_Tapped(object sender, TappedRoutedEventArgs e)

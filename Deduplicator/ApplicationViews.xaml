@@ -14,8 +14,7 @@
     <UserControl.Resources>
         <CollectionViewSource x:Name="GroupedFiles" 
                               Source="{Binding Path=AppData.DuplicatedFiles}" 
-                              IsSourceGrouped="true"
-                               ItemsPath=""/>
+                              IsSourceGrouped="true"/>
         
         <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
         <SolidColorBrush x:Key="MainBackgroundBrush" Color="#FF303030"/>
@@ -131,7 +130,7 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
                            TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" />
                 <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Margin="5,5,0,0" Text="{Binding IsProtected}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
+                    <TextBlock Margin="5,5,0,0" Text="{Binding ProtectionStatus}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
                 </StackPanel>
             </Grid>
         </DataTemplate>

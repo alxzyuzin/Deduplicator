@@ -24,12 +24,6 @@ namespace Deduplicator.Common
         Hash = 256
     }
 
-    //public enum ProtectStatus
-    //{
-    //    Protected,
-    //    Unprotected
-    //}
-
     public sealed class File:INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -69,7 +63,7 @@ namespace Deduplicator.Common
             }
         }
         public bool IsProtected { get; set; } = false;
-        public string Protected { get { return IsProtected ? "Protected" : "Not protected"; } }
+        public string ProtectionStatus { get { return IsProtected ? "Protected" : ""; } }
 
         public File()
         { }
@@ -176,6 +170,21 @@ namespace Deduplicator.Common
                     return this.Size.CompareTo(file.Size);
             }
             return 0;
+        }
+
+        public  File Clone()
+        {
+            return new File
+            {
+                Name = this.Name,
+                FileType = this.FileType,
+                FullName = this.FullName,
+                DateCreated = this.DateCreated,
+                DateModifyed = this.DateModifyed,
+                Size = this.Size,
+                FromPrimaryFolder = this.FromPrimaryFolder,
+                IsProtected = this.IsProtected
+            };
         }
     }
 

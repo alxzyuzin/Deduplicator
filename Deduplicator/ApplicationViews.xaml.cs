@@ -339,10 +339,7 @@ namespace Deduplicator {
             FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
             FileCompareOptions.CurrentGroupModeIndex = 0;
 
-            // Подпишемся на события модели данных
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
-            //this.SizeChanged += OnSizeChanged;
-
             SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; }; 
             lv_Duplicates.ItemClick += Lv_Duplicates_ItemClick;
 
@@ -352,11 +349,6 @@ namespace Deduplicator {
         {
             throw new NotImplementedException();
         }
-
-        //private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-        //{
-        //    lv_Duplicates.InternalWidth = this.ActualWidth;
-        //}
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {

@@ -99,7 +99,6 @@ namespace Deduplicator.Common
         private DateTime _startTime = DateTime.Now;
         private int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
         private int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
-//        string _currentStage = string.Empty;
         private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
@@ -573,7 +572,6 @@ namespace Deduplicator.Common
             if (_currentGroupingAttribute.Attribute == attribute.Attribute)
                 return;
 
-//            _currentGroupingAttribute = attribute;
             Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
             _tokenSource = new CancellationTokenSource();
             CancellationToken token = _tokenSource.Token;
@@ -628,16 +626,28 @@ namespace Deduplicator.Common
 
         public void SetFilesProtection(Folder folder, bool isProtected)
         {
-           foreach (var group in _resultFilesCollection)
+            GroupedFilesCollection newGroupCollection = new GroupedFilesCollection();
+            foreach (var group in _resultFilesCollection)
            {
-               foreach (File file in group)
+                FilesGroup newGroup = new FilesGroup(group.Name);
+                foreach (File file in group)
                {
-                   if (file.Path.StartsWith(folder.FullName))
+                    if (file.Path.StartsWith(folder.FullName))
                             file.IsProtected = isProtected;
+                    File newFile = file.Clone();
+                    newGroup.Add(newFile);
                }
-               // group.CollectionChanged();
+                newGroupCollection.Add(newGroup);
             }
 
+            _resultFilesCollection.Clear();
+            foreach (FilesGroup group in newGroupCollection)
+            {
+                FilesGroup newGroup = new FilesGroup(group.Name);
+                foreach (File file in group)
+                    newGroup.Add(file);
+                _resultFilesCollection.Add(newGroup);
+            }
             _resultFilesCollection.Invalidate();
         }
     }

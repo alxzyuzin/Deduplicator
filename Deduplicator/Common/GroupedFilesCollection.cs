@@ -23,12 +23,7 @@ namespace Deduplicator.Common
 
         }
 
-        //public new void Clear()
-        //{
-        //    base.Clear();
-        ////    NotifyCollectionChanged();
-        //}
-
+  
         public void Invalidate()
         {
             NotifyCollectionChanged();

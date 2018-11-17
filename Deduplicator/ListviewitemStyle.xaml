@@ -3,11 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Deduplicator">
 
-
-   
-
-    
-
     <!--SolidColorBrush x:Key="PhoneForegroundBrush " Color="Red" /-->
 
     <!-- Толщина рамки вібранного єлемента, рамка расположена внутри поля єлемента с отступлением от краёв -->
@@ -35,7 +30,8 @@
         Это так же цвет уголка ListviewItem в котором располагается галочка при наваедении указателя на ListviewItem -->
     <SolidColorBrush x:Key="ListViewItemSelectedPointerOverBorderThemeBrush" Color="Transparent" />
 
-    
+    <!-- Make SelectedBackground transparent to remove upper lright corner on checked items-->
+
     <!-- Default style for Windows.UI.Xaml.Controls.ListViewItem -->
     <Style x:Key="ListViewItemStyle" TargetType="ListViewItem">
         <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
@@ -50,33 +46,29 @@
                     <ListViewItemPresenter
                         SelectedBorderThickness="0"
                         CheckBrush="Orange" 
-                        FocusBorderBrush="#FFF0F0F0"
+                        CheckSelectingBrush="Orange"
+                        FocusBorderBrush="#FF505050"
                         PointerOverBackground="#FF707070"
-                        SelectedBackground="#FF303030"
+                        SelectedPointerOverBackground ="#FF707070"
+                        SelectedPointerOverBorderBrush ="#00505050"
+
+                        SelectedBackground="#00505050"
+                        PlaceholderBackground="Aqua"
+                        Foreground="White"
                         SelectedForeground="White"
-                        SelectedPointerOverBackground ="#FF505050"
-                        SelectedPointerOverBorderBrush ="Transparent"
-                            Foreground="White"
-                            CheckSelectingBrush="Orange"
                         CheckHintBrush="BlanchedAlmond"
-                             SelectionCheckMarkVisualEnabled="True"                
-                        
-                            ContentTransitions="{TemplateBinding ContentTransitions}"
-                            DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
-                        
-                            ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
-                            
-                            HorizontalContentAlignment="Stretch"
-                        
-                            HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                            VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                            ContentMargin="0"
+                        SelectionCheckMarkVisualEnabled="True"                
+                        ContentTransitions="{TemplateBinding ContentTransitions}"
+                        DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
+                        ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
+                        HorizontalContentAlignment="Stretch"
+                        HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                        VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                        ContentMargin="0"
                         Margin="0,0,15,0">
                     </ListViewItemPresenter>
-
                 </ControlTemplate>
-
             </Setter.Value>
         </Setter>
     </Style>

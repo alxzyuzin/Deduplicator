@@ -51,28 +51,28 @@ namespace Deduplicator.DesignData
     public class FileCompareOptions
     {
        
-    public bool IsRollBack { get; set; }
-    public bool CheckName { get; set; }
-    public bool CheckSize { get; set; }
-    public bool CheckCreationDateTime { get; set; }
-    public bool CheckModificationDateTime { get; set; }
-    public bool CheckContent { get; set; }
-//    public GroupAttribute CurrentGroupModeAttrib { get; set; }
-    public int CurrentGroupModeIndex { get; set; }
-    public ObservableCollection<GroupAttribute> GrouppingAttributes { get; set; }
+        public bool IsRollBack { get; set; }
+        public bool CheckName { get; set; }
+        public bool CheckSize { get; set; }
+        public bool CheckCreationDateTime { get; set; }
+        public bool CheckModificationDateTime { get; set; }
+        public bool CheckContent { get; set; }
+    //    public GroupAttribute CurrentGroupModeAttrib { get; set; }
+        public int CurrentGroupModeIndex { get; set; }
+        public ObservableCollection<GroupAttribute> GrouppingAttributes { get; set; }
 
-    public FileCompareOptions()
-        {
-            //GrouppingAttributes = new ObservableCollection<GroupAttribute>
-            //{
+        public FileCompareOptions()
+            {
+                //GrouppingAttributes = new ObservableCollection<GroupAttribute>
+                //{
 
-            //    new GroupAttribute {GroupName= "Do not group files", Attribute= Common.FileAttribs.None },
-            //    new GroupAttribute {GroupName= "Name", Attribute= Common.FileAttribs.Name },
-            //    new GroupAttribute {GroupName= "Size", Attribute= Common.FileAttribs.Size },
-            //    new GroupAttribute {GroupName= "Content", Attribute= Common.FileAttribs.Content }
-            //};
+                //    new GroupAttribute {GroupName= "Do not group files", Attribute= Common.FileAttribs.None },
+                //    new GroupAttribute {GroupName= "Name", Attribute= Common.FileAttribs.Name },
+                //    new GroupAttribute {GroupName= "Size", Attribute= Common.FileAttribs.Size },
+                //    new GroupAttribute {GroupName= "Content", Attribute= Common.FileAttribs.Content }
+                //};
 
-        }
+            }
 
 
     } // Class FileCompareOptions
@@ -92,7 +92,7 @@ namespace Deduplicator.DesignData
     public class AppData
     {
         public List<Folder> Folders { get; set; }
- //       public GroupedFilesCollection DuplicatedFiles { get; set; }
+        public GroupedFilesCollection DuplicatedFiles { get; set; }
         public Common.DataModel.SearchStatus Status { get; set; }
         public int FoldersCount { get; set; }
         public int DuplicatesCount { get; set; }
@@ -128,4 +128,43 @@ namespace Deduplicator.DesignData
             this.ImageFileExtentions = ".3dm;.max;.bmp;.gif;.jpg;.jpeg;.png;.psd;.pspimage;.thm;.tif;.yuv;.ai;.drw;.eps;.ps;.svg;";
         }
     } //  Class DTSettings
+
+    public class GroupedFilesCollection:ObservableCollection<FilesGroup>
+    {
+        public GroupedFilesCollection()
+        {
+            Add(new FilesGroup {Name ="Const group name", TotalSize=98789787, FileSize=9878777 });
+
+        }
+    }
+
+    public class FilesGroup : ObservableCollection<File>
+    {
+        public string Name { get; set; } = "Groupe name";
+        public ulong TotalSize { get; set; } = 8905677;
+        public ulong FileSize { get; set; } = 975445678;
+
+        public FilesGroup()
+        {
+            this.Add(new File { Name = "File name", FileType = ".xaml", DateCreated = new DateTime(2018, 12, 25) });
+        }
+     }
+
+    public sealed class File
+    {
+        public string Name { get; set; } = "File name";
+        public string FileType { get; set; } = ".xaml";
+        public string FullName { get; set; } = "File full name";
+        public string Path { get; set; } = "File path";
+        public DateTime DateCreated { get; set; } = new DateTime(2018,12,25);
+        public DateTime DateModifyed { get; set; } = new DateTime(2018, 2, 5);
+        public ulong Size { get; set; } = 1111110;
+        public bool FromPrimaryFolder { get; set; } = false;
+        public string Extention { get; set; } = ".tyg";
+        public bool IsProtected { get; set; } = false;
+        public string ProtectionStatus { get; set; }
+
+        public File()
+        { }
+    }  // Class File
 }

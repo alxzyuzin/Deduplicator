@@ -341,13 +341,7 @@ namespace Deduplicator {
 
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
             SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; }; 
-            lv_Duplicates.ItemClick += Lv_Duplicates_ItemClick;
-
-        }
-
-        private void Lv_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            throw new NotImplementedException();
+  
         }
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -624,16 +618,12 @@ namespace Deduplicator {
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
-        private void lv_Duplicates_ItemClick(object sender, ItemClickEventArgs e)
+        
+
+        private void File_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (((ListView)sender).SelectedItems.Contains(e.ClickedItem))
-                ((ListView)sender).SelectedItems.Remove(e.ClickedItem);
-            else
-                ((ListView)sender).SelectedItems.Add(e.ClickedItem);
-
-            BtnDelFilesEnabled = ((ListView)sender).SelectedItems.Count > 0 ? true : false;
+            BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
         }
-
         private async void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
             List<File> deletedFiles = new List<File>();
@@ -682,9 +672,6 @@ namespace Deduplicator {
             GroupingModeSelectorEnabled = false;
         }
 
-        private void lv_Folders_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
 
-        }
     } // Class ApplicationViews
 } // Namespace Deduplicator

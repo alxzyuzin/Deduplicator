@@ -6,7 +6,7 @@ using Windows.UI.Core;
 
 namespace Deduplicator.Common
 {
-    public sealed class GroupedFilesCollection: ObservableCollection<FilesGroup>
+    public class GroupedFilesCollection: ObservableCollection<FilesGroup>
     {
         public override event NotifyCollectionChangedEventHandler CollectionChanged;
 

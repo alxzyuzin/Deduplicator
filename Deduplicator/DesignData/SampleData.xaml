@@ -1,9 +1,9 @@
 ﻿<data:CommonAppViewsData xmlns:data="using:Deduplicator.DesignData" 
      
     ViewOptionsVisibility="Collapsed"
-    ViewSearchResultsVisibility="Collapsed"
+    ViewSearchResultsVisibility="Visible"
     ViewSettingsVisibility="Collapsed"
-    ViewWhereToSearchVisibility="Visible"
+    ViewWhereToSearchVisibility="Collapsed"
     
      BtnAddFolderEnabled ="False"
      BtnDelFolderEnabled ="True"
@@ -17,11 +17,30 @@
     <data:CommonAppViewsData.AppData>
         <data:AppData>
             <data:AppData.Folders>
-                <data:Folder FullName="Folder full name (Jvery very long file name) ooooooooooooooooooooooooooooooo" 
+                <data:Folder FullName="Folder full name (Veeeery very long file name) ooooooooooooooooooooooooooooooo" 
                              IsPrimary="True" Protected="True" SearchInSubfolders="True"/>
                 <data:Folder FullName="Folder full name" 
                              IsPrimary="False" Protected="False" SearchInSubfolders="False"/>
             </data:AppData.Folders>
+
+            <data:AppData.DuplicatedFiles>
+                <data:FilesGroup >
+                    <data:File  Extention=".xaml"
+                                FileType=".xaml" FromPrimaryFolder="False" 
+                                FullName="C:/users/Desctop/qwert/tyuoi/hjjkll;.xaml"
+                                IsProtected="True"
+                                Path="C:/users/Desctop/qwert/tyuoi/"
+                                ProtectionStatus="Protected"/>
+
+                    <data:File  Extention=".xaml"
+                                FileType=".xaml" FromPrimaryFolder="False" 
+                                FullName="C:/users/Desctop/qwert/tyuoi/hjjkll;.xaml"
+                                IsProtected="False"
+                                Path="C:/users/Desctop/qwert/tyuoi/"
+                                ProtectionStatus=""/>
+
+                </data:FilesGroup>
+            </data:AppData.DuplicatedFiles>
         </data:AppData>
         
     </data:CommonAppViewsData.AppData>

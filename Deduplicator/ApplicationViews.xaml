@@ -15,14 +15,15 @@
         <CollectionViewSource x:Name="GroupedFiles" 
                               Source="{Binding Path=AppData.DuplicatedFiles}" 
                               IsSourceGrouped="true"/>
-        
+
         <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
         <SolidColorBrush x:Key="MainBackgroundBrush" Color="#FF303030"/>
-        
+
         <Style x:Key="TextBlockStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="17"/>
             <Setter Property="Margin" Value="0,0,5,0"/>
+            <!--Setter Property="HorizontalAlignment" Value="Left"/-->
         </Style>
 
         <Style x:Key="TextBlockStatusLineStyle" TargetType="TextBlock">
@@ -39,10 +40,10 @@
             <Setter Property="VerticalAlignment" Value="Top" />
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
-        
+
         <Style x:Key="TextBlockHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="17"/>
             <Setter Property="Margin" Value="5,5,0,0"/>
             <Setter Property="VerticalAlignment" Value="Top" />
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -69,7 +70,7 @@
             <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="Margin" Value="0,-15,10,0"/>
         </Style>
-        
+
         <DataTemplate x:Key="FolderTemplate" >
 
             <Grid x:Name="Folder" Height="50" HorizontalAlignment="Stretch" d:Background="Gray" Margin="0,0,0,0">
@@ -103,45 +104,42 @@
         </DataTemplate>
 
         <DataTemplate x:Key="FileTemplate">
-            <Grid x:Name="File" Height="60" HorizontalAlignment="Stretch" Margin="0,0,25,0">
+            <Grid x:Name="File" Height="50"  Tapped="File_Tapped">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="520"/>
+                    <ColumnDefinition Width="500"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="22"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Name}"  
-                           Style="{StaticResource TextBlockStyle}" TextWrapping="WrapWholeWords"/>
-                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="210"/>
-                            <ColumnDefinition Width="210"/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Margin="5,5,0,0" Text="{Binding DateCreated}"  Style="{StaticResource TextBlockStyle}"  />
-                        <TextBlock Grid.Column="1" Margin="5,5,0,0" Text="{Binding DateModifyed}"  Style="{StaticResource TextBlockStyle}" />
-                        <TextBlock Grid.Column="2" Margin="5,5,0,0" Text="{Binding Size}"  Style="{StaticResource TextBlockStyle}"   HorizontalAlignment="Right"/>
-                    </Grid>
-                </StackPanel>
-                <TextBlock Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
-                           TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" />
-                <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Margin="5,5,0,0" Text="{Binding ProtectionStatus}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="4" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"  
+                           Style="{StaticResource TextBlockStyle}" TextWrapping="WrapWholeWords" Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
+                      <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding DateCreated}"  Style="{StaticResource TextBlockStyle}"/>
+                            <TextBlock Text="{Binding DateModifyed}"  Style="{StaticResource TextBlockStyle}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="2"  HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding Size}"   Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
+                           TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" Margin="5,0,110,0" HorizontalAlignment="Stretch"/>
+                <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding ProtectionStatus}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
                 </StackPanel>
             </Grid>
         </DataTemplate>
 
         <DataTemplate x:Key="FileGroupHeaderTemplate">
 
-                 <Grid HorizontalAlignment="Stretch"  
-                       Height="40" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
+            <Grid HorizontalAlignment="Stretch"  
+                       Height="30" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
                 <!--Grid HorizontalAlignment="Stretch"  
                        Height="40" Width="{Binding ActuallWidth}"-->
-                    <Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="700"/>
                 </Grid.ColumnDefinitions>
@@ -201,7 +199,7 @@
         <TextBlock Grid.Row="0" Text="{Binding TabHeader}" 
                    Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
         <StackPanel Grid.Row="0" HorizontalAlignment="Right"
-                     Visibility="{Binding ViewSearchResultsVisibility}">
+                     Visibility="{Binding ViewSearchResultsVisibility}" d:IsHidden="True">
             <!-- Selecting grouping mode on Search results page -->
             <StackPanel   Visibility="{Binding GroupingSelectorVisibility}" Orientation="Horizontal" 
                           HorizontalAlignment="Right">
@@ -222,7 +220,7 @@
         </StackPanel>
         <!-- Folders list where to search duplicates -->
         <Border Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
-                Visibility="{Binding ViewWhereToSearchVisibility}">
+                Visibility="{Binding ViewWhereToSearchVisibility}" d:IsHidden="True">
             <ListView x:Name="lv_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
                       ItemsSource="{Binding Path=AppData.Folders}"
@@ -230,14 +228,14 @@
                       SelectionMode="Multiple"
                       Margin="0,5,0,0"
                       ItemContainerStyle="{StaticResource ListViewItemStyle}"
-                      Tapped="lv_Folders_Tapped" SelectionChanged="lv_Folders_SelectionChanged">
+                      Tapped="lv_Folders_Tapped">
                 <ListViewItem/>
                 <ListViewItem/>
             </ListView>
         </Border>
         <!-- Search options -->
         <Grid Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
-              Visibility="{Binding ViewOptionsVisibility}">
+              Visibility="{Binding ViewOptionsVisibility}" d:IsHidden="True">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -317,25 +315,24 @@
                     <TextBlock Grid.Column="2"  Text="Size"     Style="{StaticResource TextBlockHeaderStyle}"/>
                 </Grid>
             </StackPanel>
-  
+
             <Border BorderBrush="White" Grid.Row="1" BorderThickness="1" Margin="0,0,0,5">
-            <common:GListView x:Name="lv_Duplicates"  Grid.Row="1"  BorderBrush="White" BorderThickness="1"
+                <common:GListView x:Name="lv_Duplicates"  Grid.Row="1"  BorderBrush="White" BorderThickness="1"
                           VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                           ItemsSource="{Binding Source={StaticResource GroupedFiles}}"
                           ItemContainerStyle="{StaticResource ListViewItemStyle}"
                           ItemTemplate="{StaticResource FileTemplate}"
-                          SelectionMode="Multiple" 
-                          ItemClick="lv_Duplicates_ItemClick">
-                <ListView.GroupStyle>
-                    <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}"/>
-                </ListView.GroupStyle>
-             </common:GListView>
-        </Border>
-    </Grid>
+                          SelectionMode="Multiple">
+                    <ListView.GroupStyle>
+                        <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}"/>
+                    </ListView.GroupStyle>
+                </common:GListView>
+            </Border>
+        </Grid>
 
         <Border Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
                 BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" 
-                Visibility="{Binding ViewSettingsVisibility}">
+                Visibility="{Binding ViewSettingsVisibility}" d:IsHidden="True">
             <StackPanel >
                 <TextBlock Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
                 <TextBox   Text="{Binding AppData.Settings.ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
@@ -380,4 +377,4 @@
                    Foreground="Orange" Margin="30,4,30,4" Text="{Binding Path=AppData.SearchStatusInfo}"/>
         <local:MessageBox x:Name="MsgBox"  Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed"/>
     </Grid>
- </UserControl>
+</UserControl>

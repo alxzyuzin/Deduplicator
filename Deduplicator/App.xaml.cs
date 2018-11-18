@@ -24,6 +24,7 @@ namespace Deduplicator
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            
         }
 
         /// <summary>

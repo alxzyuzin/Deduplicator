@@ -43,6 +43,13 @@ namespace Deduplicator {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public event EventHandler<View> ChangeViewRequested;
+        private void RequesViewChange(View newView)
+        {
+            if (ChangeViewRequested != null)
+                ChangeViewRequested(this, newView);
+
+        }
         private ResourceLoader _resldr = new ResourceLoader();
 
         // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
@@ -340,8 +347,7 @@ namespace Deduplicator {
             FileCompareOptions.CurrentGroupModeIndex = 0;
 
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
-            SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; }; 
-  
+            SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; };
         }
 
         private async void OnFileCompareOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -536,6 +542,7 @@ namespace Deduplicator {
 
             DisableComandButtons();
             await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.GrouppingAttributes);
+            RequesViewChange(View.SearchResults);
         }
 
         private void button_CancelSearch_Tapped(object sender, TappedRoutedEventArgs e)

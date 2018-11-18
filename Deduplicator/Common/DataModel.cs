@@ -67,6 +67,13 @@ namespace Deduplicator.Common
             StartCancelOperation
         }
 
+        private struct OperationStatus
+        {
+            public SearchStatus status;
+            public int filesTotal;    // общее количество кандидатов в дубликаты в текущей фазе очистки
+            public int filesHandled;  // количество кандидатов проанализированых к данному моменту
+        }
+
         public event EventHandler<SearchStatus> SearchStatusChanged;
         private void NotifySearchStatusChanged(SearchStatus status)
         {
@@ -85,6 +92,7 @@ namespace Deduplicator.Common
         public Folder PrimaryFolder = null;
 
 
+
 #region Fields
         // Список каталогов в которых искать дубликаты
         private ObservableCollection<Folder> _foldersCollection = new ObservableCollection<Folder>();
@@ -93,9 +101,8 @@ namespace Deduplicator.Common
         // Список файлов отобранных из каталогов в которых искать дубликаты    
         private ObservableCollection<File> FilesCollection = new ObservableCollection<File>();
         // Список файлов из первичного каталога
-        private ObservableCollection<File> PrimaryFilesCollection = new ObservableCollection<File>();
+  //      private ObservableCollection<File> PrimaryFilesCollection = new ObservableCollection<File>();
         
-        private int _totalFilesHandled = 0; // Общее число файлов найденных в указанных каталогах
         private DateTime _startTime = DateTime.Now;
         private int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
         private int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
@@ -108,7 +115,7 @@ namespace Deduplicator.Common
 
 #region Properties
 
-        public ObservableCollection<Folder> Folders
+        public  ObservableCollection<Folder> Folders
         {
             get {return _foldersCollection;}
         }
@@ -186,9 +193,8 @@ namespace Deduplicator.Common
         {
             FilesCollection.Clear();
             _resultFilesCollection.Clear();
-            _totalFilesHandled = 0;
+            _filesHandled = 0;
             _startTime = DateTime.Now;
-
 
             Progress<SearchStatus>  status = new Progress<SearchStatus>(ReportStatus);
             _tokenSource = new CancellationTokenSource();
@@ -230,39 +236,8 @@ namespace Deduplicator.Common
                 }
                 // Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
                 if (PrimaryFolder != null)
-                {
+                    DeleteNonPrimaryFolderDuplicates();
 
-                    List<FilesGroup> groupsForDelete = new List<FilesGroup>();
-                    File fileFromPrimaryFolder = null;
-                    // Просматриваем все группы в результатах поиска и 
-                    foreach (FilesGroup group in _resultFilesCollection)
-                    {
-                        fileFromPrimaryFolder = null;
-                        // Для каждого файла в группе проверяем его принадлежность к Primary folder
-                        foreach (File file in group)
-                        {
-                            if (file.FromPrimaryFolder)
-                            {
-                                fileFromPrimaryFolder = file;
-                                break;
-                            }
-                        }
-                        // Если в группе находится файл принадлежащий к Primary folder
-                        // Удаляем его из группы и называем группу по имени этого файла
-                        if (fileFromPrimaryFolder != null)
-                        {
-                            group.Remove(fileFromPrimaryFolder);
-                            group.Name = fileFromPrimaryFolder.Name;
-                        }
-                        else
-                        { // если нет то помещаем группу в список для последующего удаления
-                            groupsForDelete.Add(group);
-                        }
-                    }
-                    // Удалим тз результатов поиска все группы не содержащие файлов из Primary folder
-                    foreach (FilesGroup group in groupsForDelete)
-                        _resultFilesCollection.Remove(group);
-                }
                 searchStatus.Report(SearchStatus.SearchCompleted);
             }
             catch (OperationCanceledException)
@@ -270,11 +245,43 @@ namespace Deduplicator.Common
                 FilesCollection.Clear();
                 _resultFilesCollection.Clear();
 
-                if (_error.Type == ErrorType.SearchCanceled)
+                if (_error.Type == ErrorType.SearchCanceled || _error.Type== ErrorType.OperationCanceled)
                     searchStatus.Report(SearchStatus.SearchCanceled);
                 else
                     searchStatus.Report(SearchStatus.Error);
             }
+        }
+
+        private void DeleteNonPrimaryFolderDuplicates()
+        {
+            List<FilesGroup> groupsForDelete = new List<FilesGroup>();
+
+            // Просматриваем все группы в результатах поиска  
+            foreach (FilesGroup group in _resultFilesCollection)
+            {
+                List<File> primaryFolderFiles = new List<File>();
+                // Для каждого файла в группе проверяем его принадлежность к Primary folder
+                foreach (File file in group)
+                {
+                    if (file.FromPrimaryFolder)
+                         primaryFolderFiles.Add(file);
+                }
+                // Если в группе находится хотя бы один файл принадлежащий к Primary folder
+                // Удаляем его из группы и называем группу по имени этого файла
+                if (primaryFolderFiles.Count>0)
+                {
+                    group.Name = primaryFolderFiles[0].Name;
+                    foreach(File file in primaryFolderFiles)
+                        group.Remove(file);
+                }
+                else
+                { // если нет то помещаем группу в список для последующего удаления
+                    groupsForDelete.Add(group);
+                }
+            }
+            // Удалим тз результатов поиска все группы не содержащие файлов из Primary folder
+            foreach (FilesGroup group in groupsForDelete)
+                _resultFilesCollection.Remove(group);
         }
 
         /// <summary>
@@ -367,11 +374,12 @@ namespace Deduplicator.Common
              }
             catch (OperationCanceledException)
             {
-                if (regrouping)
-                    _error.Set(ErrorType.RegroupingCanceled, "", 0, "");
-                else
-                    _error.Set(ErrorType.SearchCanceled, "", 0, "");
-              
+                _error.Set(ErrorType.OperationCanceled, "", 0, "");
+                //if (regrouping)
+                //    _error.Set(ErrorType.RegroupingCanceled, "", 0, "");
+                //else
+                //    _error.Set(ErrorType.SearchCanceled, "", 0, "");
+
                 throw new OperationCanceledException();
             }
             catch (Exception ex)
@@ -389,7 +397,7 @@ namespace Deduplicator.Common
             {
                 case SearchStatus.NewFileSelected:
                     SearchStatusInfo = string.Format(@"Selecting files to search duplicates. Selected {0} files. Total files found {1}.",
-                                                 FilesCollection.Count, _totalFilesHandled);
+                                                 FilesCollection.Count, _filesHandled);
                     break;
                 case SearchStatus.Grouping:
                 case SearchStatus.GroupingStarted:
@@ -466,7 +474,7 @@ namespace Deduplicator.Common
         /// </param>
         /// <returns></returns>
         private async Task GetFolderFiles(Folder folder, ObservableCollection<File> filelist, FileSelectionOptions options,
-                                            IProgress<SearchStatus> selectingFilesStatus, CancellationToken canselationToken)
+                                            IProgress<SearchStatus> fileSelectionStatus, CancellationToken canselationToken)
         {
             IReadOnlyList<IStorageItem> folderitems = null;
             StorageFolder f;
@@ -479,19 +487,19 @@ namespace Deduplicator.Common
             }
             catch (FileNotFoundException e)
             {
-                _error.Set(ErrorType.FileNotFound, "GetFolderFiles", 423, e.Message);
+                _error.Set(ErrorType.FileNotFound, "GetFolderFiles", 482, e.Message);
                 throw new OperationCanceledException();
             }
 
             foreach (IStorageItem item in folderitems)
             {
                 canselationToken.ThrowIfCancellationRequested();
-                _totalFilesHandled++;
+                ++_filesHandled;
                 if (item.Attributes.HasFlag(FileAttributes.Directory))  
                 {
                     if (folder.SearchInSubfolders)
                         await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
-                                            filelist, options, selectingFilesStatus, canselationToken);
+                                            filelist, options, fileSelectionStatus, canselationToken);
                 }
                 else
                 {
@@ -507,7 +515,8 @@ namespace Deduplicator.Common
                             file.DateModifyed = basicproperties.DateModified.DateTime;
                             file.Size = basicproperties.Size;
                             filelist.Add(file);
-                            selectingFilesStatus.Report(SearchStatus.NewFileSelected);
+
+                            fileSelectionStatus.Report(SearchStatus.NewFileSelected);
                         }
                     }
                     catch(Exception e)
@@ -557,7 +566,7 @@ namespace Deduplicator.Common
                     File t = files[i];
                     files[i] = files[j];
                     files[j] = t;
-                    i++;
+                    ++i;
                 }
             }
             return i - 1;

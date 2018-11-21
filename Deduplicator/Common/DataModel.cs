@@ -64,14 +64,9 @@ namespace Deduplicator.Common
             ComparingStarted,
             Comparing,
             ComparingCompleted,
-            StartCancelOperation
-        }
-
-        private struct OperationStatus
-        {
-            public SearchStatus status;
-            public int filesTotal;    // общее количество кандидатов в дубликаты в текущей фазе очистки
-            public int filesHandled;  // количество кандидатов проанализированых к данному моменту
+            StartCancelOperation,
+            Analyse,
+            OperationCanceled
         }
 
         public event EventHandler<SearchStatus> SearchStatusChanged;
@@ -97,7 +92,7 @@ namespace Deduplicator.Common
         // Список каталогов в которых искать дубликаты
         private ObservableCollection<Folder> _foldersCollection = new ObservableCollection<Folder>();
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту
-        private GroupedFilesCollection _resultFilesCollection = new GroupedFilesCollection();
+        private GroupedFilesCollection m_DuplicatesCollection; // = new GroupedFilesCollection(progress);
         // Список файлов отобранных из каталогов в которых искать дубликаты    
         private FilesGroup FilesCollection = new FilesGroup();
         
@@ -107,10 +102,11 @@ namespace Deduplicator.Common
         private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
+        private Progress<OperationStatus> m_progress;
 
-#endregion
+        #endregion
 
-#region Properties
+        #region Properties
 
         public  ObservableCollection<Folder> Folders
         {
@@ -119,7 +115,7 @@ namespace Deduplicator.Common
 
         public GroupedFilesCollection DuplicatedFiles
         {
-            get { return _resultFilesCollection; }
+            get { return m_DuplicatesCollection; }
         }
 
         SearchStatus _status = SearchStatus.JustInitialazed;
@@ -153,7 +149,7 @@ namespace Deduplicator.Common
             }
         }
 
-        public int  DuplicatesCount { get { return _resultFilesCollection.Count; } }
+        public int  DuplicatesCount { get { return m_DuplicatesCollection.Count; } }
 
         public bool PrimaryFolderSelected { get; set; }
 
@@ -183,66 +179,88 @@ namespace Deduplicator.Common
         public DataModel()
         {
             Settings.Restore();
+            m_progress = new Progress<OperationStatus>(ReportStatus);
+            m_progress.ProgressChanged += Status_ProgressChanged;
+            m_DuplicatesCollection = new GroupedFilesCollection(m_progress);
         }
-
  
         public async Task StartSearch(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList)
         {
-            Progress<SearchStatus>  status = new Progress<SearchStatus>(ReportStatus);
             _tokenSource = new CancellationTokenSource();
             CancellationToken token = _tokenSource.Token;
 
-            WorkItemHandler workhandler = delegate { Search(selectionOptions, compareAttribsList, status, token); };
+            WorkItemHandler workhandler = delegate { Search(selectionOptions, compareAttribsList, token); };
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
+        }
+
+        private void Status_ProgressChanged(object sender, OperationStatus e)
+        {
+            int i = 0;
         }
 
         /// <summary>
         /// Поиск дубликатов файлов
         /// </summary>
         /// <returns></returns>
-        private async void Search(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList, 
-                                  IProgress<SearchStatus> searchStatus, CancellationToken cancelToken)
+        private async void Search( FileSelectionOptions selectionOptions, 
+                                   ObservableCollection<GroupingAttribute> compareAttribsList, 
+                                   CancellationToken cancelToken )
         {
             _filesHandled = 0;
-            _startTime = DateTime.Now;
             _error.Set(ErrorType.OperationCanceled, "", 0, "");
-            searchStatus.Report(SearchStatus.SelectingFiles);
+
+            OperationStatus status = new OperationStatus
+            {
+                Stage = @"Selecting files to search duplicates.",
+                Id = SearchStatus.SelectingFiles 
+            };
+            IProgress<OperationStatus> progress = m_progress;
+//            searchStatus.Report(SearchStatus.SelectingFiles);
             FilesCollection.Clear();
-            _resultFilesCollection.Clear();
+            m_DuplicatesCollection.Clear();
             try
             {
                 // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
                 foreach (Folder folder in _foldersCollection)
-                    await GetFolderFiles(folder, FilesCollection, selectionOptions, searchStatus, cancelToken);
+                    await GetFolderFiles(folder, FilesCollection, selectionOptions, cancelToken, status);
 
                 //// Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
-                if (FilesCollection.Count > 0)
+                if (FilesCollection.Count > 1)
                 {
-                    searchStatus.Report(SearchStatus.SearchingDuplicates);
+                    //                    searchStatus.Report(SearchStatus.SearchingDuplicates);
 
-                    FilesGroup fg = new FilesGroup();
+                    FilesGroup fg = new FilesGroup(m_progress);
                     foreach (File file in FilesCollection)
                         fg.Add(file);
 
-                    _resultFilesCollection.Add(fg);
-                
-                    await _resultFilesCollection.RemoveNonDuplicates(compareAttribsList, searchStatus, cancelToken);
+                    m_DuplicatesCollection.Add(fg);
+
+                    await m_DuplicatesCollection.RemoveNonDuplicates(compareAttribsList, cancelToken);
                 }
                 //// Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
                 if (PrimaryFolder != null)
                     DeleteNonPrimaryFolderDuplicates();
-
-                searchStatus.Report(SearchStatus.SearchCompleted);
+                status.Stage = @"Search complete";
+                status.Id = SearchStatus.SearchCompleted;
+                progress.Report(status);
             }
             catch (OperationCanceledException)
             {
                 FilesCollection.Clear();
-                _resultFilesCollection.Clear();
+                m_DuplicatesCollection.Clear();
 
-                if (_error.Type == ErrorType.SearchCanceled || _error.Type== ErrorType.OperationCanceled)
-                    searchStatus.Report(SearchStatus.SearchCanceled);
+                if (_error.Type == ErrorType.SearchCanceled || _error.Type == ErrorType.OperationCanceled)
+                {
+                    status.Stage = @"Search complete";
+                    status.Id = SearchStatus.SearchCanceled;
+                    progress.Report(status);
+                }
                 else
-                    searchStatus.Report(SearchStatus.Error);
+                {
+                    status.Stage = @"Error";
+                    status.Id = SearchStatus.SearchCanceled;
+                    progress.Report(status);
+                }
             }
         }
 
@@ -251,7 +269,7 @@ namespace Deduplicator.Common
             List<FilesGroup> groupsForDelete = new List<FilesGroup>();
 
             // Просматриваем все группы в результатах поиска  
-            foreach (FilesGroup group in _resultFilesCollection)
+            foreach (FilesGroup group in m_DuplicatesCollection)
             {
                 List<File> primaryFolderFiles = new List<File>();
                 // Для каждого файла в группе проверяем его принадлежность к Primary folder
@@ -275,181 +293,89 @@ namespace Deduplicator.Common
             }
             // Удалим тз результатов поиска все группы не содержащие файлов из Primary folder
             foreach (FilesGroup group in groupsForDelete)
-                _resultFilesCollection.Remove(group);
+                m_DuplicatesCollection.Remove(group);
         }
 
-        ///// <summary>
-        ///// Удаляет из коллекции файлы с уникальным значением указанног атрибута
-        ///// При задании сравнения файлов по одному атрибуту удаляет из коллекции файлов файлы с уникальным 
-        ///// значением атрибута, собирает файлы с совпадающим значением атрибута в группу и помещает созданную группу
-        ///// в коллекцию результатов поиска
-        ///// При задании сравнения файлов по нескольким атрибутам функуция вызывается отдельно для каждого атрибута 
-        ///// При каждом последующем вызове созданные при предыдущем вызове группы разбиваются на новые группы 
-        ///// в которых совпадает значение нового атрибута и удаляются файлы с уникальным значением атрибута в нутри группы
-        ///// Если значение переданного атрибута равно FileAttribs.None  - все группы объединяются в одну, 
-        ///// которая помещается в результаты поиска
-        ///// </summary>
-        ///// <param name="filegroups">Коллекция групп файлов</param>
-        ///// <param name="attribute">Атрибут значение которого проверяется на уникальность</param>
-        //private async Task SplitGroupsByAttribute(GroupedFilesCollection filegroups, GroupingAttribute attribute, 
-        //                                            bool regrouping, IProgress<SearchStatus> status, CancellationToken canselationToken)
-        //{
-        //    _filesTotal = 0;
-        //    _filesHandled = 0;
-        //    _currentGroupingAttribute = attribute;
-        //    //_currentStageName = attribute.Name;
-
-        //    // Подсчитаем общее количество файлов подлежащих перегруппировке
-        //    foreach (var group in filegroups)
-        //        _filesTotal+=group.Count;
-
-        //    status.Report(regrouping ? SearchStatus.GroupingStarted : SearchStatus.ComparingStarted);
-        //    GroupedFilesCollection groupsBuffer = new GroupedFilesCollection();
-        //    try {
-        //         //Перенесём группы из исходного списка в буфер
-        //        foreach (var group in filegroups)
-        //            groupsBuffer.Add(group);
-        //        // Очистим исходный список групп 
-        //        filegroups.Clear();
-
-        //        // Если attribute == FileAttribs.None прсто собираем все файлы в одну группу
-        //        if (attribute.Attribute == FileAttribs.None)
-        //        {
-        //            FilesGroup newgroup = new FilesGroup();
-        //            foreach (FilesGroup group in groupsBuffer)
-        //                foreach (File file in group)
-        //                    newgroup.Add(file);
-        //            filegroups.Add(newgroup);
-        //        }
-        //        else
-        //        {
-        //            // Для каждой группы в буфере 
-        //            // выполняем сортировку по текущему атрибуту файла
-        //            // Сравниваем файлы в группе по текущему атрибуту попарно первый со вторым второй с третьим и тд
-        //            // и при равенстве файлов добавляем файлы в новую группу
-        //            // при первом несовпадении файлов считаем формирование группы файлов совпадающих по заданному атрибуту
-        //            // завершенным.
-        //            // Удаляем из группы в буфере файлы, добавленные в новую группу.
-        //            // Если количество файлов в новой группе больше 1, новую группу добавляем в список групп 
-        //            // с результатами поиска (если в группе только один файл значит он не является дубликатом)
-        //            // Процесс повторяем до те по пока в группе из буфера присутствуют файлы 
-
-        //            foreach (var group in groupsBuffer)
-        //            {
-        //                await QuickSortGroupByAttrib(group, 0, group.Count - 1, attribute.Attribute); 
-
-        //                while (group.Count > 1)
-        //                {
-        //                    FilesGroup newgroup = new FilesGroup();
-        //                    newgroup.Add(group[0]);
-        //                    for (int i = 0; i < group.Count - 1; i++)
-        //                    {
-        //                        canselationToken.ThrowIfCancellationRequested();
-        //                        status.Report(regrouping ? SearchStatus.Grouping : SearchStatus.Comparing);
-        //                        int compareResult = await group[i].CompareTo(group[i + 1], attribute.Attribute);
-        //                        if (compareResult == 0)
-        //                            newgroup.Add(group[i + 1]);
-        //                        else
-        //                            break;
-        //                    }
-        //                    // Удалим из обрабатываемой группы файлы, перенесённые в созданную группу
-        //                    foreach (File file in newgroup)
-        //                    {
-        //                        newgroup.TotalSize += file.Size;
-        //                        group.Remove(file);
-        //                        ++_filesHandled;
-        //                    }
-        //                    //Сохраним новую группу в буфере результата
-        //                    if (newgroup.Count > 1)
-        //                       filegroups.Add(newgroup);
-        //                }
-        //            }
-        //        }
-        //     }
-        //    catch (OperationCanceledException)
-        //    {
-        //        _error.Set(ErrorType.OperationCanceled, "", 0, "");
-        //        //if (regrouping)
-        //        //    _error.Set(ErrorType.RegroupingCanceled, "", 0, "");
-        //        //else
-        //        //    _error.Set(ErrorType.SearchCanceled, "", 0, "");
-
-        //        throw new OperationCanceledException();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _error.Set(ErrorType.UnknownError,"SplitGroupsByAttribute", 377, ex.Message);
-        //        throw new OperationCanceledException();
-        //    }
-        //} 
-
-        private void ReportStatus(SearchStatus searchStatus)
+  
+        private void ReportStatus(OperationStatus status)
         {
-            int totalDuplicatesCount = 0;
-            _status = searchStatus;
-            switch(searchStatus)
+////            int totalDuplicatesCount = 0;
+////            _status = searchStatus;
+            switch(status.Id)
             {
                 case SearchStatus.NewFileSelected:
-                    SearchStatusInfo = string.Format(@"Selecting files to search duplicates. Selected {0} files. Total files found {1}.",
-                                                 FilesCollection.Count, _filesHandled);
+                    SearchStatusInfo = string.Format("{0}. Total files selected {1}.", status.Stage, status.HandledItems);
+                    
+                    //SearchStatusInfo = string.Format(@"Selecting files to search duplicates. Selected {0} files. Total files found {1}.",
+                    //                             FilesCollection.Count, _filesHandled);
                     break;
-                //case SearchStatus.Grouping:
-                //case SearchStatus.GroupingStarted:
-                //    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
-                //                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
-                //    break;
-                //case SearchStatus.GroupingCompleted:
-                //    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
-                //                                      _filesTotal, _resultFilesCollection.Count);
-                //    break;
+//                //case SearchStatus.Grouping:
+//                //case SearchStatus.GroupingStarted:
+//                //    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
+//                //                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
+//                //    break;
+//                case SearchStatus.GroupingCompleted:
+//                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
+//                                                      _filesTotal, m_DuplicatesCollection.Count);
+//                    break;
 
-                //case SearchStatus.Comparing:
-                //case SearchStatus.ComparingStarted:
-                //    SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
-                //                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
-                //    break;
-                //case SearchStatus.ComparingCompleted:
-                //    SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
-                //                                    _filesTotal, _resultFilesCollection.Count);
-                //    break;
-                case SearchStatus.Sorting:
-                    SearchStatusInfo = @"Sorting files";
-                    break;
-                //case SearchStatus.SearchCompleted:
-                //    totalDuplicatesCount = 0;
-                //    foreach (FilesGroup g in _resultFilesCollection)
-                //        totalDuplicatesCount += g.Count;
-                //    SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
-                //                                        totalDuplicatesCount, _resultFilesCollection.Count);
-                //    break;
-                case SearchStatus.SearchCanceled:
-                    SearchStatusInfo = string.Format(@"Search canceled.");
-                    break;
-                case SearchStatus.GroupingCanceled:
-                    SearchStatusInfo = string.Format(@"Grouping canceled.");
-                    break;
-                //case SearchStatus.Error:
-                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
-                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
-                //    break;
-                 case SearchStatus.ResultsCleared:
-                    SearchStatusInfo = string.Format(@"Search results cleared.");
-                    break;
-                case SearchStatus.StartCancelOperation:
-                    SearchStatusInfo = string.Format(@"Canceling current operation.");
-                    break;
-                default:
-                    SearchStatusInfo = string.Empty;
-                    break;
+//                case SearchStatus.ComparingStarted:
+//                case SearchStatus.Comparing:
+//                    SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
+//                                                   m_DuplicatesCollection.CurrentGroupingAttribute.Name, _filesHandled, _filesTotal);
+//                    break;
+//                case SearchStatus.ComparingCompleted:
+//                    SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
+//                                                    _filesTotal, m_DuplicatesCollection.Count);
+//                    break;
+//                case SearchStatus.Sorting:
+//                    SearchStatusInfo = @"Sorting files";
+//                    break;
+//                case SearchStatus.SearchCompleted:
+//                    totalDuplicatesCount = 0;
+//                    foreach (FilesGroup g in m_DuplicatesCollection)
+//                        totalDuplicatesCount += g.Count;
+//                    SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
+//                                                        totalDuplicatesCount, m_DuplicatesCollection.Count);
+//                    break;
+//                case SearchStatus.SearchCanceled:
+//                    SearchStatusInfo = string.Format(@"Search canceled.");
+//                    break;
+//                case SearchStatus.GroupingCanceled:
+//                    SearchStatusInfo = string.Format(@"Grouping canceled.");
+//                    break;
+//                //case SearchStatus.Error:
+//                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
+//                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
+//                //    break;
+//                 case SearchStatus.ResultsCleared:
+//                    SearchStatusInfo = string.Format(@"Search results cleared.");
+//                    break;
+//                case SearchStatus.StartCancelOperation:
+//                    SearchStatusInfo = string.Format(@"Canceling current operation.");
+//                    break;
+//                case SearchStatus.Analyse:
+//                    SearchStatusInfo = string.Format(@"Analyzing file {0} from {1}.", 1,2);
+//                    break;
+//                default:
+//                    SearchStatusInfo = string.Empty;
+//                    break;
             }
-            NotifySearchStatusChanged(searchStatus);
+            NotifySearchStatusChanged(status.Id);
             if (OperationCompleted)
-                _resultFilesCollection.Invalidate();
+                m_DuplicatesCollection.Invalidate();
         }
 
         public void CancelOperation()
         {
-            ReportStatus(SearchStatus.StartCancelOperation);
+            OperationStatus status = new OperationStatus
+            {
+                Id = SearchStatus.StartCancelOperation,
+                TotalItems = 0,
+                HandledItems = 0,
+                Stage = @"Start canceling operation."
+            };
+            ReportStatus(status);
             _tokenSource.Cancel();
         }
 
@@ -467,8 +393,9 @@ namespace Deduplicator.Common
         /// условия которым должен удовлетворять файл для включения в список файлов
         /// </param>
         /// <returns></returns>
-        private async Task GetFolderFiles(Folder folder, ObservableCollection<File> filelist, FileSelectionOptions options,
-                                            IProgress<SearchStatus> fileSelectionStatus, CancellationToken canselationToken)
+        private async Task GetFolderFiles(Folder folder, ObservableCollection<File> filelist,
+                                            FileSelectionOptions options, CancellationToken canselationToken,
+                                            OperationStatus status )
         {
             IReadOnlyList<IStorageItem> folderitems = null;
             StorageFolder f;
@@ -485,15 +412,16 @@ namespace Deduplicator.Common
                 throw new OperationCanceledException();
             }
 
+            IProgress<OperationStatus> progress = m_progress;
             foreach (IStorageItem item in folderitems)
             {
                 canselationToken.ThrowIfCancellationRequested();
-                ++_filesHandled;
+                ++status.TotalItems;
                 if (item.Attributes.HasFlag(FileAttributes.Directory))  
                 {
                     if (folder.SearchInSubfolders)
                         await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
-                                            filelist, options, fileSelectionStatus, canselationToken);
+                                            filelist, options, canselationToken, status);
                 }
                 else
                 {
@@ -504,12 +432,13 @@ namespace Deduplicator.Common
                         {
                             File file = new File(item.Name, item.Path, fileExtention, item.DateCreated.DateTime,
                                                     new DateTime(), 0, folder.IsPrimary, folder.IsProtected);
-                        
                             Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
                             file.DateModifyed = basicproperties.DateModified.DateTime;
                             file.Size = basicproperties.Size;
                             filelist.Add(file);
-                            fileSelectionStatus.Report(SearchStatus.NewFileSelected);
+                            status.Id = SearchStatus.NewFileSelected;
+                            ++status.HandledItems;
+                            progress.Report(status);
                         }
                     }
                     catch(Exception e)
@@ -527,54 +456,73 @@ namespace Deduplicator.Common
         /// <param name="attribute"></param>
         public async void RegroupResultsByFileAttribute(GroupingAttribute attribute)
         {
-            Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
+ //           Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
             _tokenSource = new CancellationTokenSource();
             CancellationToken token = _tokenSource.Token;
 
-            WorkItemHandler workhandler = delegate { Regroup(attribute, status, token); };
+            WorkItemHandler workhandler = delegate { Regroup(attribute, token); };
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
-            _resultFilesCollection.Invalidate();
+            m_DuplicatesCollection.Invalidate();
         }
-        
-        private async void Regroup( GroupingAttribute attribute, IProgress<SearchStatus> status, CancellationToken token)
+
+
+
+        private async void Regroup( GroupingAttribute attribute, CancellationToken token)
         {
             GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection();
             // Сохраним результаты предыдущей сортировки для восстановления в случае отката операции
-            foreach (var group in _resultFilesCollection)
+            foreach (var group in m_DuplicatesCollection)
                 rollbackGroupsBuffer.Add(group);
+
+            OperationStatus status = new OperationStatus
+            {
+                Id = DataModel.SearchStatus.GroupingCompleted,
+                Stage = "Regrouping complete"
+            };
+
             // Разделим полученный ранее полный список дубликатов на группы по указанному атрибуту
             try
             {
-                await _resultFilesCollection.RegroupDuplicates(attribute, status, token);
-                status.Report(SearchStatus.GroupingCompleted);
+                await m_DuplicatesCollection.RegroupDuplicates(attribute, token);
+
+             
+               
+                ((IProgress<OperationStatus>)m_progress).Report(status);
             }
             catch (OperationCanceledException)
             {
-                _resultFilesCollection.Clear();
+                m_DuplicatesCollection.Clear();
 
                 if (_error.Type == ErrorType.RegroupingCanceled)
                 {
                     // Восстановим результаты предыдущей сортировки
                     foreach (var group in rollbackGroupsBuffer)
-                        _resultFilesCollection.Add(group);
-                     status.Report(SearchStatus.GroupingCanceled);
+                        m_DuplicatesCollection.Add(group);
+                    status.Id = SearchStatus.GroupingCanceled;
+                    status.Stage = "Regrouping canceled.";
+                    ((IProgress<OperationStatus>)m_progress).Report(status);
                 }
                 else
-                    status.Report(SearchStatus.Error);
+                    ((IProgress<OperationStatus>)m_progress).Report(status);
             }
         }
 
        public void ClearSearchResults()
         {
             FilesCollection.Clear();
-            _resultFilesCollection.Clear();
-            ReportStatus(SearchStatus.ResultsCleared);
+            m_DuplicatesCollection.Clear();
+            OperationStatus status = new OperationStatus
+            {
+                Id = DataModel.SearchStatus.GroupingCompleted,
+                Stage = "Search results cleared."
+            };
+            ReportStatus(status);
         }
 
         public void SetFilesProtection(Folder folder, bool isProtected)
         {
             GroupedFilesCollection newGroupCollection = new GroupedFilesCollection();
-            foreach (var group in _resultFilesCollection)
+            foreach (var group in m_DuplicatesCollection)
            {
                 FilesGroup newGroup = new FilesGroup(group.Name);
                 foreach (File file in group)
@@ -587,15 +535,17 @@ namespace Deduplicator.Common
                 newGroupCollection.Add(newGroup);
             }
 
-            _resultFilesCollection.Clear();
+            m_DuplicatesCollection.Clear();
             foreach (FilesGroup group in newGroupCollection)
             {
                 FilesGroup newGroup = new FilesGroup(group.Name);
                 foreach (File file in group)
                     newGroup.Add(file);
-                _resultFilesCollection.Add(newGroup);
+                m_DuplicatesCollection.Add(newGroup);
             }
-            _resultFilesCollection.Invalidate();
+            m_DuplicatesCollection.Invalidate();
         }
-    }
+    } // class DataModel
+
+   
 }

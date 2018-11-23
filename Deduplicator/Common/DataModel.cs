@@ -206,11 +206,8 @@ namespace Deduplicator.Common
                                    CancellationToken cancelToken )
         {
             _error.Set(ErrorType.OperationCanceled, "", 0, "");
-            IProgress<OperationStatus> progress = m_progress;
-            OperationStatus status = new OperationStatus
-            {
-                 Id = SearchStatus.SelectingFiles 
-            };
+
+            OperationStatus status = new OperationStatus { Id = SearchStatus.SelectingFiles };
 
             FilesCollection.Clear();
             m_DuplicatesCollection.Clear();
@@ -236,23 +233,14 @@ namespace Deduplicator.Common
                     DeleteNonPrimaryFolderDuplicates();
 
                 status.Id = SearchStatus.SearchCompleted;
-                progress.Report(status);
+                ((IProgress<OperationStatus>)m_progress).Report(status);
             }
             catch (OperationCanceledException)
             {
                 FilesCollection.Clear();
                 m_DuplicatesCollection.Clear();
-
-                if (_error.Type == ErrorType.SearchCanceled || _error.Type == ErrorType.OperationCanceled)
-                {
-                    status.Id = SearchStatus.SearchCanceled;
-                    progress.Report(status);
-                }
-                else
-                {
-                    status.Id = SearchStatus.Error;
-                    progress.Report(status);
-                }
+                status.Id = SearchStatus.SearchCanceled;
+                ((IProgress<OperationStatus>)m_progress).Report(status);
             }
         }
 
@@ -311,10 +299,6 @@ namespace Deduplicator.Common
                     SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
                                                    status.Stage, status.HandledItems, status.TotalItems);
                     break;
-                //                case SearchStatus.ComparingCompleted:
-                //                    SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
-                //                                                    _filesTotal, m_DuplicatesCollection.Count);
-                //                    break;
                 case SearchStatus.Sorting:
                     SearchStatusInfo = @"Sorting files ...";
                     break;
@@ -322,28 +306,18 @@ namespace Deduplicator.Common
                     SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
                                                       m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
                     break;
-                //                case SearchStatus.SearchCanceled:
-                //                    SearchStatusInfo = string.Format(@"Search canceled.");
-                //                    break;
-                //                case SearchStatus.GroupingCanceled:
-                //                    SearchStatusInfo = string.Format(@"Grouping canceled.");
-                //                    break;
-                //                //case SearchStatus.Error:
-                //                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
-                //                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
-                //                //    break;
+                case SearchStatus.SearchCanceled:
+                    SearchStatusInfo = string.Format(@"Search canceled.");
+                    break;
+                case SearchStatus.GroupingCanceled:
+                    SearchStatusInfo = string.Format(@"Grouping canceled.");
+                    break;
                 case SearchStatus.ResultsCleared:
                     SearchStatusInfo = string.Format(@"Search results cleared.");
                     break;
-                    //                case SearchStatus.StartCancelOperation:
-                    //                    SearchStatusInfo = string.Format(@"Canceling current operation.");
-                    //                    break;
-                    //                case SearchStatus.Analyse:
-                    //                    SearchStatusInfo = string.Format(@"Analyzing file {0} from {1}.", 1,2);
-                    //                    break;
-                    //                default:
-                    //                    SearchStatusInfo = string.Empty;
-                    //                    break;
+                case SearchStatus.StartCancelOperation:
+                    SearchStatusInfo = string.Format(@"Canceling current operation.");
+                    break;
             }
             NotifySearchStatusChanged(status.Id);
             if (OperationCompleted)
@@ -352,13 +326,7 @@ namespace Deduplicator.Common
 
         public void CancelOperation()
         {
-            OperationStatus status = new OperationStatus
-            {
-                Id = SearchStatus.StartCancelOperation,
-                TotalItems = 0,
-                HandledItems = 0,
-                Stage = @"Start canceling operation."
-            };
+            OperationStatus status = new OperationStatus { Id = SearchStatus.StartCancelOperation };
             ReportStatus(status);
             _tokenSource.Cancel();
         }
@@ -448,8 +416,6 @@ namespace Deduplicator.Common
             m_DuplicatesCollection.Invalidate();
         }
 
-
-
         private async void Regroup( GroupingAttribute attribute, CancellationToken token)
         {
             GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection(m_progress);
@@ -464,13 +430,11 @@ namespace Deduplicator.Common
             catch (OperationCanceledException)
             {
                 m_DuplicatesCollection.Clear();
-
-                if (_error.Type == ErrorType.RegroupingCanceled)
-                {
-                    // Восстановим результаты предыдущей сортировки
-                    foreach (var group in rollbackGroupsBuffer)
-                        m_DuplicatesCollection.Add(group);
-                }
+                // Восстановим результаты предыдущей сортировки
+                foreach (var group in rollbackGroupsBuffer)
+                    m_DuplicatesCollection.Add(group);
+                OperationStatus status = new OperationStatus { Id = SearchStatus.GroupingCanceled };
+                ((IProgress<OperationStatus>)m_progress).Report(status);
             }
         }
 

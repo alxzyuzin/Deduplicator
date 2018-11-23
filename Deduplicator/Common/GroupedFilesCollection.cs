@@ -75,7 +75,7 @@ namespace Deduplicator.Common
                         this.Add(newGroup);
                  }
              }
-         }
+        }
 
         public async Task RegroupDuplicates(GroupingAttribute attribute, CancellationToken cancelToken)
         {

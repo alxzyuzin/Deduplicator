@@ -252,7 +252,7 @@ namespace Deduplicator.Common
 
     public class OperationStatus
     {
-        public DataModel.SearchStatus Id = DataModel.SearchStatus.UnDefined;
+        public DataModel.SearchStatus Id = DataModel.SearchStatus.JustInitialazed;
         public string Stage = string.Empty;
         public int TotalItems = 0;
         public int HandledItems = 0;

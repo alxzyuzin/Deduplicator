@@ -31,10 +31,10 @@ namespace Deduplicator.Common
             public int LineNumber;
             public string Message;
 
-            public ErrorData(string moduleName)
-            {
-                ModuleName = moduleName;
-            }
+            //public ErrorData(string moduleName)
+            //{
+            //    ModuleName = moduleName;
+            //}
 
             public void Set(ErrorType type, string functionName, int lineNumber, string message)
             {
@@ -46,27 +46,19 @@ namespace Deduplicator.Common
         }
 
         public enum SearchStatus {
-            SelectingFiles,
             Sorting,
-            SearchingDuplicates,
-            GroupingStarted,
             Grouping,
             GroupingCompleted,
             GroupingCanceled,
-            Error,
             SearchCompleted,
             SearchCanceled,
-            Stopping,
             NewFileSelected,
             ResultsCleared,
-            UnDefined,
             JustInitialazed,
             ComparingStarted,
             Comparing,
-            ComparingCompleted,
             StartCancelOperation,
-            Analyse,
-            OperationCanceled
+            Error
         }
 
         public event EventHandler<SearchStatus> SearchStatusChanged;
@@ -97,7 +89,7 @@ namespace Deduplicator.Common
         private FilesGroup FilesCollection;
         
         private DateTime _startTime = DateTime.Now;
-        private ErrorData _error = new ErrorData("DataModel.cs");
+ //       private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
         private Progress<OperationStatus> m_progress;
@@ -155,13 +147,12 @@ namespace Deduplicator.Common
         {
             get
             {
-                return _status == SearchStatus.Error ||
+                return
                        _status == SearchStatus.SearchCanceled ||
                        _status == SearchStatus.SearchCompleted ||
                        _status == SearchStatus.GroupingCompleted ||
                        _status == SearchStatus.GroupingCanceled ||
                        _status == SearchStatus.JustInitialazed ||
-                       _status == SearchStatus.ComparingCompleted ||
                        _status == SearchStatus.JustInitialazed
                        ? true : false;
             }
@@ -205,9 +196,9 @@ namespace Deduplicator.Common
                                    ObservableCollection<GroupingAttribute> compareAttribsList, 
                                    CancellationToken cancelToken )
         {
-            _error.Set(ErrorType.OperationCanceled, "", 0, "");
+//            _error.Set(ErrorType.OperationCanceled, "", 0, "");
 
-            OperationStatus status = new OperationStatus { Id = SearchStatus.SelectingFiles };
+            OperationStatus status = new OperationStatus { Id = SearchStatus.NewFileSelected };
 
             FilesCollection.Clear();
             m_DuplicatesCollection.Clear();
@@ -360,7 +351,7 @@ namespace Deduplicator.Common
             }
             catch (FileNotFoundException e)
             {
-                _error.Set(ErrorType.FileNotFound, "GetFolderFiles", 482, e.Message);
+//                _error.Set(ErrorType.FileNotFound, "GetFolderFiles", 482, e.Message);
                 throw new OperationCanceledException();
             }
 
@@ -395,7 +386,7 @@ namespace Deduplicator.Common
                     }
                     catch(Exception e)
                     {
-                        _error.Set(ErrorType.UnknownError, "GetFolderFiles", 515, e.Message);
+//                        _error.Set(ErrorType.UnknownError, "GetFolderFiles", 515, e.Message);
                         throw new OperationCanceledException();
                     }
                 }

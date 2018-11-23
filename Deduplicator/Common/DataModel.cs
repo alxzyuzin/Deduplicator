@@ -97,14 +97,12 @@ namespace Deduplicator.Common
         private FilesGroup FilesCollection;
         
         private DateTime _startTime = DateTime.Now;
-//        private int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
-//        private int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
         private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
         private Progress<OperationStatus> m_progress;
 
-        #endregion
+#endregion
 
         #region Properties
 
@@ -207,16 +205,13 @@ namespace Deduplicator.Common
                                    ObservableCollection<GroupingAttribute> compareAttribsList, 
                                    CancellationToken cancelToken )
         {
-//            _filesHandled = 0;
             _error.Set(ErrorType.OperationCanceled, "", 0, "");
-
+            IProgress<OperationStatus> progress = m_progress;
             OperationStatus status = new OperationStatus
             {
-                Stage = @"Selecting files to search duplicates.",
-                Id = SearchStatus.SelectingFiles 
+                 Id = SearchStatus.SelectingFiles 
             };
-            IProgress<OperationStatus> progress = m_progress;
-//            searchStatus.Report(SearchStatus.SelectingFiles);
+
             FilesCollection.Clear();
             m_DuplicatesCollection.Clear();
             try
@@ -228,8 +223,6 @@ namespace Deduplicator.Common
                 //// Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
                 if (FilesCollection.Count > 1)
                 {
-                    //                    searchStatus.Report(SearchStatus.SearchingDuplicates);
-
                     FilesGroup fg = new FilesGroup(m_progress);
                     foreach (File file in FilesCollection)
                         fg.Add(file);
@@ -241,7 +234,7 @@ namespace Deduplicator.Common
                 //// Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
                 if (PrimaryFolder != null)
                     DeleteNonPrimaryFolderDuplicates();
-                status.Stage = @"Search complete";
+
                 status.Id = SearchStatus.SearchCompleted;
                 progress.Report(status);
             }
@@ -252,14 +245,12 @@ namespace Deduplicator.Common
 
                 if (_error.Type == ErrorType.SearchCanceled || _error.Type == ErrorType.OperationCanceled)
                 {
-                    status.Stage = @"Search complete";
                     status.Id = SearchStatus.SearchCanceled;
                     progress.Report(status);
                 }
                 else
                 {
-                    status.Stage = @"Error";
-                    status.Id = SearchStatus.SearchCanceled;
+                    status.Id = SearchStatus.Error;
                     progress.Report(status);
                 }
             }
@@ -301,7 +292,7 @@ namespace Deduplicator.Common
         private void ReportStatus(OperationStatus status)
         {
 ////            int totalDuplicatesCount = 0;
-////            _status = searchStatus;
+            _status = status.Id;
             switch(status.Id)
             {
                 case SearchStatus.NewFileSelected:
@@ -310,57 +301,54 @@ namespace Deduplicator.Common
                     //SearchStatusInfo = string.Format(@"Selecting files to search duplicates. Selected {0} files. Total files found {1}.",
                     //                             FilesCollection.Count, _filesHandled);
                     break;
-//                //case SearchStatus.Grouping:
-//                //case SearchStatus.GroupingStarted:
-//                //    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
-//                //                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
-//                //    break;
-//                case SearchStatus.GroupingCompleted:
-//                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
-//                                                      _filesTotal, m_DuplicatesCollection.Count);
-//                    break;
+                //                //case SearchStatus.Grouping:
+                //                //case SearchStatus.GroupingStarted:
+                //                //    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
+                //                //                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
+                //                //    break;
+                //                case SearchStatus.GroupingCompleted:
+                //                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
+                //                                                      _filesTotal, m_DuplicatesCollection.Count);
+                //                    break;
 
-//                case SearchStatus.ComparingStarted:
-//                case SearchStatus.Comparing:
-//                    SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
-//                                                   m_DuplicatesCollection.CurrentGroupingAttribute.Name, _filesHandled, _filesTotal);
-//                    break;
-//                case SearchStatus.ComparingCompleted:
-//                    SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
-//                                                    _filesTotal, m_DuplicatesCollection.Count);
-//                    break;
-//                case SearchStatus.Sorting:
-//                    SearchStatusInfo = @"Sorting files";
-//                    break;
-//                case SearchStatus.SearchCompleted:
-//                    totalDuplicatesCount = 0;
-//                    foreach (FilesGroup g in m_DuplicatesCollection)
-//                        totalDuplicatesCount += g.Count;
-//                    SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
-//                                                        totalDuplicatesCount, m_DuplicatesCollection.Count);
-//                    break;
-//                case SearchStatus.SearchCanceled:
-//                    SearchStatusInfo = string.Format(@"Search canceled.");
-//                    break;
-//                case SearchStatus.GroupingCanceled:
-//                    SearchStatusInfo = string.Format(@"Grouping canceled.");
-//                    break;
-//                //case SearchStatus.Error:
-//                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
-//                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
-//                //    break;
-//                 case SearchStatus.ResultsCleared:
-//                    SearchStatusInfo = string.Format(@"Search results cleared.");
-//                    break;
-//                case SearchStatus.StartCancelOperation:
-//                    SearchStatusInfo = string.Format(@"Canceling current operation.");
-//                    break;
-//                case SearchStatus.Analyse:
-//                    SearchStatusInfo = string.Format(@"Analyzing file {0} from {1}.", 1,2);
-//                    break;
-//                default:
-//                    SearchStatusInfo = string.Empty;
-//                    break;
+                case SearchStatus.ComparingStarted:
+                case SearchStatus.Comparing:
+                    SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
+                                                   status.Stage, status.HandledItems, status.TotalItems);
+                    break;
+                //                case SearchStatus.ComparingCompleted:
+                //                    SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
+                //                                                    _filesTotal, m_DuplicatesCollection.Count);
+                //                    break;
+                //                case SearchStatus.Sorting:
+                //                    SearchStatusInfo = @"Sorting files";
+                //                    break;
+                case SearchStatus.SearchCompleted:
+                    SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
+                                                      m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
+                    break;
+                    //                case SearchStatus.SearchCanceled:
+                    //                    SearchStatusInfo = string.Format(@"Search canceled.");
+                    //                    break;
+                    //                case SearchStatus.GroupingCanceled:
+                    //                    SearchStatusInfo = string.Format(@"Grouping canceled.");
+                    //                    break;
+                    //                //case SearchStatus.Error:
+                    //                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
+                    //                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
+                    //                //    break;
+                    //                 case SearchStatus.ResultsCleared:
+                    //                    SearchStatusInfo = string.Format(@"Search results cleared.");
+                    //                    break;
+                    //                case SearchStatus.StartCancelOperation:
+                    //                    SearchStatusInfo = string.Format(@"Canceling current operation.");
+                    //                    break;
+                    //                case SearchStatus.Analyse:
+                    //                    SearchStatusInfo = string.Format(@"Analyzing file {0} from {1}.", 1,2);
+                    //                    break;
+                    //                default:
+                    //                    SearchStatusInfo = string.Empty;
+                    //                    break;
             }
             NotifySearchStatusChanged(status.Id);
             if (OperationCompleted)
@@ -457,7 +445,6 @@ namespace Deduplicator.Common
         /// <param name="attribute"></param>
         public async void RegroupResultsByFileAttribute(GroupingAttribute attribute)
         {
- //           Progress<SearchStatus> status = new Progress<SearchStatus>(ReportStatus);
             _tokenSource = new CancellationTokenSource();
             CancellationToken token = _tokenSource.Token;
 

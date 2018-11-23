@@ -5,7 +5,6 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.Core;
 
 namespace Deduplicator.Common
 {
@@ -19,17 +18,22 @@ namespace Deduplicator.Common
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
+        public int FilesCount
+        {
+            get
+            {
+                int i = 0;
+                foreach (FilesGroup group in this)
+                    i += group.Count;
+                return i;
+            }
+        }
+
         private Progress<OperationStatus> m_progress = null;
-
-        //public GroupedFilesCollection()
-        //{
-
-        //}
 
         public GroupedFilesCollection(Progress<OperationStatus> progress)
         {
             m_progress = progress;
-
         }
   
         public void Invalidate()
@@ -55,7 +59,7 @@ namespace Deduplicator.Common
             {
                 if (attribute.Attribute == FileAttribs.None)
                     continue;
-
+                status.HandledItems = 0;
                 status.Stage = attribute.Name;
                 progress.Report(status);
 
@@ -205,7 +209,7 @@ namespace Deduplicator.Common
             Debug.Assert(this.Count >= 2, "SplitByAttributeMethod called on group with less then two files");
 
             IProgress<OperationStatus> progress = m_progress;
-            operationStatus.TotalItems = this.Count;
+        //    operationStatus.TotalItems = this.Count;
             ++operationStatus.HandledItems;
             List<FilesGroup> newGroupsCollection = new List<FilesGroup>();
             

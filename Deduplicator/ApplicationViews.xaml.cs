@@ -56,10 +56,11 @@ namespace Deduplicator {
         private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
         private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
-
+        private FileAttribs m_currentGroupingAttribute = FileAttribs.None;
         
 
-#region Properties
+
+        #region Properties
         CmdButtons _cmdButtonsVisualState;
         private CmdButtons CmdButtonsVisualState
         {
@@ -336,6 +337,7 @@ namespace Deduplicator {
 
         public ApplicationViews()
         {
+            
             InitializeComponent();
             DataContext = this;
 
@@ -658,17 +660,27 @@ namespace Deduplicator {
 
         private void Grouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
+            GroupingAttribute selectedItem = (GroupingAttribute)((ComboBox)sender).SelectedItem;
+            if (m_currentGroupingAttribute != selectedItem.Attribute)
+            {
+                m_currentGroupingAttribute = selectedItem.Attribute;
+                if (selectedItem != null && _dataModel.DuplicatesCount != 0)
+                {
+                    DisableComandButtons();
+                    _dataModel.RegroupResultsByFileAttribute((GroupingAttribute)selectedItem);
+                }
+            }
+ //           RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
         }
 
-        private void RegroupResult(GroupingAttribute selectedItem)
-        {
-            if (selectedItem != null && _dataModel.DuplicatesCount != 0)
-            {
-                DisableComandButtons();
-                _dataModel.RegroupResultsByFileAttribute((GroupingAttribute)selectedItem);
-            }
-        }
+        //private void RegroupResult(GroupingAttribute selectedItem)
+        //{
+        //    if (selectedItem != null && _dataModel.DuplicatesCount != 0)
+        //    {
+        //        DisableComandButtons();
+        //        _dataModel.RegroupResultsByFileAttribute((GroupingAttribute)selectedItem);
+        //    }
+        //}
 
         private void DisableComandButtons()
         {

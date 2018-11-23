@@ -19,13 +19,12 @@ namespace Deduplicator.Common
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        public GroupingAttribute CurrentGroupingAttribute { get; private set; }
         private Progress<OperationStatus> m_progress = null;
 
-        public GroupedFilesCollection()
-        {
+        //public GroupedFilesCollection()
+        //{
 
-        }
+        //}
 
         public GroupedFilesCollection(Progress<OperationStatus> progress)
         {
@@ -41,25 +40,24 @@ namespace Deduplicator.Common
         public async Task RemoveNonDuplicates(ObservableCollection<GroupingAttribute> attributeList,
                                                 CancellationToken cancelToken)
         {
+            IProgress<OperationStatus> progress = m_progress;
             OperationStatus status = new OperationStatus
             {
-                Id = DataModel.SearchStatus.Analyse,
+                Id = DataModel.SearchStatus.Comparing,
                 TotalItems = this[0].Count,
                 HandledItems = 0,
                 Stage = string.Empty
             } ;
             
-            GroupedFilesCollection groupsBuffer = new GroupedFilesCollection();
+            GroupedFilesCollection groupsBuffer = new GroupedFilesCollection(m_progress);
 
             foreach (var attribute in attributeList)
             {
-                status.Stage = string.Format(@"Select duplicates using {0}.", attribute.Name);
-                status.Id = DataModel.SearchStatus.Comparing;
-                
-                CurrentGroupingAttribute = attribute;
                 if (attribute.Attribute == FileAttribs.None)
                     continue;
-                ((IProgress<OperationStatus>)m_progress).Report(status);
+
+                status.Stage = attribute.Name;
+                progress.Report(status);
 
                 groupsBuffer.Clear();
                 foreach (FilesGroup group in this)
@@ -72,28 +70,25 @@ namespace Deduplicator.Common
                     foreach (FilesGroup newGroup in splitResult)
                         this.Add(newGroup);
                  }
- 
-            }
+             }
          }
 
         public async Task RegroupDuplicates(GroupingAttribute attribute, CancellationToken cancelToken)
         {
+            // Соберём все файлы в одну группу
+            FilesGroup allFiles = new FilesGroup(m_progress);
+            foreach (FilesGroup group in this)
+                foreach (File file in group)
+                    allFiles.Add(file);
+
+            IProgress<OperationStatus> progress = m_progress;
             OperationStatus status = new OperationStatus
             {
-                Id = DataModel.SearchStatus.Grouping,
-                TotalItems = this[0].Count,
-                HandledItems = 0,
-                Stage = string.Format(@"Regrouping duplicates using {0}.", attribute.Name)
-            }; 
-
-            if (CurrentGroupingAttribute.Attribute == attribute.Attribute)
-                return;
-            CurrentGroupingAttribute = attribute;
-            // Соберём все файлы в одну группу
-            FilesGroup allFiles = new FilesGroup();
-            foreach (FilesGroup group in this)
-                foreach(File file in group)
-                    allFiles.Add(file);
+               Id = DataModel.SearchStatus.Grouping,
+               HandledItems = 0,
+               TotalItems = allFiles.Count,
+               Stage = attribute.Name
+             };
 
             this.Clear();
 
@@ -104,9 +99,11 @@ namespace Deduplicator.Common
             else
             {
                 List<FilesGroup> splitResult = await allFiles.SplitByAttribute(attribute, cancelToken, status);
-                for ( int i = 0; i<splitResult.Count;i++)
+                for (int i = 0; i < splitResult.Count; i++)
                     this.Add(splitResult[i]);
             }
+            status.Id = DataModel.SearchStatus.GroupingCompleted;
+            progress.Report(status);
         }
 
     } // Class  GroupedFilesCollection
@@ -135,8 +132,6 @@ namespace Deduplicator.Common
             return (IEnumerator<object>)base.GetEnumerator();
         }
         
-        public FilesGroup()
-        { }
         public FilesGroup(Progress<OperationStatus> progress)
         {
             m_progress = progress;
@@ -207,46 +202,36 @@ namespace Deduplicator.Common
         public async Task<List<FilesGroup>> SplitByAttribute(GroupingAttribute attribute,
                                             CancellationToken cancelToken, OperationStatus operationStatus)
         {
-            Debug.Assert(this.Count >=2 ,"SplitByAttributeMethod called on group with less then two files");
-#if DEBUG
-            if (this.Count < 2)
-            {
-                int i = 0;
-            }
-#endif
-            await this.SortByAttribute(0, this.Count - 1, attribute.Attribute);
-
-            List<FilesGroup> newGroupsCollection = new List<FilesGroup>();
-            FilesGroup newgroup = new FilesGroup(m_progress);
+            Debug.Assert(this.Count >= 2, "SplitByAttributeMethod called on group with less then two files");
 
             IProgress<OperationStatus> progress = m_progress;
-            int compareResult = -1;
+            operationStatus.TotalItems = this.Count;
+            ++operationStatus.HandledItems;
+            List<FilesGroup> newGroupsCollection = new List<FilesGroup>();
+            
+            await this.SortByAttribute(0, this.Count - 1, attribute.Attribute);
+
+            FilesGroup newgroup = new FilesGroup(m_progress);
             newgroup.Add(this[0]);
+
             for (int i = 1; i < this.Count; i++)
             {
-                cancelToken.ThrowIfCancellationRequested();
-                ++operationStatus.HandledItems;
-
-#if DEBUG
-                if (progress == null)
-                {
-                    int x = 0;
-                }
-#endif
-                //progress.Report(DataModel.SearchStatus.Analyse);
-                progress.Report(operationStatus);
-                compareResult = await this[i-1].CompareTo(this[i], attribute.Attribute);
-                if (compareResult != 0)
-                {
+               int compareResult = await this[i - 1].CompareTo(this[i], attribute.Attribute);
+               if (compareResult != 0)
+               {
                     if (newgroup.Count > 1)
                         newGroupsCollection.Add(newgroup);
-                    newgroup = new FilesGroup(m_progress);
-                }
-                newgroup.Add(this[i]);
+                        newgroup = new FilesGroup(m_progress);
+               }
+               newgroup.Add(this[i]);
+
+               cancelToken.ThrowIfCancellationRequested();
+               ++operationStatus.HandledItems;
+               progress.Report(operationStatus);
             }
+
             if (newgroup.Count > 1)
                 newGroupsCollection.Add(newgroup);
-
             return newGroupsCollection;
         }
 
@@ -263,7 +248,5 @@ namespace Deduplicator.Common
         public string Stage = string.Empty;
         public int TotalItems = 0;
         public int HandledItems = 0;
-
-
     } // class OperationStatus
 }

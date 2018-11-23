@@ -94,11 +94,11 @@ namespace Deduplicator.Common
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту
         private GroupedFilesCollection m_DuplicatesCollection; // = new GroupedFilesCollection(progress);
         // Список файлов отобранных из каталогов в которых искать дубликаты    
-        private FilesGroup FilesCollection = new FilesGroup();
+        private FilesGroup FilesCollection;
         
         private DateTime _startTime = DateTime.Now;
-        private int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
-        private int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
+//        private int _filesTotal = 0;    // общее количество кандидатов в дубликаты в текущей фазе очистки
+//        private int _filesHandled = 0;  // количество кандидатов проанализированых к данному моменту
         private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
@@ -182,6 +182,7 @@ namespace Deduplicator.Common
             m_progress = new Progress<OperationStatus>(ReportStatus);
             m_progress.ProgressChanged += Status_ProgressChanged;
             m_DuplicatesCollection = new GroupedFilesCollection(m_progress);
+            FilesCollection = new FilesGroup(m_progress);
         }
  
         public async Task StartSearch(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList)
@@ -206,7 +207,7 @@ namespace Deduplicator.Common
                                    ObservableCollection<GroupingAttribute> compareAttribsList, 
                                    CancellationToken cancelToken )
         {
-            _filesHandled = 0;
+//            _filesHandled = 0;
             _error.Set(ErrorType.OperationCanceled, "", 0, "");
 
             OperationStatus status = new OperationStatus
@@ -469,7 +470,7 @@ namespace Deduplicator.Common
 
         private async void Regroup( GroupingAttribute attribute, CancellationToken token)
         {
-            GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection();
+            GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection(m_progress);
             // Сохраним результаты предыдущей сортировки для восстановления в случае отката операции
             foreach (var group in m_DuplicatesCollection)
                 rollbackGroupsBuffer.Add(group);
@@ -521,7 +522,7 @@ namespace Deduplicator.Common
 
         public void SetFilesProtection(Folder folder, bool isProtected)
         {
-            GroupedFilesCollection newGroupCollection = new GroupedFilesCollection();
+            GroupedFilesCollection newGroupCollection = new GroupedFilesCollection(m_progress);
             foreach (var group in m_DuplicatesCollection)
            {
                 FilesGroup newGroup = new FilesGroup(group.Name);

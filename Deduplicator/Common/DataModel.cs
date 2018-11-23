@@ -291,25 +291,20 @@ namespace Deduplicator.Common
   
         private void ReportStatus(OperationStatus status)
         {
-////            int totalDuplicatesCount = 0;
             _status = status.Id;
             switch(status.Id)
             {
                 case SearchStatus.NewFileSelected:
-                    SearchStatusInfo = string.Format("{0}. Total files selected {1}.", status.Stage, status.HandledItems);
-                    
-                    //SearchStatusInfo = string.Format(@"Selecting files to search duplicates. Selected {0} files. Total files found {1}.",
-                    //                             FilesCollection.Count, _filesHandled);
+                    SearchStatusInfo = string.Format("Selecting files. Total files selected {0}.", status.HandledItems);
                     break;
-                //                //case SearchStatus.Grouping:
-                //                //case SearchStatus.GroupingStarted:
-                //                //    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
-                //                //                                    _currentGroupingAttribute.Name, _filesHandled, _filesTotal);
-                //                //    break;
-                //                case SearchStatus.GroupingCompleted:
-                //                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
-                //                                                      _filesTotal, m_DuplicatesCollection.Count);
-                //                    break;
+                case SearchStatus.Grouping:
+                    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
+                                                    status.Stage, status.HandledItems, status.TotalItems);
+                    break;
+                case SearchStatus.GroupingCompleted:
+                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
+                                                      m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
+                    break;
 
                 case SearchStatus.ComparingStarted:
                 case SearchStatus.Comparing:
@@ -320,26 +315,26 @@ namespace Deduplicator.Common
                 //                    SearchStatusInfo = string.Format("Comparing complete. Found {0} duplicates into {1} groups.",
                 //                                                    _filesTotal, m_DuplicatesCollection.Count);
                 //                    break;
-                //                case SearchStatus.Sorting:
-                //                    SearchStatusInfo = @"Sorting files";
-                //                    break;
+                case SearchStatus.Sorting:
+                    SearchStatusInfo = @"Sorting files ...";
+                    break;
                 case SearchStatus.SearchCompleted:
                     SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
                                                       m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
                     break;
-                    //                case SearchStatus.SearchCanceled:
-                    //                    SearchStatusInfo = string.Format(@"Search canceled.");
-                    //                    break;
-                    //                case SearchStatus.GroupingCanceled:
-                    //                    SearchStatusInfo = string.Format(@"Grouping canceled.");
-                    //                    break;
-                    //                //case SearchStatus.Error:
-                    //                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
-                    //                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
-                    //                //    break;
-                    //                 case SearchStatus.ResultsCleared:
-                    //                    SearchStatusInfo = string.Format(@"Search results cleared.");
-                    //                    break;
+                //                case SearchStatus.SearchCanceled:
+                //                    SearchStatusInfo = string.Format(@"Search canceled.");
+                //                    break;
+                //                case SearchStatus.GroupingCanceled:
+                //                    SearchStatusInfo = string.Format(@"Grouping canceled.");
+                //                    break;
+                //                //case SearchStatus.Error:
+                //                //    SearchStatusInfo = string.Format(@"Error in module {0}, function {1}, line {2}, message {3}.",
+                //                //                            _error.ModuleName, _error.FunctionName, _error.LineNumber, _error.Message);
+                //                //    break;
+                case SearchStatus.ResultsCleared:
+                    SearchStatusInfo = string.Format(@"Search results cleared.");
+                    break;
                     //                case SearchStatus.StartCancelOperation:
                     //                    SearchStatusInfo = string.Format(@"Canceling current operation.");
                     //                    break;
@@ -461,21 +456,10 @@ namespace Deduplicator.Common
             // Сохраним результаты предыдущей сортировки для восстановления в случае отката операции
             foreach (var group in m_DuplicatesCollection)
                 rollbackGroupsBuffer.Add(group);
-
-            OperationStatus status = new OperationStatus
-            {
-                Id = DataModel.SearchStatus.GroupingCompleted,
-                Stage = "Regrouping complete"
-            };
-
             // Разделим полученный ранее полный список дубликатов на группы по указанному атрибуту
             try
             {
                 await m_DuplicatesCollection.RegroupDuplicates(attribute, token);
-
-             
-               
-                ((IProgress<OperationStatus>)m_progress).Report(status);
             }
             catch (OperationCanceledException)
             {
@@ -486,12 +470,7 @@ namespace Deduplicator.Common
                     // Восстановим результаты предыдущей сортировки
                     foreach (var group in rollbackGroupsBuffer)
                         m_DuplicatesCollection.Add(group);
-                    status.Id = SearchStatus.GroupingCanceled;
-                    status.Stage = "Regrouping canceled.";
-                    ((IProgress<OperationStatus>)m_progress).Report(status);
                 }
-                else
-                    ((IProgress<OperationStatus>)m_progress).Report(status);
             }
         }
 
@@ -499,11 +478,7 @@ namespace Deduplicator.Common
         {
             FilesCollection.Clear();
             m_DuplicatesCollection.Clear();
-            OperationStatus status = new OperationStatus
-            {
-                Id = DataModel.SearchStatus.GroupingCompleted,
-                Stage = "Search results cleared."
-            };
+            OperationStatus status = new OperationStatus  { Id = DataModel.SearchStatus.ResultsCleared };
             ReportStatus(status);
         }
 

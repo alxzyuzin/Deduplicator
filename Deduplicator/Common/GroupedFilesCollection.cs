@@ -204,20 +204,24 @@ namespace Deduplicator.Common
         /// <param name="cancelToken"></param>
         /// <returns></returns>
         public async Task<List<FilesGroup>> SplitByAttribute(GroupingAttribute attribute,
-                                            CancellationToken cancelToken, OperationStatus operationStatus)
+                                            CancellationToken cancelToken, OperationStatus status)
         {
             Debug.Assert(this.Count >= 2, "SplitByAttributeMethod called on group with less then two files");
 
             IProgress<OperationStatus> progress = m_progress;
-        //    operationStatus.TotalItems = this.Count;
-            ++operationStatus.HandledItems;
-            List<FilesGroup> newGroupsCollection = new List<FilesGroup>();
-            
+
+            DataModel.SearchStatus oldStatusId = status.Id;
+
+            status.Id = DataModel.SearchStatus.Sorting;
+            progress.Report(status);
             await this.SortByAttribute(0, this.Count - 1, attribute.Attribute);
+
+            status.Id = oldStatusId;
+            List<FilesGroup> newGroupsCollection = new List<FilesGroup>();
 
             FilesGroup newgroup = new FilesGroup(m_progress);
             newgroup.Add(this[0]);
-
+            ++status.HandledItems;
             for (int i = 1; i < this.Count; i++)
             {
                int compareResult = await this[i - 1].CompareTo(this[i], attribute.Attribute);
@@ -230,8 +234,8 @@ namespace Deduplicator.Common
                newgroup.Add(this[i]);
 
                cancelToken.ThrowIfCancellationRequested();
-               ++operationStatus.HandledItems;
-               progress.Report(operationStatus);
+               ++status.HandledItems;
+               progress.Report(status);
             }
 
             if (newgroup.Count > 1)

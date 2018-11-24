@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Deduplicator.Common
 {
@@ -41,11 +42,12 @@ namespace Deduplicator.Common
             NotifyCollectionChanged();
         }
 
+
         public async Task RemoveNonDuplicates(ObservableCollection<GroupingAttribute> attributeList,
                                                 CancellationToken cancelToken)
         {
             IProgress<OperationStatus> progress = m_progress;
-            OperationStatus status = new OperationStatus
+            var status = new OperationStatus
             {
                 Id = DataModel.SearchStatus.Comparing,
                 TotalItems = this[0].Count,
@@ -55,7 +57,11 @@ namespace Deduplicator.Common
             
             GroupedFilesCollection groupsBuffer = new GroupedFilesCollection(m_progress);
 
-            foreach (var attribute in attributeList)
+            IEnumerable<GroupingAttribute> query = from attribute in attributeList
+                                                   orderby attribute.Weight ascending
+                                                   select attribute;
+
+            foreach (var attribute in query)
             {
                 if (attribute.Attribute == FileAttribs.None)
                     continue;

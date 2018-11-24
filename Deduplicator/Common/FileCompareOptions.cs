@@ -6,12 +6,12 @@ namespace Deduplicator.Common
 {
     public class FileCompareOptions : INotifyPropertyChanged
     {
-        private GroupingAttribute Content = new GroupingAttribute( @"Content",FileAttribs.Content);
-        private GroupingAttribute Name = new GroupingAttribute(@"Name", FileAttribs.Name);
-        private GroupingAttribute Size = new GroupingAttribute(@"Size", FileAttribs.Size);
-        private GroupingAttribute CreationDate = new GroupingAttribute(@"Creation date", FileAttribs.DateCreated);
-        private GroupingAttribute ModificationDate = new GroupingAttribute(@"Modification date", FileAttribs.DateModified);
-        private GroupingAttribute None = new GroupingAttribute(@"Do not group", FileAttribs.None);
+        private GroupingAttribute Content = new GroupingAttribute( @"Content",FileAttribs.Content, 5);
+        private GroupingAttribute Name = new GroupingAttribute(@"Name", FileAttribs.Name, 1);
+        private GroupingAttribute Size = new GroupingAttribute(@"Size", FileAttribs.Size, 4);
+        private GroupingAttribute CreationDate = new GroupingAttribute(@"Creation date", FileAttribs.DateCreated, 2);
+        private GroupingAttribute ModificationDate = new GroupingAttribute(@"Modification date", FileAttribs.DateModified, 3);
+        private GroupingAttribute None = new GroupingAttribute(@"Do not group", FileAttribs.None, 0);
 
         private enum CheckBoxAction {Checked = 1, Unchecked = 0}
         public event PropertyChangedEventHandler PropertyChanged;
@@ -22,112 +22,112 @@ namespace Deduplicator.Common
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyname));
         }
 
-        private bool _isRollBack = false;
+        private bool m_isRollBack = false;
         public bool IsRollBack
-        { get { return _isRollBack; } }
+        { get { return m_isRollBack; } }
 
-        private bool _checkNameOldValue;
-        private bool _checkName;
+        private bool m_checkNameOldValue;
+        private bool m_checkName;
         public bool CheckName
         {
-            get { return _checkName; }
+            get { return m_checkName; }
             set
             {
-                if (_checkName != value)
+                if (m_checkName != value)
                 {
-                    _checkName = value;
+                    m_checkName = value;
                     UpdateGroupingModeList(Name, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckName");
                 }
             }
         }
 
-        private bool _checkSizeOldValue;
-        private bool _checkSize;
+        private bool m_checkSizeOldValue;
+        private bool m_checkSize;
         public bool CheckSize
         {
-            get { return _checkSize; }
+            get { return m_checkSize; }
             set
             {
-                if (_checkSize != value)
+                if (m_checkSize != value)
                 {
-                    _checkSize = value;
+                    m_checkSize = value;
                     UpdateGroupingModeList(Size, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckSize");
                 }
             }
         }
 
-        private bool _checkCreationDateTimeOldValue;
-        private bool _checkCreationDateTime;
+        private bool m_checkCreationDateTimeOldValue;
+        private bool m_checkCreationDateTime;
         public bool CheckCreationDateTime
         {
-            get { return _checkCreationDateTime; }
+            get { return m_checkCreationDateTime; }
             set
             {
-                if (_checkCreationDateTime != value)
+                if (m_checkCreationDateTime != value)
                 {
-                    _checkCreationDateTime = value;
+                    m_checkCreationDateTime = value;
                     UpdateGroupingModeList(CreationDate, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckCreationDateTime");
                 }
             }
         }
 
-        private bool _checkModificationDateTimeOldValue;
-        private bool _checkModificationDateTime;
+        private bool m_checkModificationDateTimeOldValue;
+        private bool m_checkModificationDateTime;
         public bool CheckModificationDateTime
         {
-            get { return _checkModificationDateTime; }
+            get { return m_checkModificationDateTime; }
             set
             {
-                if (_checkModificationDateTime != value)
+                if (m_checkModificationDateTime != value)
                 {
-                    _checkModificationDateTime = value;
+                    m_checkModificationDateTime = value;
                     UpdateGroupingModeList(ModificationDate, value ? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckModificationDateTime");
                 }
             }
         }
 
-        private bool _checkContentOldValue;
-        private bool _checkContent;
+        private bool m_checkContentOldValue;
+        private bool m_checkContent;
         public bool CheckContent
         {
-            get { return _checkContent; }
+            get { return m_checkContent; }
             set
             {
-                if (_checkContent != value)
+                if (m_checkContent != value)
                 {
-                    _checkContent = value;
+                    m_checkContent = value;
                     UpdateGroupingModeList(Content, value? CheckBoxAction.Checked : CheckBoxAction.Unchecked);
                     NotifyPropertyChanged("CheckContent");
                 }
             }
         }
 
-        private ObservableCollection<GroupingAttribute> _grouppingAttributes = new ObservableCollection<GroupingAttribute>();
-        public ObservableCollection<GroupingAttribute> GrouppingAttributes { get { return _grouppingAttributes; } }
+        private ObservableCollection<GroupingAttribute> m_grouppingAttributes = new ObservableCollection<GroupingAttribute>();
+        public ObservableCollection<GroupingAttribute> GrouppingAttributes { get { return m_grouppingAttributes; } }
 
-        private GroupingAttribute _currentGroupModeAttrib;
-        public GroupingAttribute CurrentGroupModeAttrib
-        {
-            get
-            {
-                return _currentGroupModeAttrib;
-            }
-        }
+//        private GroupingAttribute m_currentGroupModeAttrib;
+//        public GroupingAttribute CurrentGroupModeAttrib
+//        {
+//            get
+//            {
+//                return m_currentGroupModeAttrib;
+//            }
+//        }
 
-        private int _currentGroupModeIndexOldValue;
-        private int _currentGroupModeIndex = -1;
+        private int m_currentGroupModeIndexOldValue;
+        private int m_currentGroupModeIndex = -1;
         public  int CurrentGroupModeIndex
         {
-            get { return _currentGroupModeIndex; }
+            get { return m_currentGroupModeIndex; }
             set
             {
-                if (_currentGroupModeIndex != value)
+                if (m_currentGroupModeIndex != value)
                 {
-                    _currentGroupModeIndex = value;
+                    m_currentGroupModeIndex = value;
                     NotifyPropertyChanged("CurrentGroupModeIndex");
                 }
             }
@@ -136,72 +136,70 @@ namespace Deduplicator.Common
  
         public FileCompareOptions()
         {
-            _grouppingAttributes.Add(None);
+            
+            m_grouppingAttributes.Add(None);
+            CurrentGroupModeIndex = -1;
             CheckName = true;
             CheckSize = true;
-            CurrentGroupModeIndex = -1; 
-            _checkNameOldValue = _checkName;
-            _checkSizeOldValue = _checkSize;
-            _checkCreationDateTimeOldValue = _checkCreationDateTime;
-            _checkModificationDateTimeOldValue = _checkModificationDateTime;
-            _checkContentOldValue = _checkContent;
-            _currentGroupModeIndexOldValue = _currentGroupModeIndex;
+            m_checkNameOldValue = m_checkName;
+            m_checkSizeOldValue = m_checkSize;
+            m_checkCreationDateTimeOldValue = m_checkCreationDateTime;
+            m_checkModificationDateTimeOldValue = m_checkModificationDateTime;
+            m_checkContentOldValue = m_checkContent;
+            m_currentGroupModeIndexOldValue = m_currentGroupModeIndex;
         }
 
         private void UpdateGroupingModeList(GroupingAttribute attrib, CheckBoxAction action)
         {
             if (action == CheckBoxAction.Checked)
-                _grouppingAttributes.Add(attrib);
+                m_grouppingAttributes.Add(attrib);
             else
             {
-//                int i = _grouppingAttributes.IndexOf(CurrentGroupModeAttrib);
-                _grouppingAttributes.Remove(attrib);
-                CurrentGroupModeIndex = 0; // _grouppingAttributes.IndexOf(CurrentGroupModeAttrib); 
+                m_grouppingAttributes.Remove(attrib);
+                CurrentGroupModeIndex = 0;
             }
             NotifyPropertyChanged("ResultGrouppingModesList");
          }
 
-        private void UpdateGroupingModeList()
+          public void Commit()
         {
- 
-        }
-
-        public void Commit()
-        {
-            _checkNameOldValue = _checkName;
-            _checkSizeOldValue = _checkSize;
-            _checkCreationDateTimeOldValue = _checkCreationDateTime;
-            _checkModificationDateTimeOldValue = _checkModificationDateTime;
-            _checkContentOldValue = _checkContent;
+            m_checkNameOldValue = m_checkName;
+            m_checkSizeOldValue = m_checkSize;
+            m_checkCreationDateTimeOldValue = m_checkCreationDateTime;
+            m_checkModificationDateTimeOldValue = m_checkModificationDateTime;
+            m_checkContentOldValue = m_checkContent;
         }
 
         public void RollBack()
         {
-            _isRollBack = true;
-            if (_checkName != _checkNameOldValue)
-                CheckName = _checkNameOldValue;
-            if (_checkSize != _checkSizeOldValue)
-                CheckSize = _checkSizeOldValue;
-            if (_checkCreationDateTime != _checkCreationDateTimeOldValue)
-                CheckCreationDateTime = _checkCreationDateTimeOldValue;
-            if (_checkModificationDateTime != _checkModificationDateTimeOldValue)
-                CheckModificationDateTime = _checkModificationDateTimeOldValue;
-            if (_checkContent != _checkContentOldValue)
-                CheckContent = _checkContentOldValue;
-            _currentGroupModeIndex = _currentGroupModeIndexOldValue;
-            _isRollBack = false;
+            m_isRollBack = true;
+            if (m_checkName != m_checkNameOldValue)
+                CheckName = m_checkNameOldValue;
+            if (m_checkSize != m_checkSizeOldValue)
+                CheckSize = m_checkSizeOldValue;
+            if (m_checkCreationDateTime != m_checkCreationDateTimeOldValue)
+                CheckCreationDateTime = m_checkCreationDateTimeOldValue;
+            if (m_checkModificationDateTime != m_checkModificationDateTimeOldValue)
+                CheckModificationDateTime = m_checkModificationDateTimeOldValue;
+            if (m_checkContent != m_checkContentOldValue)
+                CheckContent = m_checkContentOldValue;
+            m_currentGroupModeIndex = m_currentGroupModeIndexOldValue;
+            m_isRollBack = false;
         }
     } // Class FileCompareOptions
 
     public class GroupingAttribute
     {
-        public GroupingAttribute(string name, FileAttribs attribute)
+        public GroupingAttribute(string name, FileAttribs attribute, int weight)
         {
             Name = name;
             Attribute = attribute;
+            Weight = weight;
+
         }
         public string Name { get; set; }
         public FileAttribs Attribute { get; set; }
+        public int Weight { get; set; }
 
         public override string ToString()
         {

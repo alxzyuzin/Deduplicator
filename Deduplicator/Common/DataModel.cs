@@ -21,29 +21,6 @@ namespace Deduplicator.Common
             SearchCanceled,
             RegroupingCanceled
         }
-        //private sealed class ErrorData
-        //{
-
-
-        //    public ErrorType Type;
-        //    public string FunctionName;
-        //    public string ModuleName;
-        //    public int LineNumber;
-        //    public string Message;
-
-        //    //public ErrorData(string moduleName)
-        //    //{
-        //    //    ModuleName = moduleName;
-        //    //}
-
-        //    public void Set(ErrorType type, string functionName, int lineNumber, string message)
-        //    {
-        //        Type = type;
-        //        FunctionName = functionName;
-        //        LineNumber = lineNumber;
-        //        Message = message;
-        //    }
-        //}
 
         public enum SearchStatus {
             Sorting,
@@ -89,7 +66,6 @@ namespace Deduplicator.Common
         private FilesGroup FilesCollection;
         
         private DateTime _startTime = DateTime.Now;
- //       private ErrorData _error = new ErrorData("DataModel.cs");
 
         private CancellationTokenSource _tokenSource;
         private Progress<OperationStatus> m_progress;

@@ -126,9 +126,9 @@ namespace Deduplicator.Common
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        public string Name { get; set; }
-        public ulong  TotalSize { get; set; }
-        public ulong  FileSize { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public ulong TotalSize { get; set; } = 0;
+        public ulong FileSize { get; set; } = 0;
         private Progress<OperationStatus> m_progress = null;
 
         public new IEnumerator<object> GetEnumerator()
@@ -256,5 +256,6 @@ namespace Deduplicator.Common
         public string Stage = string.Empty;
         public int TotalItems = 0;
         public int HandledItems = 0;
+        public string Message = string.Empty;
     } // class OperationStatus
 }

@@ -21,29 +21,29 @@ namespace Deduplicator.Common
             SearchCanceled,
             RegroupingCanceled
         }
-        private sealed class ErrorData
-        {
+        //private sealed class ErrorData
+        //{
 
 
-            public ErrorType Type;
-            public string FunctionName;
-            public string ModuleName;
-            public int LineNumber;
-            public string Message;
+        //    public ErrorType Type;
+        //    public string FunctionName;
+        //    public string ModuleName;
+        //    public int LineNumber;
+        //    public string Message;
 
-            //public ErrorData(string moduleName)
-            //{
-            //    ModuleName = moduleName;
-            //}
+        //    //public ErrorData(string moduleName)
+        //    //{
+        //    //    ModuleName = moduleName;
+        //    //}
 
-            public void Set(ErrorType type, string functionName, int lineNumber, string message)
-            {
-                Type = type;
-                FunctionName = functionName;
-                LineNumber = lineNumber;
-                Message = message;
-            }
-        }
+        //    public void Set(ErrorType type, string functionName, int lineNumber, string message)
+        //    {
+        //        Type = type;
+        //        FunctionName = functionName;
+        //        LineNumber = lineNumber;
+        //        Message = message;
+        //    }
+        //}
 
         public enum SearchStatus {
             Sorting,
@@ -153,7 +153,8 @@ namespace Deduplicator.Common
                        _status == SearchStatus.GroupingCompleted ||
                        _status == SearchStatus.GroupingCanceled ||
                        _status == SearchStatus.JustInitialazed ||
-                       _status == SearchStatus.JustInitialazed
+                       _status == SearchStatus.JustInitialazed ||
+                       _status == SearchStatus.Error
                        ? true : false;
             }
         }
@@ -169,7 +170,6 @@ namespace Deduplicator.Common
         {
             Settings.Restore();
             m_progress = new Progress<OperationStatus>(ReportStatus);
-            m_progress.ProgressChanged += Status_ProgressChanged;
             m_DuplicatesCollection = new GroupedFilesCollection(m_progress);
             FilesCollection = new FilesGroup(m_progress);
         }
@@ -183,11 +183,6 @@ namespace Deduplicator.Common
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
         }
 
-        private void Status_ProgressChanged(object sender, OperationStatus e)
-        {
-            int i = 0;
-        }
-
         /// <summary>
         /// Поиск дубликатов файлов
         /// </summary>
@@ -196,8 +191,6 @@ namespace Deduplicator.Common
                                    ObservableCollection<GroupingAttribute> compareAttribsList, 
                                    CancellationToken cancelToken )
         {
-//            _error.Set(ErrorType.OperationCanceled, "", 0, "");
-
             OperationStatus status = new OperationStatus { Id = SearchStatus.NewFileSelected };
 
             FilesCollection.Clear();
@@ -230,7 +223,8 @@ namespace Deduplicator.Common
             {
                 FilesCollection.Clear();
                 m_DuplicatesCollection.Clear();
-                status.Id = SearchStatus.SearchCanceled;
+                if (status.Id != SearchStatus.Error)
+                    status.Id = SearchStatus.SearchCanceled;
                 ((IProgress<OperationStatus>)m_progress).Report(status);
             }
         }
@@ -274,14 +268,14 @@ namespace Deduplicator.Common
             switch(status.Id)
             {
                 case SearchStatus.NewFileSelected:
-                    SearchStatusInfo = string.Format("Selecting files. Total files selected {0}.", status.HandledItems);
+                    SearchStatusInfo = string.Format(@"Selecting files. Total files selected {0}.", status.HandledItems);
                     break;
                 case SearchStatus.Grouping:
                     SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
                                                     status.Stage, status.HandledItems, status.TotalItems);
                     break;
                 case SearchStatus.GroupingCompleted:
-                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
+                    SearchStatusInfo = string.Format(@"Grouping complete. Regrouped {0} duplicates into {1} groups.",
                                                       m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
                     break;
 
@@ -308,6 +302,11 @@ namespace Deduplicator.Common
                     break;
                 case SearchStatus.StartCancelOperation:
                     SearchStatusInfo = string.Format(@"Canceling current operation.");
+                    break;
+                case SearchStatus.Error:
+                    status.Message = status.Message.Replace('\r', ' ');
+                    status.Message = status.Message.Replace('\n', ' ');
+                    SearchStatusInfo = string.Format(@"Error: {0} Operation canceled.", status.Message);
                     break;
             }
             NotifySearchStatusChanged(status.Id);
@@ -349,13 +348,14 @@ namespace Deduplicator.Common
                f = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
                folderitems = await f.GetItemsAsync();
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException ex)
             {
-//                _error.Set(ErrorType.FileNotFound, "GetFolderFiles", 482, e.Message);
+                status.Id = SearchStatus.Error;
+                status.Message = ex.Message+"'" + folder.FullName+"'";                
                 throw new OperationCanceledException();
             }
 
-            IProgress<OperationStatus> progress = m_progress;
+            var progress = m_progress as IProgress<OperationStatus>;
             foreach (IStorageItem item in folderitems)
             {
                 canselationToken.ThrowIfCancellationRequested();
@@ -384,9 +384,10 @@ namespace Deduplicator.Common
                             progress.Report(status);
                         }
                     }
-                    catch(Exception e)
+                    catch(Exception ex)
                     {
-//                        _error.Set(ErrorType.UnknownError, "GetFolderFiles", 515, e.Message);
+                        status.Id = SearchStatus.Error;
+                        status.Message = ex.Message + "'"+ item.Name + "'.";
                         throw new OperationCanceledException();
                     }
                 }

@@ -53,7 +53,7 @@ namespace Deduplicator.Common
         private GroupedFilesCollection m_duplicatesCollection; // = new GroupedFilesCollection(progress);
         // Список файлов отобранных из каталогов в которых искать дубликаты    
         private FilesGroup m_filesCollection;
-
+        // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
         private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
         private DateTime m_startTime = DateTime.Now;
 

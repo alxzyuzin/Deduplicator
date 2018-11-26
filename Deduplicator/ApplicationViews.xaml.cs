@@ -52,13 +52,11 @@ namespace Deduplicator {
         }
         private ResourceLoader _resldr = new ResourceLoader();
 
-        // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
-        //private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
         private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
-//        private FileAttribs m_currentGroupingAttribute = FileAttribs.Undefined;
+        private GroupingAttribute m_currentGroupingAttribute = new GroupingAttribute();
 
-
+        
 
         #region Properties
 
@@ -335,12 +333,7 @@ namespace Deduplicator {
             get { return _fileSelectionOptions; }
         }
 
-        //public FileCompareOptions FileCompareOptions
-        //{
-        //    get { return _fileCompareOptions; }
-        //}
-
- #endregion
+        #endregion
 
         public ApplicationViews()
         {
@@ -353,7 +346,9 @@ namespace Deduplicator {
             FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
 
             _dataModel.FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
-            _dataModel.FileCompareOptions.CurrentGroupModeIndex = 0;
+
+            cb_ResGroping.SelectedIndex = 0;
+            cb_OptGroping.SelectedIndex = 0;
 
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
             SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; };
@@ -670,9 +665,9 @@ namespace Deduplicator {
             var selectedAttribute = ((ComboBox)sender).SelectedItem as GroupingAttribute;
             if (selectedAttribute != null)
             {
-                if (AppData.FileCompareOptions.SelectedGroupAttrib != selectedAttribute )
+                if (m_currentGroupingAttribute != selectedAttribute )
                 {
-                    AppData.FileCompareOptions.SelectedGroupAttrib = selectedAttribute;
+                    m_currentGroupingAttribute = selectedAttribute;
                     if (_dataModel.DuplicatesCount != 0)
                     {
                         DisableComandButtons();

@@ -56,7 +56,7 @@ namespace Deduplicator {
         //private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
         private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
-        private FileAttribs m_currentGroupingAttribute = FileAttribs.Undefined;
+//        private FileAttribs m_currentGroupingAttribute = FileAttribs.Undefined;
 
 
 
@@ -670,10 +670,9 @@ namespace Deduplicator {
             var selectedAttribute = ((ComboBox)sender).SelectedItem as GroupingAttribute;
             if (selectedAttribute != null)
             {
-                if (m_currentGroupingAttribute != selectedAttribute.Attribute )
+                if (AppData.FileCompareOptions.SelectedGroupAttrib != selectedAttribute )
                 {
-                    m_currentGroupingAttribute = selectedAttribute.Attribute;
-                    _dataModel.FileCompareOptions.SetActiveAttribute(selectedAttribute);
+                    AppData.FileCompareOptions.SelectedGroupAttrib = selectedAttribute;
                     if (_dataModel.DuplicatesCount != 0)
                     {
                         DisableComandButtons();

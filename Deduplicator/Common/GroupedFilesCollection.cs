@@ -88,6 +88,9 @@ namespace Deduplicator.Common
 
         public async Task RegroupDuplicates(GroupingAttribute attribute, CancellationToken cancelToken)
         {
+            if (attribute == this.m_lastAttributeUsedForGrouping)
+                return;
+            
             // Соберём все файлы в одну группу
             FilesGroup allFiles = new FilesGroup(m_progress);
             foreach (FilesGroup group in this)

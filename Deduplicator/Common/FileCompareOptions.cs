@@ -109,14 +109,20 @@ namespace Deduplicator.Common
         private ObservableCollection<GroupingAttribute> m_grouppingAttributes = new ObservableCollection<GroupingAttribute>();
         public ObservableCollection<GroupingAttribute> GrouppingAttributes { get { return m_grouppingAttributes; } }
 
-//        private GroupingAttribute m_currentGroupModeAttrib;
-//        public GroupingAttribute CurrentGroupModeAttrib
-//        {
-//            get
-//            {
-//                return m_currentGroupModeAttrib;
-//            }
-//        }
+        private GroupingAttribute m_selectedGroupAttrib;
+        public GroupingAttribute SelectedGroupAttrib
+        {
+            get
+            {
+                return m_selectedGroupAttrib;
+            }
+                
+            set
+            {
+                if (m_selectedGroupAttrib != value)
+                    m_selectedGroupAttrib = value;
+            }
+        }
 
         private int m_currentGroupModeIndexOldValue;
         private int m_currentGroupModeIndex = -1;
@@ -136,7 +142,6 @@ namespace Deduplicator.Common
  
         public FileCompareOptions()
         {
-            
             m_grouppingAttributes.Add(None);
             CurrentGroupModeIndex = -1;
             CheckName = true;
@@ -147,6 +152,9 @@ namespace Deduplicator.Common
             m_checkModificationDateTimeOldValue = m_checkModificationDateTime;
             m_checkContentOldValue = m_checkContent;
             m_currentGroupModeIndexOldValue = m_currentGroupModeIndex;
+
+            m_selectedGroupAttrib = new GroupingAttribute();
+
         }
 
         private void UpdateGroupingModeList(GroupingAttribute attrib, CheckBoxAction action)
@@ -187,18 +195,12 @@ namespace Deduplicator.Common
             m_isRollBack = false;
         }
 
-        public void SetActiveAttribute(GroupingAttribute selectedAttribute)
-        {
-            foreach (var attribute in m_grouppingAttributes)
-                attribute.Active = false;
-            selectedAttribute.Active = true;
-        }
-
+ 
     } // Class FileCompareOptions
 
     public class GroupingAttribute
     {
-//        public GroupingAttribute() { }
+        public GroupingAttribute() { }
         public GroupingAttribute(string name, FileAttribs attribute, int weight)
         {
             Name = name;
@@ -207,10 +209,9 @@ namespace Deduplicator.Common
 
         }
         public string Name { get; set; } = string.Empty;
-        public FileAttribs Attribute { get; set; } = FileAttribs.None;
+        public FileAttribs Attribute { get; set; } = FileAttribs.Undefined;
         public int Weight { get; set; } = 0;
-        public bool Active { get; set; } = false;
-
+ 
         public override string ToString()
         {
             return Name;

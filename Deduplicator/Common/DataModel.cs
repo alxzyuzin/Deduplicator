@@ -190,7 +190,7 @@ namespace Deduplicator.Common
                 }
                 else
                 {  // Или перегруппируем файлы по атрибуту выбранному в ComboBox для группировки
-//                    await m_duplicatesCollection.RegroupDuplicates(attribute, cancelToken);
+                    await m_duplicatesCollection.RegroupDuplicates(_fileCompareOptions.SelectedGroupAttrib, cancelToken);
                 }
 
                 status.Id = SearchStatus.SearchCompleted;

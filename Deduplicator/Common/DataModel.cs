@@ -13,16 +13,7 @@ namespace Deduplicator.Common
 
     public sealed class DataModel : INotifyPropertyChanged
     {
-        public enum ErrorType
-        {
-            UnknownError,
-            FileNotFound,
-            OperationCanceled,
-            SearchCanceled,
-            RegroupingCanceled
-        }
-
-        public enum SearchStatus {
+         public enum SearchStatus {
             Sorting,
             Grouping,
             GroupingCompleted,
@@ -55,67 +46,71 @@ namespace Deduplicator.Common
         // Первичный каталог (если определён)
         public Folder PrimaryFolder = null;
 
-
-
 #region Fields
         // Список каталогов в которых искать дубликаты
-        private ObservableCollection<Folder> _foldersCollection = new ObservableCollection<Folder>();
+        private ObservableCollection<Folder> m_foldersCollection = new ObservableCollection<Folder>();
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту
-        private GroupedFilesCollection m_DuplicatesCollection; // = new GroupedFilesCollection(progress);
+        private GroupedFilesCollection m_duplicatesCollection; // = new GroupedFilesCollection(progress);
         // Список файлов отобранных из каталогов в которых искать дубликаты    
-        private FilesGroup FilesCollection;
-        
-        private DateTime _startTime = DateTime.Now;
+        private FilesGroup m_filesCollection;
 
-        private CancellationTokenSource _tokenSource;
+        private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
+        private DateTime m_startTime = DateTime.Now;
+
+        private CancellationTokenSource m_tokenSource;
         private Progress<OperationStatus> m_progress;
 
-#endregion
+        #endregion
 
         #region Properties
 
+        public FileCompareOptions FileCompareOptions
+        {
+            get { return _fileCompareOptions; }
+        }
+
         public  ObservableCollection<Folder> Folders
         {
-            get {return _foldersCollection;}
+            get {return m_foldersCollection;}
         }
 
         public GroupedFilesCollection DuplicatedFiles
         {
-            get { return m_DuplicatesCollection; }
+            get { return m_duplicatesCollection; }
         }
 
-        SearchStatus _status = SearchStatus.JustInitialazed;
-        public SearchStatus Status { get { return _status; } }
+        SearchStatus m_status = SearchStatus.JustInitialazed;
+        public SearchStatus Status { get { return m_status; } }
 
-        private string _searchStatusInfo = string.Empty;
+        private string m_searchStatusInfo = string.Empty;
         public string SearchStatusInfo
         { get
-            { return _searchStatusInfo; }
+            { return m_searchStatusInfo; }
             set
             {
-                if (_searchStatusInfo != value)
+                if (m_searchStatusInfo != value)
                 {
-                    _searchStatusInfo = value;
+                    m_searchStatusInfo = value;
                     NotifyPropertyChanged("SearchStatusInfo");
                 }
             }
         }
 
-        private int _foldersCount = 0;
+        private int m_foldersCount = 0;
         public int  FoldersCount
         {
-            get { return _foldersCount; }
+            get { return m_foldersCount; }
             set
             {
-                if (_foldersCount!=value)
+                if (m_foldersCount!=value)
                 {
-                    _foldersCount = value;
+                    m_foldersCount = value;
                     NotifyPropertyChanged("FoldersCount");
                 }
             }
         }
 
-        public int  DuplicatesCount { get { return m_DuplicatesCollection.Count; } }
+        public int  DuplicatesCount { get { return m_duplicatesCollection.Count; } }
 
         public bool PrimaryFolderSelected { get; set; }
 
@@ -124,13 +119,13 @@ namespace Deduplicator.Common
             get
             {
                 return
-                       _status == SearchStatus.SearchCanceled ||
-                       _status == SearchStatus.SearchCompleted ||
-                       _status == SearchStatus.GroupingCompleted ||
-                       _status == SearchStatus.GroupingCanceled ||
-                       _status == SearchStatus.JustInitialazed ||
-                       _status == SearchStatus.JustInitialazed ||
-                       _status == SearchStatus.Error
+                       m_status == SearchStatus.SearchCanceled ||
+                       m_status == SearchStatus.SearchCompleted ||
+                       m_status == SearchStatus.GroupingCompleted ||
+                       m_status == SearchStatus.GroupingCanceled ||
+                       m_status == SearchStatus.JustInitialazed ||
+                       m_status == SearchStatus.JustInitialazed ||
+                       m_status == SearchStatus.Error
                        ? true : false;
             }
         }
@@ -146,14 +141,14 @@ namespace Deduplicator.Common
         {
             Settings.Restore();
             m_progress = new Progress<OperationStatus>(ReportStatus);
-            m_DuplicatesCollection = new GroupedFilesCollection(m_progress);
-            FilesCollection = new FilesGroup(m_progress);
+            m_duplicatesCollection = new GroupedFilesCollection(m_progress);
+            m_filesCollection = new FilesGroup(m_progress);
         }
  
         public async Task StartSearch(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList)
         {
-            _tokenSource = new CancellationTokenSource();
-            CancellationToken token = _tokenSource.Token;
+            m_tokenSource = new CancellationTokenSource();
+            CancellationToken token = m_tokenSource.Token;
 
             WorkItemHandler workhandler = delegate { Search(selectionOptions, compareAttribsList, token); };
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
@@ -169,36 +164,42 @@ namespace Deduplicator.Common
         {
             OperationStatus status = new OperationStatus { Id = SearchStatus.NewFileSelected };
 
-            FilesCollection.Clear();
-            m_DuplicatesCollection.Clear();
+            m_filesCollection.Clear();
+            m_duplicatesCollection.Clear();
             try
             {
                 // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
-                foreach (Folder folder in _foldersCollection)
-                    await GetFolderFiles(folder, FilesCollection, selectionOptions, cancelToken, status);
+                foreach (Folder folder in m_foldersCollection)
+                    await GetFolderFiles(folder, m_filesCollection, selectionOptions, cancelToken, status);
 
                 //// Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
-                if (FilesCollection.Count > 1)
+                if (m_filesCollection.Count > 1)
                 {
-                    FilesGroup fg = new FilesGroup(m_progress);
-                    foreach (File file in FilesCollection)
+                    var fg = new FilesGroup(m_progress);
+                    foreach (File file in m_filesCollection)
                         fg.Add(file);
 
-                    m_DuplicatesCollection.Add(fg);
+                    m_duplicatesCollection.Add(fg);
 
-                    await m_DuplicatesCollection.RemoveNonDuplicates(compareAttribsList, cancelToken);
+                    await m_duplicatesCollection.RemoveNonDuplicates(compareAttribsList, cancelToken);
                 }
-                //// Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
+                
                 if (PrimaryFolder != null)
+                {  // Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
                     DeleteNonPrimaryFolderDuplicates();
+                }
+                else
+                {  // Или перегруппируем файлы по атрибуту выбранному в ComboBox для группировки
+//                    await m_duplicatesCollection.RegroupDuplicates(attribute, cancelToken);
+                }
 
                 status.Id = SearchStatus.SearchCompleted;
                 ((IProgress<OperationStatus>)m_progress).Report(status);
             }
             catch (OperationCanceledException)
             {
-                FilesCollection.Clear();
-                m_DuplicatesCollection.Clear();
+                m_filesCollection.Clear();
+                m_duplicatesCollection.Clear();
                 if (status.Id != SearchStatus.Error)
                     status.Id = SearchStatus.SearchCanceled;
                 ((IProgress<OperationStatus>)m_progress).Report(status);
@@ -210,7 +211,7 @@ namespace Deduplicator.Common
             List<FilesGroup> groupsForDelete = new List<FilesGroup>();
 
             // Просматриваем все группы в результатах поиска  
-            foreach (FilesGroup group in m_DuplicatesCollection)
+            foreach (FilesGroup group in m_duplicatesCollection)
             {
                 List<File> primaryFolderFiles = new List<File>();
                 // Для каждого файла в группе проверяем его принадлежность к Primary folder
@@ -234,13 +235,13 @@ namespace Deduplicator.Common
             }
             // Удалим тз результатов поиска все группы не содержащие файлов из Primary folder
             foreach (FilesGroup group in groupsForDelete)
-                m_DuplicatesCollection.Remove(group);
+                m_duplicatesCollection.Remove(group);
         }
 
   
         private void ReportStatus(OperationStatus status)
         {
-            _status = status.Id;
+            m_status = status.Id;
             switch(status.Id)
             {
                 case SearchStatus.NewFileSelected:
@@ -252,7 +253,7 @@ namespace Deduplicator.Common
                     break;
                 case SearchStatus.GroupingCompleted:
                     SearchStatusInfo = string.Format(@"Grouping complete. Regrouped {0} duplicates into {1} groups.",
-                                                      m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
+                                                      m_duplicatesCollection.FilesCount, m_duplicatesCollection.Count);
                     break;
 
                 case SearchStatus.ComparingStarted:
@@ -265,7 +266,7 @@ namespace Deduplicator.Common
                     break;
                 case SearchStatus.SearchCompleted:
                     SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
-                                                      m_DuplicatesCollection.FilesCount, m_DuplicatesCollection.Count);
+                                                      m_duplicatesCollection.FilesCount, m_duplicatesCollection.Count);
                     break;
                 case SearchStatus.SearchCanceled:
                     SearchStatusInfo = string.Format(@"Search canceled.");
@@ -287,14 +288,14 @@ namespace Deduplicator.Common
             }
             NotifySearchStatusChanged(status.Id);
             if (OperationCompleted)
-                m_DuplicatesCollection.Invalidate();
+                m_duplicatesCollection.Invalidate();
         }
 
         public void CancelOperation()
         {
             OperationStatus status = new OperationStatus { Id = SearchStatus.StartCancelOperation };
             ReportStatus(status);
-            _tokenSource.Cancel();
+            m_tokenSource.Cancel();
         }
 
         /// <summary>
@@ -376,31 +377,31 @@ namespace Deduplicator.Common
         /// <param name="attribute"></param>
         public async void RegroupResultsByFileAttribute(GroupingAttribute attribute)
         {
-            _tokenSource = new CancellationTokenSource();
-            CancellationToken token = _tokenSource.Token;
+            m_tokenSource = new CancellationTokenSource();
+            CancellationToken token = m_tokenSource.Token;
 
             WorkItemHandler workhandler = delegate { Regroup(attribute, token); };
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
-            m_DuplicatesCollection.Invalidate();
+            m_duplicatesCollection.Invalidate();
         }
 
         private async void Regroup( GroupingAttribute attribute, CancellationToken token)
         {
             GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection(m_progress);
             // Сохраним результаты предыдущей сортировки для восстановления в случае отката операции
-            foreach (var group in m_DuplicatesCollection)
+            foreach (var group in m_duplicatesCollection)
                 rollbackGroupsBuffer.Add(group);
             // Разделим полученный ранее полный список дубликатов на группы по указанному атрибуту
             try
             {
-                await m_DuplicatesCollection.RegroupDuplicates(attribute, token);
+                await m_duplicatesCollection.RegroupDuplicates(attribute, token);
             }
             catch (OperationCanceledException)
             {
-                m_DuplicatesCollection.Clear();
+                m_duplicatesCollection.Clear();
                 // Восстановим результаты предыдущей сортировки
                 foreach (var group in rollbackGroupsBuffer)
-                    m_DuplicatesCollection.Add(group);
+                    m_duplicatesCollection.Add(group);
                 OperationStatus status = new OperationStatus { Id = SearchStatus.GroupingCanceled };
                 ((IProgress<OperationStatus>)m_progress).Report(status);
             }
@@ -408,8 +409,8 @@ namespace Deduplicator.Common
 
        public void ClearSearchResults()
         {
-            FilesCollection.Clear();
-            m_DuplicatesCollection.Clear();
+            m_filesCollection.Clear();
+            m_duplicatesCollection.Clear();
             OperationStatus status = new OperationStatus  { Id = DataModel.SearchStatus.ResultsCleared };
             ReportStatus(status);
         }
@@ -417,7 +418,7 @@ namespace Deduplicator.Common
         public void SetFilesProtection(Folder folder, bool isProtected)
         {
             GroupedFilesCollection newGroupCollection = new GroupedFilesCollection(m_progress);
-            foreach (var group in m_DuplicatesCollection)
+            foreach (var group in m_duplicatesCollection)
            {
                 FilesGroup newGroup = new FilesGroup(group.Name);
                 foreach (File file in group)
@@ -430,15 +431,15 @@ namespace Deduplicator.Common
                 newGroupCollection.Add(newGroup);
             }
 
-            m_DuplicatesCollection.Clear();
+            m_duplicatesCollection.Clear();
             foreach (FilesGroup group in newGroupCollection)
             {
                 FilesGroup newGroup = new FilesGroup(group.Name);
                 foreach (File file in group)
                     newGroup.Add(file);
-                m_DuplicatesCollection.Add(newGroup);
+                m_duplicatesCollection.Add(newGroup);
             }
-            m_DuplicatesCollection.Invalidate();
+            m_duplicatesCollection.Invalidate();
         }
     } // class DataModel
 

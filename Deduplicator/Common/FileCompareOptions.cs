@@ -186,10 +186,19 @@ namespace Deduplicator.Common
             m_currentGroupModeIndex = m_currentGroupModeIndexOldValue;
             m_isRollBack = false;
         }
+
+        public void SetActiveAttribute(GroupingAttribute selectedAttribute)
+        {
+            foreach (var attribute in m_grouppingAttributes)
+                attribute.Active = false;
+            selectedAttribute.Active = true;
+        }
+
     } // Class FileCompareOptions
 
     public class GroupingAttribute
     {
+//        public GroupingAttribute() { }
         public GroupingAttribute(string name, FileAttribs attribute, int weight)
         {
             Name = name;
@@ -197,9 +206,10 @@ namespace Deduplicator.Common
             Weight = weight;
 
         }
-        public string Name { get; set; }
-        public FileAttribs Attribute { get; set; }
-        public int Weight { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public FileAttribs Attribute { get; set; } = FileAttribs.None;
+        public int Weight { get; set; } = 0;
+        public bool Active { get; set; } = false;
 
         public override string ToString()
         {

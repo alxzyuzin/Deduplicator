@@ -21,7 +21,8 @@ namespace Deduplicator.Common
         Size =32,
         Content=64,
         Extention=128,
-        Hash = 256
+        Hash = 256,
+        Undefined = 512
     }
 
     public sealed class File:INotifyPropertyChanged

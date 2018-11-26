@@ -53,34 +53,16 @@ namespace Deduplicator {
         private ResourceLoader _resldr = new ResourceLoader();
 
         // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
-        private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
+        //private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
         private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
-        private FileAttribs m_currentGroupingAttribute = FileAttribs.None;
-        
+        private FileAttribs m_currentGroupingAttribute = FileAttribs.Undefined;
+
 
 
         #region Properties
-        CmdButtons _cmdButtonsVisualState;
-        private CmdButtons CmdButtonsVisualState
-        {
-            set
-            {
-                if (_cmdButtonsVisualState != value)
-                {
-                    _cmdButtonsVisualState = 0;
-                    _cmdButtonsVisualState |= value;
 
-                    NotifyPropertyChanged("BtnDelSelectedFilesVisibility");
-                    NotifyPropertyChanged("BtnStartSearchVisibility");
-                    NotifyPropertyChanged("BtnCancelSearchVisibility");
-                    NotifyPropertyChanged("BtnSaveSettingsVisibility");
-                    NotifyPropertyChanged("BtnAddFolderVisibility");
-                    NotifyPropertyChanged("BtnDelFolderVisibility");
-                }
-            }
-        }
-
+        #region Visibility properties
         private Visibility _viewWhereToSearchVisibility = Visibility.Collapsed;
         public Visibility ViewWhereToSearchVisibility
         {
@@ -207,6 +189,29 @@ namespace Deduplicator {
                 }
             }
         }
+        #endregion
+
+        #region Buttons state properties
+
+        CmdButtons _cmdButtonsVisualState;
+        private CmdButtons CmdButtonsVisualState
+        {
+            set
+            {
+                if (_cmdButtonsVisualState != value)
+                {
+                    _cmdButtonsVisualState = 0;
+                    _cmdButtonsVisualState |= value;
+
+                    NotifyPropertyChanged("BtnDelSelectedFilesVisibility");
+                    NotifyPropertyChanged("BtnStartSearchVisibility");
+                    NotifyPropertyChanged("BtnCancelSearchVisibility");
+                    NotifyPropertyChanged("BtnSaveSettingsVisibility");
+                    NotifyPropertyChanged("BtnAddFolderVisibility");
+                    NotifyPropertyChanged("BtnDelFolderVisibility");
+                }
+            }
+        }
 
         public bool _btnAddFolderEnabled = true;
         public bool BtnAddFolderEnabled
@@ -289,6 +294,8 @@ namespace Deduplicator {
             }
         }
 
+        #endregion
+
         private bool _groupingModeSelectorEnabled = true;
         public bool GroupingModeSelectorEnabled
         {
@@ -328,10 +335,10 @@ namespace Deduplicator {
             get { return _fileSelectionOptions; }
         }
 
-        public FileCompareOptions FileCompareOptions
-        {
-            get { return _fileCompareOptions; }
-        }
+        //public FileCompareOptions FileCompareOptions
+        //{
+        //    get { return _fileCompareOptions; }
+        //}
 
  #endregion
 
@@ -345,8 +352,8 @@ namespace Deduplicator {
             FileSelectionOptions.ImageFileExtentions = _dataModel.Settings.ImageFileExtentions;
             FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
 
-            FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
-            FileCompareOptions.CurrentGroupModeIndex = 0;
+            _dataModel.FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
+            _dataModel.FileCompareOptions.CurrentGroupModeIndex = 0;
 
             _dataModel.SearchStatusChanged += OnSearchStatusChanged;
             SizeChanged += (object sender, SizeChangedEventArgs e)=>{ lv_Duplicates.InternalWidth = this.ActualWidth; };
@@ -360,13 +367,13 @@ namespace Deduplicator {
                 e.PropertyName == "CheckContent")
             {
                  // Если событие возникает в процессе отката изменений параметров то игнорируем его
-                if (FileCompareOptions.IsRollBack)
+                if (_dataModel.FileCompareOptions.IsRollBack)
                     return;
 
                 if (_dataModel.DuplicatesCount == 0)
                 {
                     // Если поиск дубликатов не выполнялся то просто сохраняем новые значения
-                    FileCompareOptions.Commit();
+                    _dataModel.FileCompareOptions.Commit();
                 }
                 else
                 {
@@ -375,13 +382,13 @@ namespace Deduplicator {
                     MessageBoxButtons pressedButton = await MsgBox.Show();
                     if (pressedButton == MessageBoxButtons.Yes)
                     {
-                        FileCompareOptions.Commit();
+                        _dataModel.FileCompareOptions.Commit();
                         _dataModel.ClearSearchResults();
                     }
 
                     if (pressedButton == MessageBoxButtons.No)
                     {
-                        FileCompareOptions.RollBack();
+                        _dataModel.FileCompareOptions.RollBack();
                     }
                 }
             }
@@ -523,9 +530,9 @@ namespace Deduplicator {
             }
 
             // Проверим что выбран хотя бы один атрибут файла для сравнения при поиске дубликатов
-            if (!(FileCompareOptions.CheckName | FileCompareOptions.CheckSize |
-                FileCompareOptions.CheckContent | FileCompareOptions.CheckCreationDateTime |
-                FileCompareOptions.CheckModificationDateTime))
+            if (!(_dataModel.FileCompareOptions.CheckName || _dataModel.FileCompareOptions.CheckSize ||
+                _dataModel.FileCompareOptions.CheckContent || _dataModel.FileCompareOptions.CheckCreationDateTime ||
+                _dataModel.FileCompareOptions.CheckModificationDateTime))
             {
                 MsgBox.SetButtons(MessageBoxButtons.Close);
                 MsgBox.Message = _resldr.GetString("NoFileCompareAttributesChecked");
@@ -543,7 +550,7 @@ namespace Deduplicator {
             }
 
             DisableComandButtons();
-            await _dataModel.StartSearch(FileSelectionOptions, FileCompareOptions.GrouppingAttributes);
+            await _dataModel.StartSearch(FileSelectionOptions, _dataModel.FileCompareOptions.GrouppingAttributes);
             RequesViewChange(View.SearchResults);
         }
 
@@ -660,27 +667,22 @@ namespace Deduplicator {
 
         private void Grouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            GroupingAttribute selectedItem = (GroupingAttribute)((ComboBox)sender).SelectedItem;
-            if (m_currentGroupingAttribute != selectedItem.Attribute)
+            var selectedAttribute = ((ComboBox)sender).SelectedItem as GroupingAttribute;
+            if (selectedAttribute != null)
             {
-                m_currentGroupingAttribute = selectedItem.Attribute;
-                if (selectedItem != null && _dataModel.DuplicatesCount != 0)
+                if (m_currentGroupingAttribute != selectedAttribute.Attribute )
                 {
-                    DisableComandButtons();
-                    _dataModel.RegroupResultsByFileAttribute((GroupingAttribute)selectedItem);
+                    m_currentGroupingAttribute = selectedAttribute.Attribute;
+                    _dataModel.FileCompareOptions.SetActiveAttribute(selectedAttribute);
+                    if (_dataModel.DuplicatesCount != 0)
+                    {
+                        DisableComandButtons();
+                        _dataModel.RegroupResultsByFileAttribute(selectedAttribute);
+                    }
                 }
             }
- //           RegroupResult((GroupingAttribute)((ComboBox)sender).SelectedItem);
         }
 
-        //private void RegroupResult(GroupingAttribute selectedItem)
-        //{
-        //    if (selectedItem != null && _dataModel.DuplicatesCount != 0)
-        //    {
-        //        DisableComandButtons();
-        //        _dataModel.RegroupResultsByFileAttribute((GroupingAttribute)selectedItem);
-        //    }
-        //}
 
         private void DisableComandButtons()
         {

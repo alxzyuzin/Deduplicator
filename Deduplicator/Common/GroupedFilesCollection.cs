@@ -19,6 +19,8 @@ namespace Deduplicator.Common
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
+        GroupingAttribute m_lastAttributeUsedForGrouping = null;
+
         public int FilesCount
         {
             get
@@ -55,12 +57,11 @@ namespace Deduplicator.Common
                 Stage = string.Empty
             } ;
             
-            GroupedFilesCollection groupsBuffer = new GroupedFilesCollection(m_progress);
+            var groupsBuffer = new GroupedFilesCollection(m_progress);
 
             IEnumerable<GroupingAttribute> query = from attribute in attributeList
                                                    orderby attribute.Weight ascending
                                                    select attribute;
-
             foreach (var attribute in query)
             {
                 if (attribute.Attribute == FileAttribs.None)
@@ -77,9 +78,11 @@ namespace Deduplicator.Common
                 foreach (FilesGroup group in groupsBuffer)
                 {
                     List<FilesGroup> splitResult = await group.SplitByAttribute(attribute, cancelToken, status);
+                    
                     foreach (FilesGroup newGroup in splitResult)
                         this.Add(newGroup);
                  }
+                m_lastAttributeUsedForGrouping = attribute;
              }
         }
 
@@ -112,6 +115,7 @@ namespace Deduplicator.Common
                 for (int i = 0; i < splitResult.Count; i++)
                     this.Add(splitResult[i]);
             }
+            m_lastAttributeUsedForGrouping = attribute;
             status.Id = DataModel.SearchStatus.GroupingCompleted;
             progress.Report(status);
         }
@@ -223,9 +227,9 @@ namespace Deduplicator.Common
             await this.SortByAttribute(0, this.Count - 1, attribute.Attribute);
 
             status.Id = oldStatusId;
-            List<FilesGroup> newGroupsCollection = new List<FilesGroup>();
+            var newGroupsCollection = new List<FilesGroup>();
 
-            FilesGroup newgroup = new FilesGroup(m_progress);
+            var newgroup = new FilesGroup(m_progress);
             newgroup.Add(this[0]);
             ++status.HandledItems;
             for (int i = 1; i < this.Count; i++)

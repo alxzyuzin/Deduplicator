@@ -29,13 +29,20 @@ namespace Deduplicator
             this.InitializeComponent();
             //ApplicationViews.View g = ApplicationViews.View.WhereToSearch;
             SwitchVewTo(ApplicationViews.View.WhereToSearch);
-            this.Unloaded += MainPage_Unloaded;
+            Unloaded += (object sender, RoutedEventArgs e)=>
+                             {
+                                 StorageApplicationPermissions.FutureAccessList.Clear();
+                             };
+            appViews.ChangeViewRequested += (object sender, ApplicationViews.View view) =>
+                               {
+                                   SwitchVewTo(view);
+                               };
         }
 
-        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
-        {
-            StorageApplicationPermissions.FutureAccessList.Clear();
-        }
+        //private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        //{
+        //    StorageApplicationPermissions.FutureAccessList.Clear();
+        //}
 
         private void button_SearchLocation_Tapped(object sender, TappedRoutedEventArgs e)
         {

@@ -199,16 +199,17 @@
         <TextBlock Grid.Row="0" Text="{Binding TabHeader}" 
                    Style="{StaticResource TextBlockTabHeaderStyle}"  HorizontalAlignment="Left" />
         <StackPanel Grid.Row="0" HorizontalAlignment="Right"
-                     Visibility="{Binding ViewSearchResultsVisibility}" d:IsHidden="True">
+                     Visibility="{Binding ViewSearchResultsVisibility}">
             <!-- Selecting grouping mode on Search results page -->
             <StackPanel   Visibility="{Binding GroupingSelectorVisibility}" Orientation="Horizontal" 
                           HorizontalAlignment="Right">
                 <TextBlock Text="Group by" Style="{StaticResource TextBlockTabHeaderStyle}" 
                        Width="100" FontSize="16"/>
-                <!--  -->
+                <!-- SelectedIndex="{Binding CurrentSelectionIndex}" 
+                  -->
                 <ComboBox x:Name="cb_ResGroping" Width="180px" FontSize="16" FontWeight="Medium" VerticalAlignment="Stretch"
-                          SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"
-                          ItemsSource="{Binding Path=FileCompareOptions.GrouppingAttributes}"
+                          SelectedValue="{Binding AppData.FileCompareOptions.SelectedGroupAttrib , Mode=TwoWay}"
+                          ItemsSource="{Binding AppData.FileCompareOptions.GrouppingAttributes}"
                           IsEnabled="{Binding GroupingModeSelectorEnabled}"
                           SelectionChanged="Grouping_SelectionChanged"/>
             </StackPanel>
@@ -220,7 +221,7 @@
         </StackPanel>
         <!-- Folders list where to search duplicates -->
         <Border Grid.Row="1" Background="{StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
-                Visibility="{Binding ViewWhereToSearchVisibility}" d:IsHidden="True">
+                Visibility="{Binding ViewWhereToSearchVisibility}">
             <ListView x:Name="lv_Folders" Grid.Row="0" VerticalAlignment="Stretch"
                       ItemTemplate="{StaticResource FolderTemplate}"
                       ItemsSource="{Binding Path=AppData.Folders}"
@@ -235,7 +236,7 @@
         </Border>
         <!-- Search options -->
         <Grid Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}" Margin="0,10,0,0"
-              Visibility="{Binding ViewOptionsVisibility}" d:IsHidden="True">
+              Visibility="{Binding ViewOptionsVisibility}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -277,17 +278,18 @@
             <StackPanel Grid.Column="1" Margin="10,0,20,0" >
                 <TextBlock Text="Use next file attributes to compare files:" Height="40" Padding="0,10,0,0"
                                    FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
-                <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckName, Mode=TwoWay}"/>
-                <CheckBox Content="  Size" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckSize, Mode=TwoWay}"/>
-                <CheckBox Content="  Creation date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckCreationDateTime, Mode=TwoWay}"/>
-                <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckModificationDateTime, Mode=TwoWay}"/>
-                <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding FileCompareOptions.CheckContent, Mode=TwoWay}"/>
+                <CheckBox Content="  Name" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding AppData.FileCompareOptions.CheckName, Mode=TwoWay}"/>
+                <CheckBox Content="  Size" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding AppData.FileCompareOptions.CheckSize, Mode=TwoWay}"/>
+                <CheckBox Content="  Creation date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding AppData.FileCompareOptions.CheckCreationDateTime, Mode=TwoWay}"/>
+                <CheckBox Content="  Modification date time" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding AppData.FileCompareOptions.CheckModificationDateTime, Mode=TwoWay}"/>
+                <CheckBox Content="  Content" FontSize="18" FontWeight="Medium"  Height="35" Margin="30,0,0,0"  IsChecked="{Binding AppData.FileCompareOptions.CheckContent, Mode=TwoWay}"/>
                 <TextBlock Text="Group search results by" FontSize="20" FontWeight="Medium"  Height="30" Margin="0,8,0,0"/>
-                <!--    -->
+                <!--  SelectedIndex="{Binding AppData.FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay }"
+                -->
                 <ComboBox  x:Name="cb_OptGroping" Width="250" FontSize="16" FontWeight="Medium"
                            HorizontalAlignment="Left" Margin="30,5,0,0"
-                           SelectedIndex="{Binding FileCompareOptions.CurrentGroupModeIndex, Mode=TwoWay}"  
-                           ItemsSource="{Binding FileCompareOptions.GrouppingAttributes}"
+                           SelectedValue="{Binding AppData.FileCompareOptions.SelectedGroupAttrib , Mode=TwoWay}"
+                           ItemsSource="{Binding AppData.FileCompareOptions.GrouppingAttributes}"
                            IsEnabled="{Binding GroupingModeSelectorEnabled}"
                            SelectionChanged="Grouping_SelectionChanged">
                 </ComboBox>
@@ -332,7 +334,7 @@
 
         <Border Grid.Row="1" Background="{ StaticResource ContentBackgroundBrush}"
                 BorderBrush="White" BorderThickness="1" Margin="0,10,0,0" Padding="20" VerticalAlignment="Stretch" 
-                Visibility="{Binding ViewSettingsVisibility}" d:IsHidden="True">
+                Visibility="{Binding ViewSettingsVisibility}">
             <StackPanel >
                 <TextBlock Text="Image files extentions:" Style="{StaticResource TextBlockStyle}"/>
                 <TextBox   Text="{Binding AppData.Settings.ImageFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
@@ -345,7 +347,7 @@
 
         <TextBlock Grid.Row="1" Height="60" FontSize="20" FontWeight="Medium" VerticalAlignment="Center" 
                    HorizontalAlignment="Center" TextWrapping="WrapWholeWords"
-                   Text="{Binding EmptyContentMessage}" Visibility="{Binding EmptyContentMessageVisibility}" d:IsHidden="True"/>
+                   Text="{Binding EmptyContentMessage}" Visibility="{Binding EmptyContentMessageVisibility}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
             <Button Style="{StaticResource CmdButtonStyle}" 

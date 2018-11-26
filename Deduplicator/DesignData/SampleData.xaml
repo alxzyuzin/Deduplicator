@@ -1,7 +1,7 @@
 ﻿<data:CommonAppViewsData xmlns:data="using:Deduplicator.DesignData" 
      
-    ViewOptionsVisibility="Collapsed"
-    ViewSearchResultsVisibility="Visible"
+    ViewOptionsVisibility="Visible"
+    ViewSearchResultsVisibility="Collapsed"
     ViewSettingsVisibility="Collapsed"
     ViewWhereToSearchVisibility="Collapsed"
     

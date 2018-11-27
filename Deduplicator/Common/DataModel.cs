@@ -7,13 +7,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.System.Threading;
+using System.Linq;
 
 namespace Deduplicator.Common
 {
 
     public sealed class DataModel : INotifyPropertyChanged
     {
-         public enum SearchStatus {
+        public enum SearchStatus {
             Sorting,
             Grouping,
             GroupingCompleted,
@@ -44,9 +45,9 @@ namespace Deduplicator.Common
         }
 
         // Первичный каталог (если определён)
-        public Folder PrimaryFolder = null;
+        //public Folder PrimaryFolder = null;
 
-#region Fields
+        #region Fields
         // Список каталогов в которых искать дубликаты
         private ObservableCollection<Folder> m_foldersCollection = new ObservableCollection<Folder>();
         // Список найденых дубликатов файлов сгруппированных по заданному аттрибуту
@@ -69,7 +70,7 @@ namespace Deduplicator.Common
             get { return _fileCompareOptions; }
         }
 
-        public  ObservableCollection<Folder> Folders
+        public ObservableCollection<Folder> Folders
         {
             get {return m_foldersCollection;}
         }
@@ -79,7 +80,7 @@ namespace Deduplicator.Common
             get { return m_duplicatesCollection; }
         }
 
-        SearchStatus m_status = SearchStatus.JustInitialazed;
+        private SearchStatus m_status = SearchStatus.JustInitialazed;
         public SearchStatus Status { get { return m_status; } }
 
         private string m_searchStatusInfo = string.Empty;
@@ -96,18 +97,9 @@ namespace Deduplicator.Common
             }
         }
 
-        private int m_foldersCount = 0;
         public int  FoldersCount
         {
-            get { return m_foldersCount; }
-            set
-            {
-                if (m_foldersCount!=value)
-                {
-                    m_foldersCount = value;
-                    NotifyPropertyChanged("FoldersCount");
-                }
-            }
+            get { return m_foldersCollection.Count; }
         }
 
         public int  DuplicatesCount { get { return m_duplicatesCollection.Count; } }
@@ -130,12 +122,20 @@ namespace Deduplicator.Common
             }
         }
 
-        public Settings _settings = new Settings();
+        private Settings _settings = new Settings();
         public Settings Settings
         {
             get { return _settings; }
         }
-#endregion
+        // Первичный каталог (если определён)
+        public Folder PrimaryFolder
+        {
+            get
+            {
+               return Folders.FirstOrDefault(folder => folder.IsPrimary);
+            }
+        } 
+        #endregion
 
         public DataModel()
         {
@@ -206,27 +206,19 @@ namespace Deduplicator.Common
             }
         }
 
+ 
+        // Для каждого файла из Primary folder показать его дубликаты в других каталогах
         private void DeleteNonPrimaryFolderDuplicates()
         {
-            List<FilesGroup> groupsForDelete = new List<FilesGroup>();
-
-            // Просматриваем все группы в результатах поиска  
+            var groupsForDelete = new List<FilesGroup>();
             foreach (FilesGroup group in m_duplicatesCollection)
             {
-                List<File> primaryFolderFiles = new List<File>();
-                // Для каждого файла в группе проверяем его принадлежность к Primary folder
-                foreach (File file in group)
+                var fileFromPrimariFolder = group.FirstOrDefault(file => file.FromPrimaryFolder);
+
+                if (fileFromPrimariFolder != null)
                 {
-                    if (file.FromPrimaryFolder)
-                         primaryFolderFiles.Add(file);
-                }
-                // Если в группе находится хотя бы один файл принадлежащий к Primary folder
-                // Удаляем его из группы и называем группу по имени этого файла
-                if (primaryFolderFiles.Count>0)
-                {
-                    group.Name = primaryFolderFiles[0].Name;
-                    foreach(File file in primaryFolderFiles)
-                        group.Remove(file);
+                    group.Name = fileFromPrimariFolder.Name;
+                    group.Remove(fileFromPrimariFolder);
                 }
                 else
                 { // если нет то помещаем группу в список для последующего удаления

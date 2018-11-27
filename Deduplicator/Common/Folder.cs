@@ -78,5 +78,16 @@ namespace Deduplicator.Common
         }
 #endregion
 
+        public Folder Clone()
+        {
+            return new Folder
+            {
+                FullName = FullName,
+                IsPrimary = IsPrimary,
+                SearchInSubfolders = SearchInSubfolders,
+                IsProtected = IsProtected,
+                AccessToken = AccessToken
+            };
+        }
     }
 }

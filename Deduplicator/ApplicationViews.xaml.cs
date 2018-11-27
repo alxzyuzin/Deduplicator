@@ -514,16 +514,6 @@ namespace Deduplicator {
 
         private async void button_StartSearch_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            // Проверим что если один из каталогов помечен как Primary то в списке должен присутствовать 
-            // хотя бы ещё один каталог 
-            if (_dataModel.Folders.Count < 2 & _dataModel.PrimaryFolder != null)
-            {
-                MsgBox.SetButtons(MessageBoxButtons.Close);
-                MsgBox.Message = _resldr.GetString("SinglePrimaryDirectory");
-                await MsgBox.Show();
-                return;
-            }
-
             // Проверим что выбран хотя бы один атрибут файла для сравнения при поиске дубликатов
             if (!(_dataModel.FileCompareOptions.CheckName || _dataModel.FileCompareOptions.CheckSize ||
                 _dataModel.FileCompareOptions.CheckContent || _dataModel.FileCompareOptions.CheckCreationDateTime ||
@@ -562,28 +552,34 @@ namespace Deduplicator {
 
 #region Where To Search view event handlers
 
-        private void ts_SetPrimary_Toggled(object sender, RoutedEventArgs e)
+        private async void ts_SetPrimary_Toggled(object sender, RoutedEventArgs e)
         {
-            Folder cf = (sender as ToggleSwitch).DataContext as Folder;
+            var toggledFolder = (sender as ToggleSwitch).DataContext as Folder;
 
-            if (cf == null)
+            if (toggledFolder == null)
                 return;
 
             // Если выбранный фолдер установлен как Primary  то сбросим флажок на остальных фолдерах 
-            if (cf.IsPrimary)
+            if (toggledFolder.IsPrimary)
             {
-                _dataModel.PrimaryFolder = cf;
-                foreach (Folder f in _dataModel.Folders)
+                // Проверим что если один из каталогов помечен как Primary то в списке должен присутствовать 
+                // хотя бы ещё один каталог 
+                if (_dataModel.FoldersCount < 2)
                 {
-                    if (f.FullName != cf.FullName)
-                        f.IsPrimary = false;
+                    MsgBox.SetButtons(MessageBoxButtons.Close);
+                    MsgBox.Message = _resldr.GetString("SinglePrimaryDirectory");
+                    await MsgBox.Show();
+                    toggledFolder.IsPrimary = false;
+                    return;
                 }
-            }
-            else
-            {
-                _dataModel.PrimaryFolder = null;
-            }
-        }
+               
+                foreach (Folder folder in _dataModel.Folders)
+                {
+                    if(folder.FullName != toggledFolder.FullName)
+                        folder.IsPrimary = false;
+                }
+             }
+         }
 
         private void ts_Protected_Toggled(object sender, RoutedEventArgs e)
         {

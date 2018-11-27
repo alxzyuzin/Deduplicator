@@ -37,15 +37,9 @@ namespace Deduplicator.Common
             }
         }
         public string Name { get; set; } = string.Empty;
-        public string FileType { get; set; } 
+        public string FileType { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
-        public string Path
-        {
-            get
-            {
-                return FullName.Substring(0, FullName.IndexOf(Name)-1);
-            }
-        }
+        public string Path => FullName.Substring(0, FullName.IndexOf(Name) - 1);
         public DateTime DateCreated { get; set; } = DateTime.Today;
         public DateTime DateModifyed { get; set; } = DateTime.Today;
         public ulong Size { get; set; } = 0;
@@ -54,7 +48,7 @@ namespace Deduplicator.Common
         {
             get
             {
-                string res = string.Empty;
+                var res = string.Empty;
                 if (Name.Contains("."))
                 {
                     string[] filenameparts = Name.Split('.');
@@ -64,7 +58,7 @@ namespace Deduplicator.Common
             }
         }
         public bool IsProtected { get; set; } = false;
-        public string ProtectionStatus { get { return IsProtected ? "Protected" : ""; } }
+        public string ProtectionStatus => IsProtected ? "Protected" : "";
 
         public File()
         { }
@@ -118,37 +112,37 @@ namespace Deduplicator.Common
             }
         }
 
-        public async Task<bool> IsEqualTo(File file, FileAttribs options)
-        {
-            switch(options)
-            {
-                case FileAttribs.Name:
-                    if (string.Compare(this.Name, file.Name, StringComparison.OrdinalIgnoreCase) != 0)
-                        return false;
-                    break;
+        //public async Task<bool> IsEqualTo(File file, FileAttribs options)
+        //{
+        //    switch(options)
+        //    {
+        //        case FileAttribs.Name:
+        //            if (string.Compare(this.Name, file.Name, StringComparison.OrdinalIgnoreCase) != 0)
+        //                return false;
+        //            break;
 
-                case FileAttribs.DateCreated:
-                    if (this.DateCreated != file.DateCreated)
-                        return false;
-                    break;
-                case FileAttribs.DateModified:
-                    if (this.DateModifyed != file.DateModifyed)
-                        return false;
-                    break;
-                case FileAttribs.Content:
-                    if (this.Size != file.Size)
-                         return false;
-                     else
-                         if (await CompareFileContent(this, file) != 0)
-                            return false;
-                     break;
-                case FileAttribs.Size:
-                    if (this.Size!=file.Size)
-                        return false;
-                    break;
-            }
-            return true;
-        }
+        //        case FileAttribs.DateCreated:
+        //            if (this.DateCreated != file.DateCreated)
+        //                return false;
+        //            break;
+        //        case FileAttribs.DateModified:
+        //            if (this.DateModifyed != file.DateModifyed)
+        //                return false;
+        //            break;
+        //        case FileAttribs.Content:
+        //            if (this.Size != file.Size)
+        //                 return false;
+        //             else
+        //                 if (await CompareFileContent(this, file) != 0)
+        //                    return false;
+        //             break;
+        //        case FileAttribs.Size:
+        //            if (this.Size!=file.Size)
+        //                return false;
+        //            break;
+        //    }
+        //    return true;
+        //}
 
         public async Task<int> CompareTo(File file, FileAttribs option)
         {
@@ -165,8 +159,8 @@ namespace Deduplicator.Common
                         return -1;
                     if (this.Size > file.Size)
                         return 1;
-                    int i = await CompareFileContent(this, file);
-                    return i;
+                    //int i = await CompareFileContent(this, file);
+                    return await CompareFileContent(this, file); //i;
                 case FileAttribs.Size:
                     return this.Size.CompareTo(file.Size);
             }

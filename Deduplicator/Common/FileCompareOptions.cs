@@ -22,9 +22,10 @@ namespace Deduplicator.Common
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyname));
         }
 
+        #region Properties
+
         private bool _isRollBack = false;
-        public bool IsRollBack
-        { get { return _isRollBack; } }
+        public bool IsRollBack => _isRollBack;
 
         private bool _checkNameOldValue;
         private bool _checkName;
@@ -89,7 +90,6 @@ namespace Deduplicator.Common
                 }
             }
         }
-
         private bool _checkContentOldValue;
         private bool _checkContent;
         public bool CheckContent
@@ -105,10 +105,8 @@ namespace Deduplicator.Common
                 }
             }
         }
-
         private ObservableCollection<GroupingAttribute> _grouppingAttributes = new ObservableCollection<GroupingAttribute>();
-        public ObservableCollection<GroupingAttribute> GrouppingAttributes { get { return _grouppingAttributes; } }
-
+        public ObservableCollection<GroupingAttribute> GrouppingAttributes => _grouppingAttributes;
         private GroupingAttribute _selectedGroupAttrib;
         public GroupingAttribute SelectedGroupAttrib
         {
@@ -116,7 +114,7 @@ namespace Deduplicator.Common
             {
                 return _selectedGroupAttrib;
             }
-                
+
             set
             {
                 if (_selectedGroupAttrib != value)
@@ -126,6 +124,8 @@ namespace Deduplicator.Common
                 }
             }
         }
+
+        #endregion
 
         public FileCompareOptions()
         {

@@ -52,8 +52,6 @@ namespace Deduplicator {
         }
         private ResourceLoader _resldr = new ResourceLoader();
 
-        // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
-        private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
         private GroupingAttribute m_currentGroupingAttribute = new GroupingAttribute();
 
         
@@ -323,22 +321,17 @@ namespace Deduplicator {
         }
 
         private DataModel _dataModel = new DataModel();
-        public DataModel AppData
-        {
-            get {return _dataModel;}
-        }
-
-        public FileSelectionOptions FileSelectionOptions
-        {
-            get { return _fileSelectionOptions; }
-        }
-
+        public DataModel AppData => _dataModel;
+        // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
+        private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
+        public FileSelectionOptions FileSelectionOptions => _fileSelectionOptions;
+ 
         #endregion
 
         public ApplicationViews()
         {
-            
             InitializeComponent();
+
             DataContext = this;
 
             FileSelectionOptions.AudioFileExtentions = _dataModel.Settings.AudioFileExtentions;

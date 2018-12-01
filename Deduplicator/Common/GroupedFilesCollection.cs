@@ -6,18 +6,13 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.ComponentModel;
 
 namespace Deduplicator.Common
 {
     public class GroupedFilesCollection : ObservableCollection<FilesGroup>
     {
         public override event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        private void NotifyCollectionChanged()
-        {
-            if (CollectionChanged != null)
-                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
 
         GroupingAttribute m_lastAttributeUsedForGrouping = null;
 
@@ -41,7 +36,7 @@ namespace Deduplicator.Common
   
         public void Invalidate()
         {
-            NotifyCollectionChanged();
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
 
@@ -94,8 +89,8 @@ namespace Deduplicator.Common
             // Соберём все файлы в одну группу
             FilesGroup allFiles = new FilesGroup(m_progress);
             foreach (FilesGroup group in this)
-                foreach (File file in group)
-                    allFiles.Add(file);
+                foreach (File file in group.Files)
+                    allFiles.AddFile(file);
 
             IProgress<OperationStatus> progress = m_progress;
             OperationStatus status = new OperationStatus
@@ -123,6 +118,7 @@ namespace Deduplicator.Common
             progress.Report(status);
         }
 
+ 
     } // Class  GroupedFilesCollection
 
 
@@ -130,33 +126,120 @@ namespace Deduplicator.Common
     /// Представляет собой группу файлов
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class FilesGroup : ObservableCollection<File>
+    public class FilesGroup //: ObservableCollection<File>
     {
-        public override event NotifyCollectionChangedEventHandler CollectionChanged;
-        private void NotifyCollectionChanged()
+        public event PropertyChangedEventHandler PropertyChanged;
+ 
+        private List<File> _files = new List<File>();
+        public List<File> Files { get { return _files; } }
+        private string _name;
+        public string Name
         {
-            if (CollectionChanged != null)
-                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            get {return _name; }
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+                }
+            }
         }
+        private ulong _totalSize = 0;
+        public ulong  TotalSize
+        {
+            get
+            {
+                return _totalSize;
+            }
+            set
+            {
+                if (_totalSize != value)
+                {
+                    _totalSize = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalSize)));
+                }
+            }
+        }
+        private ulong _fileSize = 0;
+        public ulong  FileSize
+        {
+            get
+            {
+                return _fileSize;
+            }
+        set
+            {
+                if (_fileSize != value)
+                {
+                    _fileSize = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FileSize)));
+                }
+            }
 
-        public string Name { get; set; } = string.Empty;
-        public ulong TotalSize { get; set; } = 0;
-        public ulong FileSize { get; set; } = 0;
+        }
+        public bool?  IsChecked
+        {
+            get
+            {
+                int checkedCount = _files.Count(n => n.IsChecked);
+                if (checkedCount == 0)
+                    return false;
+                if (checkedCount == _files.Count)
+                    return true;
+                return null;
+            }
+            set
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsChecked"));
+            }
+
+        }
+        public int Count  => _files.Count;
         private Progress<OperationStatus> m_progress = null;
 
-        public new IEnumerator<object> GetEnumerator()
-        {
-            return (IEnumerator<object>)base.GetEnumerator();
-        }
+        //public new IEnumerator<object> GetEnumerator()
+        //{
+        //    return (IEnumerator<object>)base.GetEnumerator();
+        //}
         
         public FilesGroup(Progress<OperationStatus> progress)
         {
             m_progress = progress;
-        }
+         }
 
         public FilesGroup( string name)
         {
             Name = name;
+        }
+
+        private void NotifyPropertyChanged(object obj, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(IsChecked))
+                IsChecked = null;
+        }
+    
+
+        public void AddFile(File file)
+        {
+            file.PropertyChanged += NotifyPropertyChanged; 
+            _files.Add(file);
+        }
+
+        public bool Contains(File file)
+        {
+            return _files.Contains(file);
+        }
+
+        public void Remove(File file)
+        {
+            file.PropertyChanged -= NotifyPropertyChanged;
+            _files.Remove(file);
+        }
+
+        public void Clear()
+        {
+            _files.Clear();
         }
 
         /// <summary>
@@ -191,12 +274,12 @@ namespace Deduplicator.Common
 
             for (int j = i; j <= lastindex; j++)
             {
-                int compareResult = await this[j].CompareTo(this[lastindex], compareattrib);
+                int compareResult = await _files[j].CompareTo(_files[lastindex], compareattrib);
                 if (compareResult <= 0)
                 {
-                    File t = this[i];
-                    this[i] = this[j];
-                    this[j] = t;
+                    File t = _files[i];
+                    _files[i] = _files[j];
+                    _files[j] = t;
                     ++i;
                 }
             }
@@ -233,18 +316,18 @@ namespace Deduplicator.Common
             var newGroupsCollection = new List<FilesGroup>();
 
             var newgroup = new FilesGroup(m_progress);
-            newgroup.Add(this[0]);
+            newgroup.AddFile(_files[0]);
             ++status.HandledItems;
             for (int i = 1; i < this.Count; i++)
             {
-               int compareResult = await this[i - 1].CompareTo(this[i], attribute.Attribute);
+               int compareResult = await _files[i - 1].CompareTo(_files[i], attribute.Attribute);
                if (compareResult != 0)
                {
                     if (newgroup.Count > 1)
                         newGroupsCollection.Add(newgroup);
                         newgroup = new FilesGroup(m_progress);
                }
-               newgroup.Add(this[i]);
+               newgroup.AddFile(_files[i]);
 
                cancelToken.ThrowIfCancellationRequested();
                ++status.HandledItems;
@@ -255,12 +338,6 @@ namespace Deduplicator.Common
                 newGroupsCollection.Add(newgroup);
             return newGroupsCollection;
         }
-
-        public void Invalidate()
-        {
-            NotifyCollectionChanged();
-        }
-
     }  // Class FilesGroup
 
     public class OperationStatus

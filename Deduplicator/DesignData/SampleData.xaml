@@ -1,7 +1,7 @@
 ﻿<data:CommonAppViewsData xmlns:data="using:Deduplicator.DesignData" 
      
-    ViewOptionsVisibility="Visible"
-    ViewSearchResultsVisibility="Collapsed"
+    ViewOptionsVisibility="Collapsed"
+    ViewSearchResultsVisibility="Visible"
     ViewSettingsVisibility="Collapsed"
     ViewWhereToSearchVisibility="Collapsed"
     
@@ -24,23 +24,46 @@
             </data:AppData.Folders>
 
             <data:AppData.DuplicatedFiles>
-                <data:FilesGroup >
-                    <data:File  Extention=".xaml"
+
+                <data:GroupedFilesCollection >
+                    <data:FilesGroup IsChecked="True" GroupName="First Group of files">
+                        <data:FilesGroup.Files>
+                            <data:File  Extention=".xaml"
                                 FileType=".xaml" FromPrimaryFolder="False" 
                                 FullName="C:/users/Desctop/qwert/tyuoi/hjjkll;.xaml"
                                 IsProtected="True"
                                 Path="C:/users/Desctop/qwert/tyuoi/"
                                 ProtectionStatus="Protected"/>
 
-                    <data:File  Extention=".xaml"
+                            <data:File  Extention=".xaml"
                                 FileType=".xaml" FromPrimaryFolder="False" 
                                 FullName="C:/users/Desctop/qwert/tyuoi/hjjkll;.xaml"
                                 IsProtected="False"
                                 Path="C:/users/Desctop/qwert/tyuoi/"
                                 ProtectionStatus=""/>
+                        </data:FilesGroup.Files>
+                    </data:FilesGroup>
+                    <data:FilesGroup IsChecked="True" GroupName="Second Group of files">
+                        <data:FilesGroup.Files>
+                            <data:File  Extention=".xaml"
+                                FileType=".xaml" FromPrimaryFolder="False" 
+                                FullName="C:/users/Desctop/qwert/tyuoi/hjjkll;.xaml"
+                                IsProtected="True"
+                                Path="C:/users/Desctop/qwert/tyuoi/"
+                                ProtectionStatus="Protected"/>
 
-                </data:FilesGroup>
+                            <data:File  Extention=".xaml"
+                                FileType=".xaml" FromPrimaryFolder="False" 
+                                FullName="C:/users/Desctop/qwert/tyuoi/hjjkll;.xaml"
+                                IsProtected="False"
+                                Path="C:/users/Desctop/qwert/tyuoi/"
+                                ProtectionStatus=""/>
+                        </data:FilesGroup.Files>
+                    </data:FilesGroup>
+                </data:GroupedFilesCollection>
+                
             </data:AppData.DuplicatedFiles>
+            
         </data:AppData>
         
     </data:CommonAppViewsData.AppData>

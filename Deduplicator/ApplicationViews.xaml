@@ -13,7 +13,7 @@
 
     <UserControl.Resources>
         <CollectionViewSource x:Name="GroupedFiles" 
-                              Source="{Binding Path=AppData.DuplicatedFiles}" 
+                              Source="{Binding Path=AppData.DuplicatedFiles}"  ItemsPath="Files"
                               IsSourceGrouped="true"/>
 
         <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
@@ -128,6 +128,7 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
                            TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" Margin="5,0,110,0" HorizontalAlignment="Stretch"/>
                 <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
+                    <!--TextBlock Text="{Binding IsChecked}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/-->
                     <TextBlock Text="{Binding ProtectionStatus}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>
                 </StackPanel>
             </Grid>
@@ -135,31 +136,30 @@
 
         <DataTemplate x:Key="FileGroupHeaderTemplate">
 
-            <Grid HorizontalAlignment="Stretch"  
-                       Height="30" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
-                <!--Grid HorizontalAlignment="Stretch"  
-                       Height="40" Width="{Binding ActuallWidth}"-->
-                <Grid.ColumnDefinitions>
+            <Grid HorizontalAlignment="Stretch" Height="30" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
+                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="700"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text='{Binding Name}' Grid.Column="0"  
+                <TextBlock Text="{Binding Name}" Grid.Column="0"  
                            Style="{StaticResource TextBlockFileGroupHeaderStyle}"
                            HorizontalAlignment="Stretch" />
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" 
-                            VerticalAlignment="Center">
-                    <TextBlock Text="Files in group  "    Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" >
+                    <TextBlock  Text="Files in group  "    Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
                     <TextBlock Text="{Binding Count}"     Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
                     <TextBlock Text=".  Total group file size " Style="{StaticResource TextBlockFileGroupHeaderStyle}" Margin="0,5,0,0"/>
                     <TextBlock Text="{Binding TotalSize}"       Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
                     <TextBlock Text=" byte."                    Style="{StaticResource TextBlockFileGroupHeaderStyle}"/>
-                    <CheckBox  Content="Select group" Margin="40,0,30,0" 
-                              FontWeight="SemiBold" FontSize ="16" VerticalAlignment="Center"
-                              FlowDirection="RightToLeft" Foreground="Orange"
-                              Checked="cbx_SelectGroup_Checked" 
-                              Unchecked="cbx_SelectGroup_Unchecked"/>
+                    <CheckBox  Content="Select group" Margin="40,0,30,0" IsThreeState="False"
+                               IsChecked="{Binding IsChecked}"
+                               FontWeight="SemiBold" FontSize ="16" VerticalAlignment="Center"
+                               FlowDirection="RightToLeft" Foreground="Orange"
+                               Checked="cbx_SelectGroup_Checked" 
+                               Unchecked="cbx_SelectGroup_Unchecked"
+                               />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -252,7 +252,7 @@
                 <RadioButton x:Name="rb_SpecificFiles" Content="  specific files"  Height="35" FontSize="18" 
                              FontWeight="Medium" Margin="30,0,0,0" GroupName="FileSelection"
                              IsChecked="{Binding Path=FileSelectionOptions.SpecificFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
-                <CheckBox    Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
+                <CheckBox  x:Name="cbx"  Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
                              IsChecked="{Binding ImageFiles , Mode=TwoWay}"/>
                 <CheckBox    Content="  audio files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
@@ -324,9 +324,10 @@
                           ItemsSource="{Binding Source={StaticResource GroupedFiles}}"
                           ItemContainerStyle="{StaticResource ListViewItemStyle}"
                           ItemTemplate="{StaticResource FileTemplate}"
-                          SelectionMode="Multiple">
+                          SelectionMode="Multiple"
+                          Tapped="lv_Duplicates_Tapped">
                     <ListView.GroupStyle>
-                        <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}"/>
+                        <GroupStyle HeaderTemplate="{StaticResource FileGroupHeaderTemplate}" HidesIfEmpty="False"/>
                     </ListView.GroupStyle>
                 </common:GListView>
             </Border>

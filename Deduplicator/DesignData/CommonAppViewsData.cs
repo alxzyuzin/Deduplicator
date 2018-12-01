@@ -88,7 +88,6 @@ namespace Deduplicator.DesignData
         }
     }
 
-
     public class AppData
     {
         public List<Folder> Folders { get; set; }
@@ -133,20 +132,22 @@ namespace Deduplicator.DesignData
     {
         public GroupedFilesCollection()
         {
-            Add(new FilesGroup {Name ="Const group name", TotalSize=98789787, FileSize=9878777 });
+            Add(new FilesGroup {GroupName ="Const group name", TotalSize=98789787, FileSize=9878777 });
 
         }
     }
 
-    public class FilesGroup : ObservableCollection<File>
+    public class FilesGroup 
     {
-        public string Name { get; set; } = "Groupe name";
+        public string GroupName { get; set; } = "Groupe name";
         public ulong TotalSize { get; set; } = 8905677;
         public ulong FileSize { get; set; } = 975445678;
+        public bool IsChecked { get; set; }
+        public List<File> Files { get; set; }
 
         public FilesGroup()
         {
-            this.Add(new File { Name = "File name", FileType = ".xaml", DateCreated = new DateTime(2018, 12, 25) });
+            Files.Add(new File { Name = "File name", FileType = ".xaml", DateCreated = new DateTime(2018, 12, 25) });
         }
      }
 

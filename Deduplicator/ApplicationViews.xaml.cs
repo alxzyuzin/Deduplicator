@@ -11,6 +11,8 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Media;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -434,7 +436,7 @@ namespace Deduplicator {
         
         private async void button_AddFolder_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            FolderPicker folderPicker = new FolderPicker();
+            var folderPicker = new FolderPicker();
             folderPicker.SuggestedStartLocation = PickerLocationId.ComputerFolder;
             folderPicker.FileTypeFilter.Add("*");
             StorageFolder newfolder = await folderPicker.PickSingleFolderAsync();
@@ -445,7 +447,7 @@ namespace Deduplicator {
                 // Проверим что такого каталога ещё нет в списке каталогов для поиска дубликатов
                 if (_dataModel.Folders.Any(Folder => Folder.FullName == newfolder.Path))
                 {
-                    MsgBox.Message = "Folder\n" + newfolder.Path + "\nalready in the folders list.";
+                    MsgBox.Message = $"Folder\n {newfolder.Path}\nalready in the folders list.";
                     await MsgBox.Show();
                     return;
                 }
@@ -457,7 +459,7 @@ namespace Deduplicator {
                         string deepestfoldername = newfolder.Path.Substring(folder.FullName.Length);
                         if (deepestfoldername.StartsWith("\\"))
                         {
-                            MsgBox.Message = "Directory\n" + newfolder.Path + "\n is a subdirectory of directory\n" + folder.FullName + "\nYou can't create list of directories containing directory and its subdirectory.";
+                            MsgBox.Message = $"Directory\n{newfolder.Path}\n is a subdirectory of directory\n{folder.FullName}\nYou can't create list of directories containing directory and its subdirectory.";
                             await MsgBox.Show();
                             return;
                         }
@@ -471,7 +473,7 @@ namespace Deduplicator {
                         string deepestfoldername = folder.FullName.Substring(newfolder.Path.Length);
                         if (deepestfoldername.StartsWith("\\"))
                         {
-                            MsgBox.Message = "Directory\n" + newfolder.Path + "\n is a directory containing directory already present in the directory list.\nYou can't create list of directories containing directory and its subdirectory.";
+                            MsgBox.Message = $"Directory\n{newfolder.Path}\n is a directory containing directory already present in the directory list.\nYou can't create list of directories containing directory and its subdirectory.";
                             await MsgBox.Show();
                             return;
                         }
@@ -599,11 +601,12 @@ namespace Deduplicator {
         {
             CheckBox cbx = sender as CheckBox;
             FilesGroup datacontext = cbx.DataContext as FilesGroup;
-            foreach (File f in datacontext)
+            foreach (File file in datacontext.Files)
             {
-                lv_Duplicates.SelectedItems.Add(f);
+                file.IsChecked = true;
+                lv_Duplicates.SelectedItems.Add(file);
             }
-
+//            cbx.IsChecked = true;
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
@@ -611,10 +614,12 @@ namespace Deduplicator {
         {
             CheckBox cbx = sender as CheckBox;
             FilesGroup datacontext = cbx.DataContext as FilesGroup;
-            foreach (File f in datacontext)
+            foreach (File file in datacontext.Files)
             {
-                lv_Duplicates.SelectedItems.Remove(f);
+                file.IsChecked = false;
+                lv_Duplicates.SelectedItems.Remove(file);
             }
+//            cbx.IsChecked = false;
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
@@ -622,8 +627,11 @@ namespace Deduplicator {
 
         private void File_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            File clickedFile = (sender as Grid).DataContext as File;
+            clickedFile.IsChecked = clickedFile.IsChecked ? false : true;
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
         }
+
         private async void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
             List<File> deletedFiles = new List<File>();
@@ -676,6 +684,16 @@ namespace Deduplicator {
             GroupingModeSelectorEnabled = false;
         }
 
-
+        private void lv_Duplicates_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            lv_Duplicates = sender as GListView;
+            foreach (ListViewHeaderItem headerItem in lv_Duplicates.ItemsPanelRoot.Children.Where(item => item.GetType().Name == "ListViewHeaderItem"))
+            {
+                var TemplateStackPanel = (headerItem.ContentTemplateRoot as Grid).Children[1] as StackPanel;
+                var TemplateCheckBox = TemplateStackPanel.Children[5] as CheckBox;
+                var CheckBoxData = TemplateCheckBox.DataContext as FilesGroup;
+                TemplateCheckBox.IsChecked = (TemplateCheckBox.DataContext as FilesGroup).IsChecked;
+            }
+        }
     } // Class ApplicationViews
 } // Namespace Deduplicator

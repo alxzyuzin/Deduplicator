@@ -55,7 +55,7 @@ namespace Deduplicator
         }
 
         // Using a DependencyProperty as the backing store for Message.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty MessageProperty =
+        public static DependencyProperty MessageProperty =
             DependencyProperty.Register("Message", typeof(string), typeof(PopUpDialog), new PropertyMetadata(0));
 
         private void OnMessageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

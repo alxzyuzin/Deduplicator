@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.System.Threading;
 using System.Linq;
+using Windows.Storage.Search;
 
 namespace Deduplicator.Common
 {
@@ -31,21 +32,12 @@ namespace Deduplicator.Common
         }
 
         public event EventHandler<SearchStatus> SearchStatusChanged;
-        private void NotifySearchStatusChanged(SearchStatus status)
-        {
-            if (SearchStatusChanged != null)
-                SearchStatusChanged(this, status);
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        // Первичный каталог (если определён)
-        //public Folder PrimaryFolder = null;
+        //private void NotifyPropertyChanged(string propertyName)
+        //{
+        //    if (PropertyChanged != null)
+        //        PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        //}
 
         #region Fields
         // Список каталогов в которых искать дубликаты
@@ -82,7 +74,7 @@ namespace Deduplicator.Common
                 if (_searchStatusInfo != value)
                 {
                     _searchStatusInfo = value;
-                    NotifyPropertyChanged("SearchStatusInfo");
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchStatusInfo)));
                 }
             }
         }
@@ -138,14 +130,14 @@ namespace Deduplicator.Common
             {
                 // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
                 foreach (Folder folder in _foldersCollection)
-                    await GetFolderFiles(folder, _filesCollection, selectionOptions, cancelToken, status);
+                    await GetFolderFiles(folder, selectionOptions, cancelToken, status);
 
                 //// Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
                 if (_filesCollection.Count > 1)
                 {
                     var fg = new FilesGroup(_progress);
-                    foreach (File file in _filesCollection)
-                        fg.Add(file);
+                    foreach (File file in _filesCollection.Files)
+                        fg.AddFile(file);
 
                     _duplicatesCollection.Add(fg);
 
@@ -181,7 +173,7 @@ namespace Deduplicator.Common
             var groupsForDelete = new List<FilesGroup>();
             foreach (FilesGroup group in _duplicatesCollection)
             {
-                var fileFromPrimariFolder = group.FirstOrDefault(file => file.FromPrimaryFolder);
+                var fileFromPrimariFolder = group.Files.FirstOrDefault(file => file.FromPrimaryFolder);
 
                 if (fileFromPrimariFolder != null)
                 {
@@ -246,7 +238,8 @@ namespace Deduplicator.Common
                     SearchStatusInfo = string.Format(@"Error: {0} Operation canceled.", status.Message);
                     break;
             }
-            NotifySearchStatusChanged(status.Id);
+            SearchStatusChanged?.Invoke(this, status.Id);
+
             if (OperationCompleted)
                 _duplicatesCollection.Invalidate();
         }
@@ -272,18 +265,17 @@ namespace Deduplicator.Common
         /// условия которым должен удовлетворять файл для включения в список файлов
         /// </param>
         /// <returns></returns>
-        private async Task GetFolderFiles(Folder folder, ObservableCollection<File> filelist,
-                                            FileSelectionOptions options, CancellationToken canselationToken,
+        private async Task GetFolderFiles(Folder folder, FileSelectionOptions options, CancellationToken canselationToken,
                                             OperationStatus status )
         {
             IReadOnlyList<IStorageItem> folderitems = null;
-            StorageFolder f;
+            
 
             try
             {
-               // Каталог может быть удалён после того как начался поиск дубликато
-               f = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
-               folderitems = await f.GetItemsAsync();
+                // Каталог может быть удалён после того как начался поиск дубликато
+               var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
+               folderitems = await storageFolder.GetItemsAsync();
             }
             catch (FileNotFoundException ex)
             {
@@ -301,7 +293,7 @@ namespace Deduplicator.Common
                 {
                     if (folder.SearchInSubfolders)
                         await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
-                                            filelist, options, canselationToken, status);
+                                            options, canselationToken, status);
                 }
                 else
                 {
@@ -315,7 +307,7 @@ namespace Deduplicator.Common
                             Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
                             file.DateModifyed = basicproperties.DateModified.DateTime;
                             file.Size = basicproperties.Size;
-                            filelist.Add(file);
+                            _filesCollection.AddFile(file);
                             status.Id = SearchStatus.NewFileSelected;
                             ++status.HandledItems;
                             progress.Report(status);
@@ -331,10 +323,45 @@ namespace Deduplicator.Common
             }
         }
 
+        private async Task GetFolderFiles2(Folder folder, FileSelectionOptions options, 
+                                            CancellationToken canselationToken, OperationStatus status)
+        {
+            IReadOnlyList<IStorageItem> folderitems = null;
+            try
+            {
+                // Каталог может быть удалён после того как начался поиск дубликато
+                var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
+
+                var fileTypeFilter = new List<string>();
+                // Set filter to Enumerate only Files with the ".xyz" extension (f.ex. "test.xyz")
+                fileTypeFilter.Add(".xaml");
+                //fileTypeFilter.Add(".flac");
+                // Generate the Options for the Query
+                var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
+                // Generate the Query and set the options
+                var query = ApplicationData.Current.LocalFolder.CreateFileQueryWithOptions(queryOptions);
+                // Execute the Query and write the Result in a List
+                IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
+                int i = fileList.Count;
+                foreach (StorageFile file in fileList)
+                {
+                    StorageFile f = file;
+                }
+                //storageFolder.
+                folderitems = await storageFolder.GetItemsAsync();
+            }
+            catch (FileNotFoundException ex)
+            {
+                status.Id = SearchStatus.Error;
+                status.Message = $"{ex.Message} ' {folder.FullName} '";
+                throw new OperationCanceledException();
+            }
+        }
+
          /// <summary>
-        /// Перегруппировывает результаты поиска дубликатов по заданному атрибуту
-        /// </summary>
-        /// <param name="attribute"></param>
+         /// Перегруппировывает результаты поиска дубликатов по заданному атрибуту
+         /// </summary>
+         /// <param name="attribute"></param>
         public async void RegroupResultsByFileAttribute(GroupingAttribute attribute)
         {
             _tokenSource = new CancellationTokenSource();
@@ -381,12 +408,12 @@ namespace Deduplicator.Common
             foreach (var group in _duplicatesCollection)
            {
                 FilesGroup newGroup = new FilesGroup(group.Name);
-                foreach (File file in group)
+                foreach (File file in group.Files)
                {
                     if (file.Path.StartsWith(folder.FullName))
                             file.IsProtected = isProtected;
                     File newFile = file.Clone();
-                    newGroup.Add(newFile);
+                    newGroup.AddFile(newFile);
                }
                 newGroupCollection.Add(newGroup);
             }
@@ -395,8 +422,8 @@ namespace Deduplicator.Common
             foreach (FilesGroup group in newGroupCollection)
             {
                 FilesGroup newGroup = new FilesGroup(group.Name);
-                foreach (File file in group)
-                    newGroup.Add(file);
+                foreach (File file in group.Files)
+                    newGroup.AddFile(file);
                 _duplicatesCollection.Add(newGroup);
             }
             _duplicatesCollection.Invalidate();

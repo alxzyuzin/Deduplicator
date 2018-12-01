@@ -59,6 +59,20 @@ namespace Deduplicator.Common
         }
         public bool IsProtected { get; set; } = false;
         public string ProtectionStatus => IsProtected ? "Protected" : "";
+        private bool _isChecked = false;
+        public bool IsChecked
+        {
+            get { return _isChecked; }
+            set
+            {
+                if (_isChecked != value)
+                {
+                    _isChecked = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecked)));
+                }
+
+            }
+        }
 
         public File()
         { }
@@ -99,8 +113,9 @@ namespace Deduplicator.Common
                         return 1;
                 }
             }
-            catch (EndOfStreamException e)
+            catch (EndOfStreamException ex)
             {
+               string e= ex.Message;
                 return 0;
             }
             finally

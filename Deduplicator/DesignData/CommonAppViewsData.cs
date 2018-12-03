@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -137,19 +138,34 @@ namespace Deduplicator.DesignData
         }
     }
 
-    public class FilesGroup 
+    public class FilesGroup : IEnumerable<File>
     {
         public string GroupName { get; set; } = "Groupe name";
         public ulong TotalSize { get; set; } = 8905677;
         public ulong FileSize { get; set; } = 975445678;
         public bool IsChecked { get; set; }
-        public List<File> Files { get; set; }
+        private List<File> _files = new List<File>();
 
         public FilesGroup()
         {
-            Files.Add(new File { Name = "File name", FileType = ".xaml", DateCreated = new DateTime(2018, 12, 25) });
+            _files.Add(new File { Name = "File name", FileType = ".xaml", DateCreated = new DateTime(2018, 12, 25) });
         }
-     }
+
+        public IEnumerator<File> GetEnumerator()
+        {
+            return ((IEnumerable<File>)_files).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<File>)_files).GetEnumerator();
+        }
+
+        public void Add(File file)
+        {
+            _files.Add(file);
+        }
+    }
 
     public sealed class File
     {

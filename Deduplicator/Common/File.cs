@@ -57,7 +57,19 @@ namespace Deduplicator.Common
                 return "."+res.Trim();
             }
         }
-        public bool IsProtected { get; set; } = false;
+        private bool _isProtected = false;
+        public bool IsProtected
+        {
+            get { return _isProtected; }
+            set
+            {
+                if (_isProtected != value)
+                {
+                    _isProtected = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsProtected)));
+                }
+            }
+        }
         public string ProtectionStatus => IsProtected ? "Protected" : "";
         private bool _isChecked = false;
         public bool IsChecked
@@ -126,38 +138,6 @@ namespace Deduplicator.Common
                 s2.Dispose();
             }
         }
-
-        //public async Task<bool> IsEqualTo(File file, FileAttribs options)
-        //{
-        //    switch(options)
-        //    {
-        //        case FileAttribs.Name:
-        //            if (string.Compare(this.Name, file.Name, StringComparison.OrdinalIgnoreCase) != 0)
-        //                return false;
-        //            break;
-
-        //        case FileAttribs.DateCreated:
-        //            if (this.DateCreated != file.DateCreated)
-        //                return false;
-        //            break;
-        //        case FileAttribs.DateModified:
-        //            if (this.DateModifyed != file.DateModifyed)
-        //                return false;
-        //            break;
-        //        case FileAttribs.Content:
-        //            if (this.Size != file.Size)
-        //                 return false;
-        //             else
-        //                 if (await CompareFileContent(this, file) != 0)
-        //                    return false;
-        //             break;
-        //        case FileAttribs.Size:
-        //            if (this.Size!=file.Size)
-        //                return false;
-        //            break;
-        //    }
-        //    return true;
-        //}
 
         public async Task<int> CompareTo(File file, FileAttribs option)
         {

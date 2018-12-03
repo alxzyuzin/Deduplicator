@@ -27,6 +27,10 @@
 
                 <data:GroupedFilesCollection >
                     <data:FilesGroup IsChecked="True" GroupName="First Group of files">
+ 
+                    </data:FilesGroup>
+                    <!--
+                    <data:FilesGroup IsChecked="True" GroupName="First Group of files">
                         <data:FilesGroup.Files>
                             <data:File  Extention=".xaml"
                                 FileType=".xaml" FromPrimaryFolder="False" 
@@ -60,6 +64,7 @@
                                 ProtectionStatus=""/>
                         </data:FilesGroup.Files>
                     </data:FilesGroup>
+                    -->
                 </data:GroupedFilesCollection>
                 
             </data:AppData.DuplicatedFiles>

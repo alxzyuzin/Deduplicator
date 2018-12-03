@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.ComponentModel;
+using System.Collections;
 
 namespace Deduplicator.Common
 {
@@ -38,7 +39,6 @@ namespace Deduplicator.Common
         {
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
-
 
         public async Task RemoveNonDuplicates(ObservableCollection<GroupingAttribute> attributeList,
                                                 CancellationToken cancelToken)
@@ -89,8 +89,8 @@ namespace Deduplicator.Common
             // Соберём все файлы в одну группу
             FilesGroup allFiles = new FilesGroup(m_progress);
             foreach (FilesGroup group in this)
-                foreach (File file in group.Files)
-                    allFiles.AddFile(file);
+                foreach (File file in group)
+                    allFiles.Add(file);
 
             IProgress<OperationStatus> progress = m_progress;
             OperationStatus status = new OperationStatus
@@ -126,12 +126,16 @@ namespace Deduplicator.Common
     /// Представляет собой группу файлов
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class FilesGroup //: ObservableCollection<File>
+    public class FilesGroup : IEnumerable<File>
     {
         public event PropertyChangedEventHandler PropertyChanged;
- 
+
+        public IEnumerator<File> GetEnumerator() => (IEnumerator<File>)_files.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<File>)_files).GetEnumerator();
+
+
         private List<File> _files = new List<File>();
-        public List<File> Files { get { return _files; } }
         private string _name;
         public string Name
         {
@@ -196,13 +200,11 @@ namespace Deduplicator.Common
 
         }
         public int Count  => _files.Count;
+
+        public File FileFromPrimariFolder => _files.FirstOrDefault(file => file.FromPrimaryFolder);
+
         private Progress<OperationStatus> m_progress = null;
 
-        //public new IEnumerator<object> GetEnumerator()
-        //{
-        //    return (IEnumerator<object>)base.GetEnumerator();
-        //}
-        
         public FilesGroup(Progress<OperationStatus> progress)
         {
             m_progress = progress;
@@ -218,9 +220,8 @@ namespace Deduplicator.Common
             if (e.PropertyName == nameof(IsChecked))
                 IsChecked = null;
         }
-    
 
-        public void AddFile(File file)
+        public void Add(File file)
         {
             file.PropertyChanged += NotifyPropertyChanged; 
             _files.Add(file);
@@ -240,6 +241,38 @@ namespace Deduplicator.Common
         public void Clear()
         {
             _files.Clear();
+        }
+
+        public FilesGroup Clone()
+        {
+            var newGroup = new FilesGroup(m_progress);
+            foreach (File file in _files)
+                newGroup.Add(file);
+            return newGroup;
+        }
+
+        public void AddGroupFilesToSelectedItems(IList<object> selectedItems)
+        {
+            if (!selectedItems.IsReadOnly)
+            {
+                foreach (File file in _files)
+                {
+                    file.IsChecked = true;
+                    selectedItems.Add(file);
+                }
+            }
+        }
+
+        public void RemoveGroupFilesToSelectedItems(IList<object> selectedItems)
+        {
+            if (!selectedItems.IsReadOnly)
+            {
+                foreach (File file in _files)
+                {
+                    file.IsChecked = false;
+                    selectedItems.Remove(file);
+                }
+            }
         }
 
         /// <summary>
@@ -316,7 +349,7 @@ namespace Deduplicator.Common
             var newGroupsCollection = new List<FilesGroup>();
 
             var newgroup = new FilesGroup(m_progress);
-            newgroup.AddFile(_files[0]);
+            newgroup.Add(_files[0]);
             ++status.HandledItems;
             for (int i = 1; i < this.Count; i++)
             {
@@ -327,7 +360,7 @@ namespace Deduplicator.Common
                         newGroupsCollection.Add(newgroup);
                         newgroup = new FilesGroup(m_progress);
                }
-               newgroup.AddFile(_files[i]);
+               newgroup.Add(_files[i]);
 
                cancelToken.ThrowIfCancellationRequested();
                ++status.HandledItems;
@@ -338,6 +371,8 @@ namespace Deduplicator.Common
                 newGroupsCollection.Add(newgroup);
             return newGroupsCollection;
         }
+
+     
     }  // Class FilesGroup
 
     public class OperationStatus

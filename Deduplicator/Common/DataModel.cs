@@ -123,7 +123,6 @@ namespace Deduplicator.Common
                                    CancellationToken cancelToken )
         {
             OperationStatus status = new OperationStatus { Id = SearchStatus.NewFileSelected };
-
             _filesCollection.Clear();
             _duplicatesCollection.Clear();
             try
@@ -131,19 +130,12 @@ namespace Deduplicator.Common
                 // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
                 foreach (Folder folder in _foldersCollection)
                     await GetFolderFiles(folder, selectionOptions, cancelToken, status);
-
                 //// Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
                 if (_filesCollection.Count > 1)
                 {
-                    var fg = new FilesGroup(_progress);
-                    foreach (File file in _filesCollection.Files)
-                        fg.AddFile(file);
-
-                    _duplicatesCollection.Add(fg);
-
+                    _duplicatesCollection.Add(_filesCollection);
                     await _duplicatesCollection.RemoveNonDuplicates(compareAttribsList, cancelToken);
                 }
-                
                 if (PrimaryFolder != null)
                 {  // Дополнительно удалим из списка дубликатов файлы не дублирующие файлы из PrimaryFolder
                     DeleteNonPrimaryFolderDuplicates();
@@ -152,7 +144,6 @@ namespace Deduplicator.Common
                 {  // Или перегруппируем файлы по атрибуту выбранному в ComboBox для группировки
                     await _duplicatesCollection.RegroupDuplicates(_fileCompareOptions.SelectedGroupAttrib, cancelToken);
                 }
-
                 status.Id = SearchStatus.SearchCompleted;
                 ((IProgress<OperationStatus>)_progress).Report(status);
             }
@@ -173,12 +164,12 @@ namespace Deduplicator.Common
             var groupsForDelete = new List<FilesGroup>();
             foreach (FilesGroup group in _duplicatesCollection)
             {
-                var fileFromPrimariFolder = group.Files.FirstOrDefault(file => file.FromPrimaryFolder);
+                //var fileFromPrimariFolder = group.Files.FirstOrDefault(file => file.FromPrimaryFolder);
 
-                if (fileFromPrimariFolder != null)
+                if (group.FileFromPrimariFolder != null)
                 {
-                    group.Name = fileFromPrimariFolder.Name;
-                    group.Remove(fileFromPrimariFolder);
+                    group.Name = group.FileFromPrimariFolder.Name;
+                    group.Remove(group.FileFromPrimariFolder);
                 }
                 else
                 { // если нет то помещаем группу в список для последующего удаления
@@ -307,7 +298,7 @@ namespace Deduplicator.Common
                             Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
                             file.DateModifyed = basicproperties.DateModified.DateTime;
                             file.Size = basicproperties.Size;
-                            _filesCollection.AddFile(file);
+                            _filesCollection.Add(file);
                             status.Id = SearchStatus.NewFileSelected;
                             ++status.HandledItems;
                             progress.Report(status);
@@ -404,28 +395,18 @@ namespace Deduplicator.Common
 
         public void SetFilesProtection(Folder folder, bool isProtected)
         {
-            GroupedFilesCollection newGroupCollection = new GroupedFilesCollection(_progress);
             foreach (var group in _duplicatesCollection)
-           {
-                FilesGroup newGroup = new FilesGroup(group.Name);
-                foreach (File file in group.Files)
-               {
+            {
+                foreach (File file in group)
+                {
                     if (file.Path.StartsWith(folder.FullName))
                             file.IsProtected = isProtected;
-                    File newFile = file.Clone();
-                    newGroup.AddFile(newFile);
-               }
-                newGroupCollection.Add(newGroup);
+                }
             }
+            var grp = _duplicatesCollection[0].Clone();
+            _duplicatesCollection.RemoveAt(0);
+            _duplicatesCollection.Add(grp);
 
-            _duplicatesCollection.Clear();
-            foreach (FilesGroup group in newGroupCollection)
-            {
-                FilesGroup newGroup = new FilesGroup(group.Name);
-                foreach (File file in group.Files)
-                    newGroup.AddFile(file);
-                _duplicatesCollection.Add(newGroup);
-            }
             _duplicatesCollection.Invalidate();
         }
     } // class DataModel

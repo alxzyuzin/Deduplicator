@@ -12,9 +12,8 @@
     d:DataContext="{d:DesignData Source=./DesignData/SampleData.xaml}">
 
     <UserControl.Resources>
-        <CollectionViewSource x:Name="GroupedFiles" 
-                              Source="{Binding Path=AppData.DuplicatedFiles}"  ItemsPath="Files"
-                              IsSourceGrouped="true"/>
+        <CollectionViewSource x:Name="GroupedFiles" Source="{Binding Path=AppData.DuplicatedFiles}"
+                                 IsSourceGrouped="true"/>
 
         <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FF505050"/>
         <SolidColorBrush x:Key="MainBackgroundBrush" Color="#FF303030"/>
@@ -115,9 +114,11 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="4" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"  
-                           Style="{StaticResource TextBlockStyle}" TextWrapping="WrapWholeWords" Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="4" 
+                               VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontSize="18" 
+                           Style="{StaticResource TextBlockStyle}" TextWrapping="WrapWholeWords" 
+                               Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
                       <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                             <TextBlock Text="{Binding DateCreated}"  Style="{StaticResource TextBlockStyle}"/>
                             <TextBlock Text="{Binding DateModifyed}"  Style="{StaticResource TextBlockStyle}"/>
@@ -125,8 +126,10 @@
                     <StackPanel Grid.Row="0" Grid.Column="2"  HorizontalAlignment="Right">
                                 <TextBlock Text="{Binding Size}"   Style="{StaticResource TextBlockStyle}" />
                     </StackPanel>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Path}"  Style="{StaticResource TextBlockStyle}"   
-                           TextWrapping="WrapWholeWords" Grid.ColumnSpan="2" Margin="5,0,110,0" HorizontalAlignment="Stretch"/>
+                <TextBlock Grid.Row="1" Grid.Column="0"  Grid.ColumnSpan="2" Text="{Binding Path}"  
+                           Style="{StaticResource TextBlockStyle}"   FontSize="16"
+                           TextWrapping="WrapWholeWords"  Margin="5,0,110,0" 
+                           HorizontalAlignment="Stretch"/>
                 <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
                     <!--TextBlock Text="{Binding IsChecked}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/-->
                     <TextBlock Text="{Binding ProtectionStatus}"  Style="{StaticResource TextBlockStyle}" Foreground="Orange"/>

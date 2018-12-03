@@ -600,30 +600,18 @@ namespace Deduplicator {
         private void cbx_SelectGroup_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox cbx = sender as CheckBox;
-            FilesGroup datacontext = cbx.DataContext as FilesGroup;
-            foreach (File file in datacontext.Files)
-            {
-                file.IsChecked = true;
-                lv_Duplicates.SelectedItems.Add(file);
-            }
-//            cbx.IsChecked = true;
+            FilesGroup filesGroup = cbx.DataContext as FilesGroup;
+            filesGroup.AddGroupFilesToSelectedItems(lv_Duplicates.SelectedItems);
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
         private void cbx_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
         {
             CheckBox cbx = sender as CheckBox;
-            FilesGroup datacontext = cbx.DataContext as FilesGroup;
-            foreach (File file in datacontext.Files)
-            {
-                file.IsChecked = false;
-                lv_Duplicates.SelectedItems.Remove(file);
-            }
-//            cbx.IsChecked = false;
+            FilesGroup filesGroup = cbx.DataContext as FilesGroup;
+            filesGroup.RemoveGroupFilesToSelectedItems(lv_Duplicates.SelectedItems);
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
-
-        
 
         private void File_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -673,7 +661,6 @@ namespace Deduplicator {
                 }
             }
         }
-
 
         private void DisableComandButtons()
         {

@@ -47,7 +47,25 @@ namespace Deduplicator.DesignData
 
     } // Class ComonAppViewsData
 
+    public class FileSelectionOptions
+    {
+        public FileSelectionOptions() { }
 
+        public bool AllFiles   { get; set; } = false;
+        public bool VideoFiles { get; set; } = false;
+        public bool AudioFiles { get; set; } = false;
+        public bool ImageFiles { get; set; } = false;
+
+        public bool DocumentFiles { get; set; } = false;
+        public bool DataFiles { get; set; } = false;
+        public bool ExecutableFiles { get; set; } = false;
+        public bool SystemFiles { get; set; } = false;
+        public bool CompressedFiles { get; set; } = false;
+        public bool AppSourceCodeFiles { get; set; } = false;
+        
+        public string SpecialExtentions { get; set; }
+        public string ExcludeExtentions { get; set; } = string.Empty;
+    }
 
     public class FileCompareOptions
     {
@@ -99,6 +117,9 @@ namespace Deduplicator.DesignData
         public bool PrimaryFolderSelected { get; set; }
         public bool OperationCompleted { get; set; }
         public Settings Settings { get; set; }
+
+        public FileSelectionOptions FileSelectionOptions { get; set; }
+        public FileCompareOptions FileCompareOptions { get; set; }
     } // Class DataModel
 
     

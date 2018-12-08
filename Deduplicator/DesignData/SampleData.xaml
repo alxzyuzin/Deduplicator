@@ -1,7 +1,7 @@
 ﻿<data:CommonAppViewsData xmlns:data="using:Deduplicator.DesignData" 
      
-    ViewOptionsVisibility="Collapsed"
-    ViewSearchResultsVisibility="Visible"
+    ViewOptionsVisibility="Visible"
+    ViewSearchResultsVisibility="Collapsed"
     ViewSettingsVisibility="Collapsed"
     ViewWhereToSearchVisibility="Collapsed"
     
@@ -68,6 +68,16 @@
                 </data:GroupedFilesCollection>
                 
             </data:AppData.DuplicatedFiles>
+
+            <data:AppData.FileCompareOptions>
+                <data:FileCompareOptions CheckContent="True" CheckCreationDateTime="True" CheckModificationDateTime="True"
+                                          CheckName="True" CheckSize="True"/>
+            </data:AppData.FileCompareOptions>
+
+            <data:AppData.FileSelectionOptions>
+                <data:FileSelectionOptions AllFiles="True" AudioFiles="True" ImageFiles="True" VideoFiles="True"
+                                            SpecialExtentions=".xamj;.jpg" ExcludeExtentions=".tif;.exe"/>
+            </data:AppData.FileSelectionOptions>
             
         </data:AppData>
         

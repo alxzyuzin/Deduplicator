@@ -315,7 +315,7 @@ namespace Deduplicator {
             set { _tabHeader = value; NotifyPropertyChanged("TabHeader"); }
         }
 
-        private string _emptyContentMessage;
+        private string _emptyContentMessage = string.Empty;
         public string EmptyContentMessage
         {
             get { return _emptyContentMessage; }
@@ -325,8 +325,8 @@ namespace Deduplicator {
         private DataModel _dataModel = new DataModel();
         public DataModel AppData => _dataModel;
         // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
-        private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
-        public FileSelectionOptions FileSelectionOptions => _fileSelectionOptions;
+        //private FileSelectionOptions _fileSelectionOptions;
+        //public FileSelectionOptions FileSelectionOptions => _fileSelectionOptions;
  
         #endregion
 
@@ -336,9 +336,13 @@ namespace Deduplicator {
 
             DataContext = this;
 
-            FileSelectionOptions.AudioFileExtentions = _dataModel.Settings.AudioFileExtentions;
-            FileSelectionOptions.ImageFileExtentions = _dataModel.Settings.ImageFileExtentions;
-            FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
+//            _fileSelectionOptions = new FileSelectionOptions();
+
+//            _fileSelectionOptions.AllFiles = true;
+            //InitializeComponent();
+            //FileSelectionOptions.AudioFileExtentions = _dataModel.Settings.AudioFileExtentions;
+            //FileSelectionOptions.ImageFileExtentions = _dataModel.Settings.ImageFileExtentions;
+            //FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
 
             _dataModel.FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
 
@@ -530,7 +534,7 @@ namespace Deduplicator {
             }
 
             DisableComandButtons();
-            await _dataModel.StartSearch(FileSelectionOptions, _dataModel.FileCompareOptions.GrouppingAttributes);
+            await _dataModel.StartSearch(_dataModel.FileCompareOptions.GrouppingAttributes);
             RequesViewChange(View.SearchResults);
         }
 
@@ -622,24 +626,42 @@ namespace Deduplicator {
 
         private async void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            List<File> deletedFiles = new List<File>();
-            foreach (File file in ((ListView)sender).SelectedItems)
+            List<File> filesForDelete = new List<File>();// ((List < File > )lv_Duplicates.SelectedItems);
+            foreach (File file in lv_Duplicates.SelectedItems)
+                filesForDelete.Add(file);
+
+            foreach (File file in filesForDelete.Where(f => !f.IsProtected))
             {
-                if (!file.IsProtected)
+                try
                 {
                     StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
                     await f.DeleteAsync(StorageDeleteOption.Default);
-                    deletedFiles.Add(file);
+                    lv_Duplicates.SelectedItems.Remove(file);
                 }
-            }
-            foreach (File file in deletedFiles)
-            {
-                foreach (var group in _dataModel.DuplicatedFiles)
+                catch(Exception ex)
                 {
-                    if (group.Contains(file))
-                        group.Remove(file);
+                    AppData.SearchStatusInfo = $"Error deleting file {file.FullName}.{ex.Message}";
                 }
             }
+            //var filesForDelete = new List<object>(((List<>)lv_Duplicates.SelectedItems).Where(file => !file.IsProtected));
+
+            //foreach (File file in ((ListView)sender).SelectedItems)
+            //{
+            //    if (!file.IsProtected)
+            //    {
+            //        StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
+            //        await f.DeleteAsync(StorageDeleteOption.Default);
+            //        deletedFiles.Add(file);
+            //    }
+            //}
+            //foreach (File file in deletedFiles)
+            //{
+            //    foreach (var group in _dataModel.DuplicatedFiles)
+            //    {
+            //        if (group.Contains(file))
+            //            group.Remove(file);
+            //    }
+            //}
         }
 
 

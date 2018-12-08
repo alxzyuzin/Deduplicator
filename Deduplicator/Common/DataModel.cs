@@ -33,12 +33,7 @@ namespace Deduplicator.Common
 
         public event EventHandler<SearchStatus> SearchStatusChanged;
         public event PropertyChangedEventHandler PropertyChanged;
-        //private void NotifyPropertyChanged(string propertyName)
-        //{
-        //    if (PropertyChanged != null)
-        //        PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        //}
-
+ 
         #region Fields
         // Список каталогов в которых искать дубликаты
         private ObservableCollection<Folder> _foldersCollection = new ObservableCollection<Folder>();
@@ -48,6 +43,7 @@ namespace Deduplicator.Common
         private FilesGroup _filesCollection;
         // Список аттрибутов по которым будет выполняться сравнение файлов при поиске дубликатов
         private FileCompareOptions _fileCompareOptions = new FileCompareOptions();
+        private FileSelectionOptions _fileSelectionOptions = new FileSelectionOptions();
         private DateTime _startTime = DateTime.Now;
 
         private CancellationTokenSource _tokenSource;
@@ -58,6 +54,7 @@ namespace Deduplicator.Common
         #region Properties
 
         public FileCompareOptions FileCompareOptions => _fileCompareOptions;
+        public FileSelectionOptions FileSelectionOptions => _fileSelectionOptions;
 
         public ObservableCollection<Folder> Folders => _foldersCollection;
 
@@ -100,17 +97,18 @@ namespace Deduplicator.Common
         public DataModel()
         {
             Settings.Restore();
+            FileSelectionOptions.Init(_settings);
             _progress = new Progress<OperationStatus>(ReportStatus);
             _duplicatesCollection = new GroupedFilesCollection(_progress);
             _filesCollection = new FilesGroup(_progress);
         }
  
-        public async Task StartSearch(FileSelectionOptions selectionOptions, ObservableCollection<GroupingAttribute> compareAttribsList)
+        public async Task StartSearch(ObservableCollection<GroupingAttribute> compareAttribsList)
         {
             _tokenSource = new CancellationTokenSource();
             CancellationToken token = _tokenSource.Token;
 
-            WorkItemHandler workhandler = delegate { Search(selectionOptions, compareAttribsList, token); };
+            WorkItemHandler workhandler = delegate { Search(compareAttribsList, token); };
             await ThreadPool.RunAsync(workhandler, WorkItemPriority.High, WorkItemOptions.TimeSliced);
         }
 
@@ -118,8 +116,7 @@ namespace Deduplicator.Common
         /// Поиск дубликатов файлов
         /// </summary>
         /// <returns></returns>
-        private async void Search( FileSelectionOptions selectionOptions, 
-                                   ObservableCollection<GroupingAttribute> compareAttribsList, 
+        private async void Search( ObservableCollection<GroupingAttribute> compareAttribsList, 
                                    CancellationToken cancelToken )
         {
             OperationStatus status = new OperationStatus { Id = SearchStatus.NewFileSelected };
@@ -128,8 +125,11 @@ namespace Deduplicator.Common
             try
             {
                 // Отберём файлы из заданных пользователем каталогов для дальнейшего анализа в FilesCollection
+                DateTime s = DateTime.Now;
                 foreach (Folder folder in _foldersCollection)
-                    await GetFolderFiles(folder, selectionOptions, cancelToken, status);
+                    await GetFolderFiles(folder, cancelToken, status);
+                TimeSpan duration = DateTime.Now - s; // 18000 файлов 777 sec
+                // 2 331 file 7 sec
                 //// Если нашлись файлы подходящие под условия фильтра то выполняем среди них поиск дубликатов
                 if (_filesCollection.Count > 1)
                 {
@@ -164,9 +164,7 @@ namespace Deduplicator.Common
             var groupsForDelete = new List<FilesGroup>();
             foreach (FilesGroup group in _duplicatesCollection)
             {
-                //var fileFromPrimariFolder = group.Files.FirstOrDefault(file => file.FromPrimaryFolder);
-
-                if (group.FileFromPrimariFolder != null)
+                 if (group.FileFromPrimariFolder != null)
                 {
                     group.Name = group.FileFromPrimariFolder.Name;
                     group.Remove(group.FileFromPrimariFolder);
@@ -242,6 +240,77 @@ namespace Deduplicator.Common
             _tokenSource.Cancel();
         }
 
+        ///// <summary>
+        ///// Формирует список файлов содержащихся в указанном каталоге
+        ///// Файлы включаются в результирующий список если удовлетворяют условиям определённым в параметре options
+        ///// </summary>
+        ///// <param name="folder">
+        ///// каталог в котором искать файлы
+        ///// </param>
+        ///// <param name="filelist">
+        ///// Список найденных файлов
+        ///// </param>
+        ///// <param name="options">
+        ///// условия которым должен удовлетворять файл для включения в список файлов
+        ///// </param>
+        ///// <returns></returns>
+        //private async Task GetFolderFiles(Folder folder, FileSelectionOptions options, CancellationToken canselationToken,
+        //                                    OperationStatus status )
+        //{
+        //    IReadOnlyList<IStorageItem> folderitems = null;
+ 
+        //    try
+        //    {
+        //        // Каталог может быть удалён после того как начался поиск дубликато
+        //       var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
+        //       folderitems = await storageFolder.GetItemsAsync();
+        //    }
+        //    catch (FileNotFoundException ex)
+        //    {
+        //        status.Id = SearchStatus.Error;
+        //        status.Message = ex.Message+"'" + folder.FullName+"'";                
+        //        throw new OperationCanceledException();
+        //    }
+
+        //    var progress = _progress as IProgress<OperationStatus>;
+        //    foreach (IStorageItem item in folderitems)
+        //    {
+        //        canselationToken.ThrowIfCancellationRequested();
+        //        ++status.TotalItems;
+        //        if (item.Attributes.HasFlag(FileAttributes.Directory))  
+        //        {
+        //            if (folder.SearchInSubfolders)
+        //                await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
+        //                                    options, canselationToken, status);
+        //        }
+        //        else
+        //        {
+        //            try
+        //            {
+        //                string fileExtention = (item as StorageFile).FileType;
+        //                if (options.ExtentionRequested(fileExtention))
+        //                {
+        //                    File file = new File(item.Name, item.Path, fileExtention, item.DateCreated.DateTime,
+        //                                            new DateTime(), 0, folder.IsPrimary, folder.IsProtected);
+        //                    Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
+        //                    file.DateModifyed = basicproperties.DateModified.DateTime;
+        //                    file.Size = basicproperties.Size;
+        //                    _filesCollection.Add(file);
+        //                    status.Id = SearchStatus.NewFileSelected;
+        //                    ++status.HandledItems;
+        //                    progress.Report(status);
+        //                }
+        //            }
+        //            catch(Exception ex)
+        //            {
+        //                status.Id = SearchStatus.Error;
+        //                status.Message = ex.Message + "'"+ item.Name + "'.";
+        //                throw new OperationCanceledException();
+        //            }
+        //        }
+        //    }
+        //}
+
         /// <summary>
         /// Формирует список файлов содержащихся в указанном каталоге
         /// Файлы включаются в результирующий список если удовлетворяют условиям определённым в параметре options
@@ -256,90 +325,33 @@ namespace Deduplicator.Common
         /// условия которым должен удовлетворять файл для включения в список файлов
         /// </param>
         /// <returns></returns>
-        private async Task GetFolderFiles(Folder folder, FileSelectionOptions options, CancellationToken canselationToken,
-                                            OperationStatus status )
+        private async Task GetFolderFiles(Folder folder, CancellationToken canselationToken, OperationStatus status)
         {
-            IReadOnlyList<IStorageItem> folderitems = null;
-            
-
-            try
-            {
-                // Каталог может быть удалён после того как начался поиск дубликато
-               var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
-               folderitems = await storageFolder.GetItemsAsync();
-            }
-            catch (FileNotFoundException ex)
-            {
-                status.Id = SearchStatus.Error;
-                status.Message = ex.Message+"'" + folder.FullName+"'";                
-                throw new OperationCanceledException();
-            }
-
+            status.Id = SearchStatus.NewFileSelected;
             var progress = _progress as IProgress<OperationStatus>;
-            foreach (IStorageItem item in folderitems)
-            {
-                canselationToken.ThrowIfCancellationRequested();
-                ++status.TotalItems;
-                if (item.Attributes.HasFlag(FileAttributes.Directory))  
-                {
-                    if (folder.SearchInSubfolders)
-                        await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
-                                            options, canselationToken, status);
-                }
-                else
-                {
-                    try
-                    {
-                        string fileExtention = (item as StorageFile).FileType;
-                        if (options.ExtentionRequested(fileExtention))
-                        {
-                            File file = new File(item.Name, item.Path, fileExtention, item.DateCreated.DateTime,
-                                                    new DateTime(), 0, folder.IsPrimary, folder.IsProtected);
-                            Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
-                            file.DateModifyed = basicproperties.DateModified.DateTime;
-                            file.Size = basicproperties.Size;
-                            _filesCollection.Add(file);
-                            status.Id = SearchStatus.NewFileSelected;
-                            ++status.HandledItems;
-                            progress.Report(status);
-                        }
-                    }
-                    catch(Exception ex)
-                    {
-                        status.Id = SearchStatus.Error;
-                        status.Message = ex.Message + "'"+ item.Name + "'.";
-                        throw new OperationCanceledException();
-                    }
-                }
-            }
-        }
-
-        private async Task GetFolderFiles2(Folder folder, FileSelectionOptions options, 
-                                            CancellationToken canselationToken, OperationStatus status)
-        {
-            IReadOnlyList<IStorageItem> folderitems = null;
-            try
-            {
-                // Каталог может быть удалён после того как начался поиск дубликато
+            try // Каталог может быть удалён после того как начался поиск дубликатов
+            {  
                 var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
-
-                var fileTypeFilter = new List<string>();
-                // Set filter to Enumerate only Files with the ".xyz" extension (f.ex. "test.xyz")
-                fileTypeFilter.Add(".xaml");
-                //fileTypeFilter.Add(".flac");
-                // Generate the Options for the Query
-                var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
-                // Generate the Query and set the options
-                var query = ApplicationData.Current.LocalFolder.CreateFileQueryWithOptions(queryOptions);
-                // Execute the Query and write the Result in a List
-                IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
-                int i = fileList.Count;
-                foreach (StorageFile file in fileList)
+                List<string> l = new List<string>();
+                l.AddRange(_fileSelectionOptions.FileTypeFilter.Where(f => f != ""));
+                var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, _fileSelectionOptions.FileTypeFilter.Where(f=>f!=""));
+                var query = storageFolder.CreateFileQueryWithOptions(queryOptions);
+                foreach (StorageFile item in await query.GetFilesAsync())
                 {
-                    StorageFile f = file;
+                    canselationToken.ThrowIfCancellationRequested();
+
+                    if (_fileSelectionOptions.ExcludeExtentions.Contains(item.FileType))
+                        continue;
+
+                    File file = new File(item.Name, item.Path, item.FileType, item.DateCreated.DateTime,
+                                      new DateTime(), 0, folder.IsPrimary, folder.IsProtected);
+                    Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
+                    file.DateModifyed = basicproperties.DateModified.DateTime;
+                    file.Size = basicproperties.Size;
+                    _filesCollection.Add(file);
+                    ++status.HandledItems;
+                    progress.Report(status);
                 }
-                //storageFolder.
-                folderitems = await storageFolder.GetItemsAsync();
             }
             catch (FileNotFoundException ex)
             {

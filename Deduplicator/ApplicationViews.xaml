@@ -59,7 +59,8 @@
         <Style x:Key="TextBoxStyle" TargetType="TextBox">
             <Setter Property="Margin" Value="40,0,40,10"/>
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Height" Value="20"/>
         </Style>
 
         <Style x:Key="FolderToggleSwitchStyle" BasedOn="{StaticResource ToggleSwitchStyle}" TargetType="ToggleSwitch">
@@ -250,31 +251,52 @@
                 <TextBlock Text="Search duplicates for:" Height="40" Padding="0,10,0,0"
                            FontSize="20" FontWeight="Medium" TextWrapping="WrapWholeWords"/>
                 <RadioButton Content="  all files" Height="35" Margin="30,0,0,0"  FontSize="18" 
-                             FontWeight="Medium"  GroupName="FileSelection"
-                             IsChecked="{Binding Path=FileSelectionOptions.AllFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             FontWeight="Medium"  GroupName="FileSelection" 
+                             IsChecked="{Binding  AppData.FileSelectionOptions.AllFiles, Mode=TwoWay}"/>
                 <RadioButton x:Name="rb_SpecificFiles" Content="  specific files"  Height="35" FontSize="18" 
                              FontWeight="Medium" Margin="30,0,0,0" GroupName="FileSelection"
-                             IsChecked="{Binding Path=FileSelectionOptions.SpecificFiles, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
-                <CheckBox  x:Name="cbx"  Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
+                             IsChecked="{Binding AppData.FileSelectionOptions.SpecificFiles, Mode=TwoWay}"/>
+                <CheckBox    Content="  image files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
-                             IsChecked="{Binding ImageFiles , Mode=TwoWay}"/>
+                             IsChecked="{Binding AppData.FileSelectionOptions.ImageFiles , Mode=TwoWay}"/>
                 <CheckBox    Content="  audio files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
-                             IsChecked="{Binding FileSelectionOptions.AudioFiles , Mode=TwoWay}"/>
+                             IsChecked="{Binding AppData.FileSelectionOptions.AudioFiles , Mode=TwoWay}"/>
                 <CheckBox    Content="  video files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
-                             IsChecked="{Binding FileSelectionOptions.VideoFiles , Mode=TwoWay}"/>
+                             IsChecked="{Binding AppData.FileSelectionOptions.VideoFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  document files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AppData.FileSelectionOptions.DocumentFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  data files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AppData.FileSelectionOptions.DataFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  executable files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AppData.FileSelectionOptions.ExecutableFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  system files"  Height="35" FontSize="18" FontWeight="Medium" Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AppData.FileSelectionOptions.SystemFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  compressed files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AppData.FileSelectionOptions.CompressedFiles , Mode=TwoWay}"/>
+                <CheckBox    Content="  source code files"  Height="35" FontSize="18" FontWeight="Medium"  Margin="50,0,0,0"
+                             IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
+                             IsChecked="{Binding AppData.FileSelectionOptions.AppSourceCodeFiles , Mode=TwoWay}" 
+                             ToolTipService.Placement="Bottom" 
+                             ToolTipService.ToolTip="{Binding AppData.FileSelectionOptions.AppSourceCodeFiles}"/>
+                
                 <TextBlock   Text="and files with extensions:" FontSize="18" Height="32" FontWeight="Medium"  Margin="50,10,0,0"/>
                 <TextBox     FontSize="18" FontWeight="Normal" Margin="70,0,40,0"  Height="35" MinWidth="200"
                              IsEnabled="{Binding IsChecked,ElementName=rb_SpecificFiles}"
                              PlaceholderText="Type here list of file extentions separated with semicolon"
-                             Text="{Binding FileSelectionOptions.SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             Text="{Binding AppData.FileSelectionOptions.SpecialExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
                 <TextBlock/>
                 <TextBlock   Text="Exclude extensions:" FontSize="18" FontWeight="Medium"  Margin="0,10,0,0"/>
                 <TextBox     FontSize="18" FontWeight="Normal" Margin="20,0,40,0"
                              Height="35" MinWidth="200" 
                              PlaceholderText="Type here list of file extentions separated with semicolon"
-                             Text="{Binding FileSelectionOptions.ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
+                             Text="{Binding AppData.FileSelectionOptions.ExcludeExtentions, Mode=TwoWay, UpdateSourceTrigger=Default}"/>
             </StackPanel>
             <!-- File compare options -->
             <!-- DataContext="{Binding FileCompareOptions}" -->
@@ -346,6 +368,20 @@
                 <TextBox   Text="{Binding AppData.Settings.AudioFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
                 <TextBlock Text="Video files extentions:" Style="{StaticResource TextBlockStyle}"/>
                 <TextBox   Text="{Binding AppData.Settings.VideoFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+
+                <TextBlock Text="Document files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.DocumentFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
+                <TextBlock Text="Data files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.DataFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+                <TextBlock Text="Executable files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.ExecutableFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+                
+                <TextBlock Text="System files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.SystemFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}" />
+                <TextBlock Text="Compressed files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.CompressedFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
+                <TextBlock Text="App source code files extentions:" Style="{StaticResource TextBlockStyle}"/>
+                <TextBox   Text="{Binding AppData.Settings.AppSourceCodeFileExtentions, Mode=TwoWay}" Style="{StaticResource TextBoxStyle}"/>
             </StackPanel>
         </Border>
 

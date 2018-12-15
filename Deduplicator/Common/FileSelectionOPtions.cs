@@ -118,11 +118,8 @@ namespace Deduplicator.Common
 
                 if (SpecialExtentions.Length > 0)
                     allExtentions.Append(SpecialExtentions);
-
-                //var extArr = allExtentions.ToString().Split(';');
+ 
                 filter.AddRange(allExtentions.ToString().Split(';').Where(f => f != ""));
-                    
-                
 
                 return filter;
             }

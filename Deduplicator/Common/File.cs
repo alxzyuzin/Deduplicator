@@ -9,33 +9,33 @@ using Windows.Storage.Streams;
 
 namespace Deduplicator.Common
 {
-    [Flags]
+    
     public enum FileAttribs
     {
-        None=0,
-        Name =1,
-        FileType = 2,
-        Path = 4,
-        DateCreated = 8,
-        DateModified = 16,
-        Size =32,
-        Content=64,
-        Extention=128,
-        Hash = 256,
-        Undefined = 512
+        Undefined = 0,
+        None =1,
+        Size = 2,
+        Extention = 3,
+        Name =4,
+        FileType = 5,
+        DateCreated = 6,
+        DateModified = 7,
+        Path = 8,
+        Hash = 9,
+        Content =10
     }
 
     public sealed class File:INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
+        //private void NotifyPropertyChanged(string propertyName)
+        //{
+        //    if (PropertyChanged != null)
+        //    {
+        //        PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        //    }
+        //}
         public string Name { get; set; } = string.Empty;
         public string FileType { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
@@ -67,10 +67,26 @@ namespace Deduplicator.Common
                 {
                     _isProtected = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsProtected)));
+                    ProtectionStatus = _isProtected ? "Protected" : "";
                 }
             }
         }
-        public string ProtectionStatus => IsProtected ? "Protected" : "";
+
+        private string _protectionStatus;
+        public string ProtectionStatus
+        {
+            get { return _protectionStatus; }
+            set
+            {
+                if (_protectionStatus != value)
+                {
+                    _protectionStatus = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ProtectionStatus)));
+
+                }
+            }
+        }
+
         private bool _isChecked = false;
         public bool IsChecked
         {

@@ -21,6 +21,7 @@ namespace Deduplicator.Common
         {
             get
             {
+                int count = this.Aggregate(0, (total, next) => total += next.Count);
                 int i = 0;
                 foreach (FilesGroup group in this)
                     i += group.Count;
@@ -35,8 +36,21 @@ namespace Deduplicator.Common
             m_progress = progress;
         }
   
+        public void RemoveGroup(FilesGroup group)
+        {
+            this.Remove(group);
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
         public void Invalidate()
         {
+            //var groups = new List<FilesGroup>(this);
+            //this.Clear();
+            //foreach (var group in groups)
+            //{
+            //    var newGroup = group.Clone();
+            //    this.Add(newGroup);
+            //}
+                
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
@@ -51,12 +65,20 @@ namespace Deduplicator.Common
                 HandledItems = 0,
                 Stage = string.Empty
             } ;
-            
+
+            var localAttributeList = new List<GroupingAttribute>(attributeList);
+            GroupingAttribute size = localAttributeList.FirstOrDefault<GroupingAttribute>(a => a.Attribute == FileAttribs.Size);
+            GroupingAttribute content = localAttributeList.FirstOrDefault<GroupingAttribute>(a => a.Attribute == FileAttribs.Content);
+            if (content != null && size == null)
+                localAttributeList.Add(new GroupingAttribute("Size", FileAttribs.Size, 0));
+
+
             var groupsBuffer = new GroupedFilesCollection(m_progress);
 
-            IEnumerable<GroupingAttribute> query = from attribute in attributeList
-                                                   orderby attribute.Weight ascending
+            IEnumerable<GroupingAttribute> query = from attribute in localAttributeList
+                                                   orderby attribute.Attribute ascending
                                                    select attribute;
+            
             foreach (var attribute in query)
             {
                 if (attribute.Attribute == FileAttribs.None)
@@ -134,7 +156,6 @@ namespace Deduplicator.Common
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<File>)_files).GetEnumerator();
 
-
         private List<File> _files = new List<File>();
         private string _name;
         public string Name
@@ -182,20 +203,19 @@ namespace Deduplicator.Common
             }
 
         }
+
+        private bool? _isChecked=false; 
         public bool?  IsChecked
         {
             get
-            {
-                int checkedCount = _files.Count(n => n.IsChecked);
-                if (checkedCount == 0)
-                    return false;
-                if (checkedCount == _files.Count)
-                    return true;
-                return null;
-            }
+            { return _isChecked; }
             set
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsChecked"));
+                if (_isChecked != value)
+                {
+                    _isChecked = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecked)));
+                }
             }
 
         }
@@ -203,27 +223,41 @@ namespace Deduplicator.Common
 
         public File FileFromPrimariFolder => _files.FirstOrDefault(file => file.FromPrimaryFolder);
 
-        private Progress<OperationStatus> m_progress = null;
+        private Progress<OperationStatus> _progress = null;
 
         public FilesGroup(Progress<OperationStatus> progress)
         {
-            m_progress = progress;
-         }
+            _progress = progress;
+        }
 
+        public FilesGroup(FilesGroup group, Progress<OperationStatus> progress)
+        {
+            foreach (var file in group)
+                _files.Add(file);
+            _progress = progress;
+        }
         public FilesGroup( string name)
         {
             Name = name;
         }
 
-        private void NotifyPropertyChanged(object obj, PropertyChangedEventArgs e)
+        
+        private void OnFilePropertyChanged(object obj, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(IsChecked))
+            if (e.PropertyName == "IsChecked")
+            {
                 IsChecked = null;
+                int checkedCount = _files.Count(n => n.IsChecked);
+                if (checkedCount == 0)
+                    IsChecked = false;
+                if (checkedCount == _files.Count)
+                    IsChecked = true;
+             }
         }
 
         public void Add(File file)
         {
-            file.PropertyChanged += NotifyPropertyChanged; 
+            file.PropertyChanged += OnFilePropertyChanged; 
             _files.Add(file);
         }
 
@@ -234,7 +268,7 @@ namespace Deduplicator.Common
 
         public void Remove(File file)
         {
-            file.PropertyChanged -= NotifyPropertyChanged;
+            file.PropertyChanged -= OnFilePropertyChanged;
             _files.Remove(file);
         }
 
@@ -245,17 +279,17 @@ namespace Deduplicator.Common
 
         public FilesGroup Clone()
         {
-            var newGroup = new FilesGroup(m_progress);
+            var newGroup = new FilesGroup(_progress);
             foreach (File file in _files)
                 newGroup.Add(file);
             return newGroup;
         }
 
-        public void AddGroupFilesToSelectedItems(IList<object> selectedItems)
+        public void AddAllGroupFilesToSelectedItems(IList<object> selectedItems)
         {
             if (!selectedItems.IsReadOnly)
             {
-                foreach (File file in _files)
+                foreach (File file in _files.Where(f=>!f.IsChecked))
                 {
                     file.IsChecked = true;
                     selectedItems.Add(file);
@@ -263,11 +297,11 @@ namespace Deduplicator.Common
             }
         }
 
-        public void RemoveGroupFilesToSelectedItems(IList<object> selectedItems)
+        public void RemoveAllGroupFilesFromSelectedItems(IList<object> selectedItems)
         {
             if (!selectedItems.IsReadOnly)
             {
-                foreach (File file in _files)
+                foreach (File file in _files.Where(f => f.IsChecked))
                 {
                     file.IsChecked = false;
                     selectedItems.Remove(file);
@@ -337,7 +371,7 @@ namespace Deduplicator.Common
         {
             Debug.Assert(this.Count >= 2, "SplitByAttributeMethod called on group with less then two files");
 
-            IProgress<OperationStatus> progress = m_progress;
+            IProgress<OperationStatus> progress = _progress;
 
             DataModel.SearchStatus oldStatusId = status.Id;
 
@@ -348,7 +382,7 @@ namespace Deduplicator.Common
             status.Id = oldStatusId;
             var newGroupsCollection = new List<FilesGroup>();
 
-            var newgroup = new FilesGroup(m_progress);
+            var newgroup = new FilesGroup(_progress);
             newgroup.Add(_files[0]);
             ++status.HandledItems;
             for (int i = 1; i < this.Count; i++)
@@ -358,7 +392,7 @@ namespace Deduplicator.Common
                {
                     if (newgroup.Count > 1)
                         newGroupsCollection.Add(newgroup);
-                        newgroup = new FilesGroup(m_progress);
+                    newgroup = new FilesGroup(_progress);
                }
                newgroup.Add(_files[i]);
 

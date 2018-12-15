@@ -6,15 +6,7 @@ namespace Deduplicator.Common
     public class GListView:ListView, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
+ 
         private double _internalWidth = 200;
         public double InternalWidth
         {
@@ -24,8 +16,8 @@ namespace Deduplicator.Common
                 if (_internalWidth!=value)
                 {
                     _internalWidth = value;
-                    NotifyPropertyChanged("InternalWidth");
-                }
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InternalWidth)));
+                 }
             }
         }
     }

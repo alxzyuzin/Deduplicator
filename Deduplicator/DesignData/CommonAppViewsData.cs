@@ -76,7 +76,6 @@ namespace Deduplicator.DesignData
         public bool CheckCreationDateTime { get; set; }
         public bool CheckModificationDateTime { get; set; }
         public bool CheckContent { get; set; }
-    //    public GroupAttribute CurrentGroupModeAttrib { get; set; }
         public int CurrentGroupModeIndex { get; set; }
         public ObservableCollection<GroupAttribute> GrouppingAttributes { get; set; }
 

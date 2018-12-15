@@ -56,8 +56,6 @@ namespace Deduplicator {
 
         private GroupingAttribute m_currentGroupingAttribute = new GroupingAttribute();
 
-        
-
         #region Properties
 
         #region Visibility properties
@@ -324,10 +322,7 @@ namespace Deduplicator {
 
         private DataModel _dataModel = new DataModel();
         public DataModel AppData => _dataModel;
-        // Критерии отбора файлов из заданных каталогов, среди которых будет выполняться поиск дубликатов
-        //private FileSelectionOptions _fileSelectionOptions;
-        //public FileSelectionOptions FileSelectionOptions => _fileSelectionOptions;
- 
+  
         #endregion
 
         public ApplicationViews()
@@ -335,14 +330,6 @@ namespace Deduplicator {
             InitializeComponent();
 
             DataContext = this;
-
-//            _fileSelectionOptions = new FileSelectionOptions();
-
-//            _fileSelectionOptions.AllFiles = true;
-            //InitializeComponent();
-            //FileSelectionOptions.AudioFileExtentions = _dataModel.Settings.AudioFileExtentions;
-            //FileSelectionOptions.ImageFileExtentions = _dataModel.Settings.ImageFileExtentions;
-            //FileSelectionOptions.VideoFileExtentions = _dataModel.Settings.VideoFileExtentions;
 
             _dataModel.FileCompareOptions.PropertyChanged += OnFileCompareOptionsPropertyChanged;
 
@@ -583,12 +570,7 @@ namespace Deduplicator {
         private void ts_Protected_Toggled(object sender, RoutedEventArgs e)
         {
             if (_dataModel.DuplicatedFiles.Count>0)
-            {
                 _dataModel.SetFilesProtection((sender as ToggleSwitch).DataContext as Folder,((ToggleSwitch)sender).IsOn);
-            }
-
-            lv_Duplicates.UpdateLayout();
-            
         }
 
         private void lv_Folders_Tapped(object sender, TappedRoutedEventArgs e)
@@ -603,17 +585,15 @@ namespace Deduplicator {
 
         private void cbx_SelectGroup_Checked(object sender, RoutedEventArgs e)
         {
-            CheckBox cbx = sender as CheckBox;
-            FilesGroup filesGroup = cbx.DataContext as FilesGroup;
-            filesGroup.AddGroupFilesToSelectedItems(lv_Duplicates.SelectedItems);
+            FilesGroup filesGroup = (sender as CheckBox).DataContext as FilesGroup;
+            filesGroup.AddAllGroupFilesToSelectedItems(lv_Duplicates.SelectedItems);
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
         private void cbx_SelectGroup_Unchecked(object sender, RoutedEventArgs e)
         {
-            CheckBox cbx = sender as CheckBox;
-            FilesGroup filesGroup = cbx.DataContext as FilesGroup;
-            filesGroup.RemoveGroupFilesToSelectedItems(lv_Duplicates.SelectedItems);
+            FilesGroup filesGroup = (sender as CheckBox).DataContext as FilesGroup;
+            filesGroup.RemoveAllGroupFilesFromSelectedItems(lv_Duplicates.SelectedItems);
             BtnDelFilesEnabled = lv_Duplicates.SelectedItems.Count > 0 ? true : false;
          }
 
@@ -626,46 +606,18 @@ namespace Deduplicator {
 
         private async void button_DeleteSelectedFiles_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            List<File> filesForDelete = new List<File>();// ((List < File > )lv_Duplicates.SelectedItems);
-            foreach (File file in lv_Duplicates.SelectedItems)
-                filesForDelete.Add(file);
+            var filesForDelete = new List<File>(lv_Duplicates.SelectedItems.Cast<File>().Where(f => !f.IsProtected));
 
-            foreach (File file in filesForDelete.Where(f => !f.IsProtected))
-            {
-                try
-                {
-                    StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
-                    await f.DeleteAsync(StorageDeleteOption.Default);
-                    lv_Duplicates.SelectedItems.Remove(file);
-                }
-                catch(Exception ex)
-                {
-                    AppData.SearchStatusInfo = $"Error deleting file {file.FullName}.{ex.Message}";
-                }
-            }
-            //var filesForDelete = new List<object>(((List<>)lv_Duplicates.SelectedItems).Where(file => !file.IsProtected));
+            string res = await _dataModel.RemoveDuplicatedFile(filesForDelete);
+            if (res != string.Empty)
+                AppData.SearchStatusInfo = $"Error deleting file.{res}";
+            else
+                AppData.SearchStatusInfo = $"Selected files succefully deleted.";
 
-            //foreach (File file in ((ListView)sender).SelectedItems)
-            //{
-            //    if (!file.IsProtected)
-            //    {
-            //        StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
-            //        await f.DeleteAsync(StorageDeleteOption.Default);
-            //        deletedFiles.Add(file);
-            //    }
-            //}
-            //foreach (File file in deletedFiles)
-            //{
-            //    foreach (var group in _dataModel.DuplicatedFiles)
-            //    {
-            //        if (group.Contains(file))
-            //            group.Remove(file);
-            //    }
-            //}
-        }
+            ResetGroupCheckBoxes(lv_Duplicates, false);
+         }
 
-
-        #endregion
+        #endregion 
 
         private void Grouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -695,13 +647,19 @@ namespace Deduplicator {
 
         private void lv_Duplicates_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            lv_Duplicates = sender as GListView;
+            ResetGroupCheckBoxes(sender);
+        }
+
+        private void ResetGroupCheckBoxes(object sender, bool? value = null)
+        {
             foreach (ListViewHeaderItem headerItem in lv_Duplicates.ItemsPanelRoot.Children.Where(item => item.GetType().Name == "ListViewHeaderItem"))
             {
                 var TemplateStackPanel = (headerItem.ContentTemplateRoot as Grid).Children[1] as StackPanel;
-                var TemplateCheckBox = TemplateStackPanel.Children[5] as CheckBox;
-                var CheckBoxData = TemplateCheckBox.DataContext as FilesGroup;
-                TemplateCheckBox.IsChecked = (TemplateCheckBox.DataContext as FilesGroup).IsChecked;
+                var TemplateCheckBox = TemplateStackPanel.Children.First(item => item.GetType().Name == "CheckBox") as CheckBox;
+                if (value == null)
+                    TemplateCheckBox.IsChecked = (TemplateCheckBox.DataContext as FilesGroup).IsChecked;
+                else
+                    TemplateCheckBox.IsChecked = value;
             }
         }
     } // Class ApplicationViews

@@ -6,12 +6,12 @@ namespace Deduplicator.Common
 {
     public class FileCompareOptions : INotifyPropertyChanged
     {
-        private GroupingAttribute Content = new GroupingAttribute( @"Content",FileAttribs.Content, 5);
-        private GroupingAttribute Name = new GroupingAttribute(@"Name", FileAttribs.Name, 1);
-        private GroupingAttribute Size = new GroupingAttribute(@"Size", FileAttribs.Size, 4);
-        private GroupingAttribute CreationDate = new GroupingAttribute(@"Creation date", FileAttribs.DateCreated, 2);
-        private GroupingAttribute ModificationDate = new GroupingAttribute(@"Modification date", FileAttribs.DateModified, 3);
-        private GroupingAttribute None = new GroupingAttribute(@"Do not group", FileAttribs.None, 0);
+        private GroupingAttribute Content = new GroupingAttribute("Content",FileAttribs.Content, 5);
+        private GroupingAttribute Name = new GroupingAttribute("Name", FileAttribs.Name, 1);
+        private GroupingAttribute Size = new GroupingAttribute("Size", FileAttribs.Size, 4);
+        private GroupingAttribute CreationDate = new GroupingAttribute("Creation date", FileAttribs.DateCreated, 2);
+        private GroupingAttribute ModificationDate = new GroupingAttribute("Modification date", FileAttribs.DateModified, 3);
+        private GroupingAttribute None = new GroupingAttribute("Do not group", FileAttribs.None, 0);
 
         private enum CheckBoxAction {Checked = 1, Unchecked = 0}
         public event PropertyChangedEventHandler PropertyChanged;
@@ -189,12 +189,12 @@ namespace Deduplicator.Common
         {
             Name = name;
             Attribute = attribute;
-            Weight = weight;
+            //Weight = weight;
 
         }
         public string Name { get; set; } = string.Empty;
         public FileAttribs Attribute { get; set; } = FileAttribs.Undefined;
-        public int Weight { get; set; } = 0;
+        //public int Weight { get; set; } = 0;
  
         public override string ToString()
         {

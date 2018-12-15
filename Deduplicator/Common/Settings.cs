@@ -197,6 +197,7 @@ namespace Deduplicator.Common
             CompressedFileExtentions = ".7z;.deb;.gz;.pkg;.rar;.rpm;.sit;.sitx;.tar;.gz;.zip;.zipx;.dmg;.iso;.toast;.vcd;.bak;.gho;.ori;.tmp;";
             AppSourceCodeFileExtentions = ".asp;.cer;.csr;.css;.htm;.html;.js;.jsp;.php;.rss;.xhtml;.c;.class;.cpp;.cs;.dtd;.fla;.java;.m;.pl;.py;";
             InitialSetupDone = false;
+            
         }
     }
 }

@@ -186,45 +186,45 @@ namespace Deduplicator.Common
             switch(status.Id)
             {
                 case SearchStatus.NewFileSelected:
-                    SearchStatusInfo = string.Format(@"Selecting files. Total files selected {0}.", status.HandledItems);
+                    SearchStatusInfo = string.Format("Selecting files. Total files selected {0}.", status.HandledItems);
                     break;
                 case SearchStatus.Grouping:
-                    SearchStatusInfo = string.Format(@"Groupping files by {0}. Handled {1} files from {2}.",
+                    SearchStatusInfo = string.Format("Groupping files by {0}. Handled {1} files from {2}.",
                                                     status.Stage, status.HandledItems, status.TotalItems);
                     break;
                 case SearchStatus.GroupingCompleted:
-                    SearchStatusInfo = string.Format(@"Grouping complete. Regrouped {0} duplicates into {1} groups.",
+                    SearchStatusInfo = string.Format("Grouping complete. Regrouped {0} duplicates into {1} groups.",
                                                       _duplicatesCollection.FilesCount, _duplicatesCollection.Count);
                     break;
 
                 case SearchStatus.ComparingStarted:
                 case SearchStatus.Comparing:
-                    SearchStatusInfo = string.Format(@"Comparing files by {0}. Compared {1} files from {2}.",
+                    SearchStatusInfo = string.Format("Comparing files by {0}. Compared {1} files from {2}.",
                                                    status.Stage, status.HandledItems, status.TotalItems);
                     break;
                 case SearchStatus.Sorting:
-                    SearchStatusInfo = @"Sorting files ...";
+                    SearchStatusInfo = $"Sorting files by {status.Stage}.";
                     break;
                 case SearchStatus.SearchCompleted:
-                    SearchStatusInfo = string.Format(@"Search completed. Found {0} duplicates in {1} groups.",
+                    SearchStatusInfo = string.Format("Search completed. Found {0} duplicates in {1} groups.",
                                                       _duplicatesCollection.FilesCount, _duplicatesCollection.Count);
                     break;
                 case SearchStatus.SearchCanceled:
-                    SearchStatusInfo = string.Format(@"Search canceled.");
+                    SearchStatusInfo = string.Format("Search canceled.");
                     break;
                 case SearchStatus.GroupingCanceled:
-                    SearchStatusInfo = string.Format(@"Grouping canceled.");
+                    SearchStatusInfo = string.Format("Grouping canceled.");
                     break;
                 case SearchStatus.ResultsCleared:
-                    SearchStatusInfo = string.Format(@"Search results cleared.");
+                    SearchStatusInfo = string.Format("Search results cleared.");
                     break;
                 case SearchStatus.StartCancelOperation:
-                    SearchStatusInfo = string.Format(@"Canceling current operation.");
+                    SearchStatusInfo = string.Format("Canceling current operation.");
                     break;
                 case SearchStatus.Error:
                     status.Message = status.Message.Replace('\r', ' ');
                     status.Message = status.Message.Replace('\n', ' ');
-                    SearchStatusInfo = string.Format(@"Error: {0} Operation canceled.", status.Message);
+                    SearchStatusInfo = string.Format("Error: {0} Operation canceled.", status.Message);
                     break;
             }
             SearchStatusChanged?.Invoke(this, status.Id);
@@ -408,19 +408,42 @@ namespace Deduplicator.Common
         public void SetFilesProtection(Folder folder, bool isProtected)
         {
             foreach (var group in _duplicatesCollection)
-            {
-                foreach (File file in group)
-                {
-                    if (file.Path.StartsWith(folder.FullName))
-                            file.IsProtected = isProtected;
-                }
-            }
-            var grp = _duplicatesCollection[0].Clone();
-            _duplicatesCollection.RemoveAt(0);
-            _duplicatesCollection.Add(grp);
+                foreach (File file in group.Where(f => f.Path.StartsWith(folder.FullName)))
+                    file.IsProtected = isProtected;
 
             _duplicatesCollection.Invalidate();
         }
+
+        public async Task<string> RemoveDuplicatedFile(List<File> files)
+        {
+            string res = string.Empty;
+            try
+            {
+                foreach (File file in files)
+                {
+                    var group =_duplicatesCollection.First(g => g.Contains(file));
+
+                    group.Remove(file);
+                    StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
+                    // await f.DeleteAsync(StorageDeleteOption.Default);
+                }
+                var singleFilesGroup = new List<FilesGroup>(_duplicatesCollection.Where(g => g.Count < 2));
+                foreach (var group in singleFilesGroup)
+                    _duplicatesCollection.RemoveGroup(group);
+            }
+            catch (Exception ex)
+            {
+                res = ex.Message;
+            }
+             _duplicatesCollection.Invalidate();
+            return res;
+        }
+        
+        public void InvalidateDuplicates()
+        {
+            _duplicatesCollection.Invalidate();
+        }
+
     } // class DataModel
 
    

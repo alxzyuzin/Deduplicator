@@ -140,7 +140,7 @@
 
         <DataTemplate x:Key="FileGroupHeaderTemplate">
 
-            <Grid HorizontalAlignment="Stretch" Height="30" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
+            <Grid HorizontalAlignment="Stretch" Height="25" Width="{Binding InternalWidth, ElementName=lv_Duplicates}">
                  <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="700"/>

@@ -21,11 +21,11 @@ namespace Deduplicator.Common
         {
             get
             {
-                int count = this.Aggregate(0, (total, next) => total += next.Count);
-                int i = 0;
-                foreach (FilesGroup group in this)
-                    i += group.Count;
-                return i;
+                return this.Aggregate(0, (total, next) => total += next.Count);
+                //int i = 0;
+                //foreach (FilesGroup group in this)
+                //    i += group.Count;
+                //return i;
             }
         }
 
@@ -43,15 +43,7 @@ namespace Deduplicator.Common
         }
         public void Invalidate()
         {
-            //var groups = new List<FilesGroup>(this);
-            //this.Clear();
-            //foreach (var group in groups)
-            //{
-            //    var newGroup = group.Clone();
-            //    this.Add(newGroup);
-            //}
-                
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         public async Task RemoveNonDuplicates(ObservableCollection<GroupingAttribute> attributeList,
@@ -232,8 +224,9 @@ namespace Deduplicator.Common
 
         public FilesGroup(FilesGroup group, Progress<OperationStatus> progress)
         {
-            foreach (var file in group)
-                _files.Add(file);
+            //foreach (var file in group)
+            //    _files.Add(file);
+            _files.AddRange(group);
             _progress = progress;
         }
         public FilesGroup( string name)
@@ -282,6 +275,7 @@ namespace Deduplicator.Common
             var newGroup = new FilesGroup(_progress);
             foreach (File file in _files)
                 newGroup.Add(file);
+            
             return newGroup;
         }
 

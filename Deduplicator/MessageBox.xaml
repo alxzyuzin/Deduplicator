@@ -41,24 +41,25 @@
             <Border x:Name="BoxBorder" Grid.Column="1" Grid.Row="1" 
                     BorderBrush="White" BorderThickness="1" Background="Gray" Opacity="0">
 
-        
-            <Grid MinHeight="80">
+                <Grid MinHeight="80">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="80"/>
+                        <RowDefinition Height="60"/>
                     </Grid.RowDefinitions>
-                <TextBlock x:Name="MessageText" Grid.Row="0" Text="{Binding Message}" 
+                    <TextBlock x:Name="MessageText" Grid.Row="0" Text="{Binding Message}" 
                            Margin="10,10,10,10" TextWrapping="WrapWholeWords" VerticalAlignment="Center"
                            FontFamily="Segoe UI Light" FontSize="20"/>
-                <StackPanel x:Name="ButtonsPanel" Grid.Row="2" 
+                    <StackPanel x:Name="ButtonsPanel" Grid.Row="2" 
                             Orientation="Horizontal" Height="60" VerticalAlignment="Bottom" HorizontalAlignment="Right"
                             Margin="0,0,10,0">
+                        <!--
                         <Button x:Name="button_Yes"    Content="Yes"    Width="80"   Style="{StaticResource CmdButtonStyle}" Tapped="button_Tapped"/>
                         <Button x:Name="button_No"     Content="No"     Width="80"  Style="{StaticResource CmdButtonStyle}" Tapped="button_Tapped"/>
                         <Button x:Name="button_Continue" Content="Continue" Width="120" Style="{StaticResource CmdButtonStyle}" Tapped="button_Tapped" />
                         <Button x:Name="button_Cancel" Content="Cancel" Width="110" Style="{StaticResource CmdButtonStyle}" Tapped="button_Tapped" />
                         <Button x:Name="button_Close"  Content="Close"  Width="100" Style="{StaticResource CmdButtonStyle}" Tapped="button_Tapped"  />
-                </StackPanel>
+                        -->
+                    </StackPanel>
             </Grid>
         
         </Border>

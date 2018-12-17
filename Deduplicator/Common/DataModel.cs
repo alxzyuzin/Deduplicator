@@ -15,7 +15,8 @@ namespace Deduplicator.Common
 
     public sealed class DataModel : INotifyPropertyChanged
     {
-        public enum SearchStatus {
+        public enum SearchStatus : byte
+        {
             Sorting,
             Grouping,
             GroupingCompleted,
@@ -254,62 +255,6 @@ namespace Deduplicator.Common
         ///// условия которым должен удовлетворять файл для включения в список файлов
         ///// </param>
         ///// <returns></returns>
-        //private async Task GetFolderFiles(Folder folder, FileSelectionOptions options, CancellationToken canselationToken,
-        //                                    OperationStatus status )
-        //{
-        //    IReadOnlyList<IStorageItem> folderitems = null;
- 
-        //    try
-        //    {
-        //        // Каталог может быть удалён после того как начался поиск дубликато
-        //       var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder.FullName);
-        //       folderitems = await storageFolder.GetItemsAsync();
-        //    }
-        //    catch (FileNotFoundException ex)
-        //    {
-        //        status.Id = SearchStatus.Error;
-        //        status.Message = ex.Message+"'" + folder.FullName+"'";                
-        //        throw new OperationCanceledException();
-        //    }
-
-        //    var progress = _progress as IProgress<OperationStatus>;
-        //    foreach (IStorageItem item in folderitems)
-        //    {
-        //        canselationToken.ThrowIfCancellationRequested();
-        //        ++status.TotalItems;
-        //        if (item.Attributes.HasFlag(FileAttributes.Directory))  
-        //        {
-        //            if (folder.SearchInSubfolders)
-        //                await GetFolderFiles(new Folder(item.Path, folder.IsPrimary, folder.SearchInSubfolders, folder.IsProtected ), 
-        //                                    options, canselationToken, status);
-        //        }
-        //        else
-        //        {
-        //            try
-        //            {
-        //                string fileExtention = (item as StorageFile).FileType;
-        //                if (options.ExtentionRequested(fileExtention))
-        //                {
-        //                    File file = new File(item.Name, item.Path, fileExtention, item.DateCreated.DateTime,
-        //                                            new DateTime(), 0, folder.IsPrimary, folder.IsProtected);
-        //                    Windows.Storage.FileProperties.BasicProperties basicproperties = await item.GetBasicPropertiesAsync();
-        //                    file.DateModifyed = basicproperties.DateModified.DateTime;
-        //                    file.Size = basicproperties.Size;
-        //                    _filesCollection.Add(file);
-        //                    status.Id = SearchStatus.NewFileSelected;
-        //                    ++status.HandledItems;
-        //                    progress.Report(status);
-        //                }
-        //            }
-        //            catch(Exception ex)
-        //            {
-        //                status.Id = SearchStatus.Error;
-        //                status.Message = ex.Message + "'"+ item.Name + "'.";
-        //                throw new OperationCanceledException();
-        //            }
-        //        }
-        //    }
-        //}
 
         /// <summary>
         /// Формирует список файлов содержащихся в указанном каталоге
@@ -379,6 +324,7 @@ namespace Deduplicator.Common
         {
             GroupedFilesCollection rollbackGroupsBuffer = new GroupedFilesCollection(_progress);
             // Сохраним результаты предыдущей сортировки для восстановления в случае отката операции
+            
             foreach (var group in _duplicatesCollection)
                 rollbackGroupsBuffer.Add(group);
             // Разделим полученный ранее полный список дубликатов на группы по указанному атрибуту
@@ -425,8 +371,7 @@ namespace Deduplicator.Common
 
                     group.Remove(file);
                     StorageFile f = await StorageFile.GetFileFromPathAsync(file.FullName);
-                    // await f.DeleteAsync(StorageDeleteOption.Default);
-                }
+                 }
                 var singleFilesGroup = new List<FilesGroup>(_duplicatesCollection.Where(g => g.Count < 2));
                 foreach (var group in singleFilesGroup)
                     _duplicatesCollection.RemoveGroup(group);

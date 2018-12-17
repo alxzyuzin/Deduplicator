@@ -11,8 +11,7 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Media;
+using System.Threading.Tasks;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -31,7 +30,8 @@ namespace Deduplicator {
         }
 
         [Flags]
-        public enum View {
+        public enum View: byte
+        {
             WhereToSearch = 1,
             SearchOptions = 2,
             SearchResults = 4,
@@ -355,25 +355,23 @@ namespace Deduplicator {
                 {
                     // Если поиск дубликатов не выполнялся то просто сохраняем новые значения
                     _dataModel.FileCompareOptions.Commit();
+                    return;
                 }
-                else
+ 
+                string msg = "Changing file compare options will discard current search results.\n Would you like to change file compare options and clear results of last duplicates search?";
+                MsgBoxButton pressedButton = await DisplayMessage(msg, MsgBoxButton.Yes | MsgBoxButton.No, 200);
+                switch (pressedButton)
                 {
-                    MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
-                    MsgBox.Message = "Changing file compare options will discard current search results.\n Would you like to change file compare options\n and clear results of last duplicates search?";
-                    MessageBoxButtons pressedButton = await MsgBox.Show();
-                    if (pressedButton == MessageBoxButtons.Yes)
-                    {
+                    case MsgBoxButton.Yes:
                         _dataModel.FileCompareOptions.Commit();
                         _dataModel.ClearSearchResults();
-                    }
-
-                    if (pressedButton == MessageBoxButtons.No)
-                    {
+                        _dataModel.InvalidateDuplicates();
+                        break;
+                    case MsgBoxButton.No:
                         _dataModel.FileCompareOptions.RollBack();
-                    }
-                }
+                        break;
+                }   
             }
-
         }
 
         private void OnSearchStatusChanged(object sender, DataModel.SearchStatus status)
@@ -431,50 +429,41 @@ namespace Deduplicator {
             folderPicker.SuggestedStartLocation = PickerLocationId.ComputerFolder;
             folderPicker.FileTypeFilter.Add("*");
             StorageFolder newfolder = await folderPicker.PickSingleFolderAsync();
-
-            MsgBox.SetButtons(MessageBoxButtons.Close);
+ 
             if (newfolder != null)
             {
                 // Проверим что такого каталога ещё нет в списке каталогов для поиска дубликатов
                 if (_dataModel.Folders.Any(Folder => Folder.FullName == newfolder.Path))
                 {
-                    MsgBox.Message = $"Folder\n {newfolder.Path}\nalready in the folders list.";
-                    await MsgBox.Show();
+                    string msg = $"Folder\n {newfolder.Path}\nalready in the folders list.";
+                    await DisplayMessage(msg, MsgBoxButton.Close, 180);
                     return;
                 }
                 // Проверим что добавляемый каталог не являеся подкаталогом каталога уже присутствующего в списке
-                foreach (Folder folder in _dataModel.Folders)
+                var sfolder = _dataModel.Folders.FirstOrDefault(f => 
+                                            newfolder.Path.StartsWith(f.FullName) &&
+                                            newfolder.Path.Substring(f.FullName.Length).StartsWith("\\"));
+                if (sfolder != null)
                 {
-                    if (newfolder.Path.StartsWith(folder.FullName))
-                    {
-                        string deepestfoldername = newfolder.Path.Substring(folder.FullName.Length);
-                        if (deepestfoldername.StartsWith("\\"))
-                        {
-                            MsgBox.Message = $"Directory\n{newfolder.Path}\n is a subdirectory of directory\n{folder.FullName}\nYou can't create list of directories containing directory and its subdirectory.";
-                            await MsgBox.Show();
-                            return;
-                        }
-                    }
+                    string msg = $"Directory\n{newfolder.Path}\n is a subdirectory of directory\n{sfolder.FullName}\nYou can't create list of directories containing directory and its subdirectory.";
+                    await DisplayMessage(msg, MsgBoxButton.Close, 300);
+                    return;
                 }
                 // Проверим что ни один из каталогов присутствующих в списке не являеся подкаталогом добавляемого каталога
-                foreach (Folder folder in _dataModel.Folders)
+                var pfolder = _dataModel.Folders.FirstOrDefault(f => 
+                                                f.FullName.StartsWith(newfolder.Path) &&
+                                                f.FullName.Substring(newfolder.Path.Length).StartsWith("\\"));
+                if (pfolder != null)
                 {
-                    if (folder.FullName.StartsWith(newfolder.Path))
-                    {
-                        string deepestfoldername = folder.FullName.Substring(newfolder.Path.Length);
-                        if (deepestfoldername.StartsWith("\\"))
-                        {
-                            MsgBox.Message = $"Directory\n{newfolder.Path}\n is a directory containing directory already present in the directory list.\nYou can't create list of directories containing directory and its subdirectory.";
-                            await MsgBox.Show();
-                            return;
-                        }
-                    }
+                    string msg = $"Directory\n{newfolder.Path}\n is a directory containing directory already present in the directory list.\nYou can't create list of directories containing directory and its subdirectory.";
+                    await DisplayMessage(msg, MsgBoxButton.Close, 300);
+                    return;
                 }
+
                 String AccessToken = StorageApplicationPermissions.FutureAccessList.Add(newfolder);
                 _dataModel.Folders.Add(new Folder(newfolder.Path, false, AccessToken));
 
                 BtnStartSearchEnabled = (_dataModel.OperationCompleted) ? true : false;
-                
                 EmptyContentMessageVisibility = Visibility.Collapsed;
             }
         }
@@ -505,18 +494,15 @@ namespace Deduplicator {
                 _dataModel.FileCompareOptions.CheckContent || _dataModel.FileCompareOptions.CheckCreationDateTime ||
                 _dataModel.FileCompareOptions.CheckModificationDateTime))
             {
-                MsgBox.SetButtons(MessageBoxButtons.Close);
-                MsgBox.Message = _resldr.GetString("NoFileCompareAttributesChecked");
-                await MsgBox.Show();
+                await DisplayMessage(_resldr.GetString("NoFileCompareAttributesChecked"), MsgBoxButton.Close, 150);
                 return;
             }
             // Проверим есть ли результат предыдущего поиска и если есть покажем предупреждающее сообщение
             if (_dataModel.DuplicatesCount > 0)
             {
-                 MsgBox.SetButtons(MessageBoxButtons.Yes | MessageBoxButtons.No);
-                 MsgBox.Message = _resldr.GetString("DuplicatedAlreadyFound");
-                 MessageBoxButtons pressedbutton = await MsgBox.Show();
-                if (pressedbutton == MessageBoxButtons.No)
+                 MsgBoxButton  pressedbutton = await DisplayMessage(_resldr.GetString("DuplicatedAlreadyFound"),
+                                                    MsgBoxButton.Yes | MsgBoxButton.No, 150);
+                 if (pressedbutton == MsgBoxButton.No)
                     return;
             }
 
@@ -552,18 +538,14 @@ namespace Deduplicator {
                 // хотя бы ещё один каталог 
                 if (_dataModel.FoldersCount < 2)
                 {
-                    MsgBox.SetButtons(MessageBoxButtons.Close);
+                    MsgBox.SetButtons(MsgBoxButton.Close);
                     MsgBox.Message = _resldr.GetString("SinglePrimaryDirectory");
                     await MsgBox.Show();
                     toggledFolder.IsPrimary = false;
                     return;
                 }
-               
-                foreach (Folder folder in _dataModel.Folders)
-                {
-                    if(folder.FullName != toggledFolder.FullName)
+                foreach (Folder folder in _dataModel.Folders.Where(f=> f.FullName != toggledFolder.FullName))
                         folder.IsPrimary = false;
-                }
              }
          }
 
@@ -622,17 +604,14 @@ namespace Deduplicator {
         private void Grouping_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedAttribute = ((ComboBox)sender).SelectedItem as GroupingAttribute;
-            if (selectedAttribute != null)
+            if (selectedAttribute != null && m_currentGroupingAttribute != selectedAttribute)
             {
-                if (m_currentGroupingAttribute != selectedAttribute )
-                {
                     m_currentGroupingAttribute = selectedAttribute;
                     if (_dataModel.DuplicatesCount != 0)
                     {
                         DisableComandButtons();
                         _dataModel.RegroupResultsByFileAttribute(selectedAttribute);
                     }
-                }
             }
         }
 
@@ -662,5 +641,14 @@ namespace Deduplicator {
                     TemplateCheckBox.IsChecked = value;
             }
         }
+
+        private async Task<MsgBoxButton> DisplayMessage(string message, MsgBoxButton button, int height)
+        {
+            MsgBox.SetButtons(button);
+            MsgBox.Message = message;
+            MsgBox.BoxHeight = height;
+            return await MsgBox.Show();
+        }
+
     } // Class ApplicationViews
 } // Namespace Deduplicator
